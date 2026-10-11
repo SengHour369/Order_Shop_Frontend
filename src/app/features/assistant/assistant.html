@@ -1,0 +1,210 @@
+<div class="assistant-app" [class.customer-assistant]="!administrator">
+  
+  <div class="assistant-main">
+    <header class="admin-topbar">
+      
+      <form class="global-search" (ngSubmit)="search()"><app-icon name="search" /><input name="search" [(ngModel)]="searchQuery" aria-label="Search orders, products, customers" placeholder="Search orders, products, customers…" /></form>
+      <span class="model"><span class="model-dot"></span>Ollama assistant</span>
+      <button class="icon-button settings-button" aria-label="Assistant information" (click)="showTools = !showTools"><app-icon name="settings" /></button>
+      <a class="icon-button" routerLink="/account/notifications" aria-label="Notifications"><app-icon name="bell" /></a>
+      <a class="profile" [routerLink]="administrator ? '/admin/settings' : '/account'">
+        <span>{{ (auth.session()?.username || 'A').slice(0, 1).toUpperCase() }}</span>
+        <div><strong>{{ auth.session()?.username || 'Account' }}</strong><small>{{ auth.session()?.email || (administrator ? 'Administrator' : 'Shop account') }}</small></div>
+        <app-icon name="down" />
+      </a>
+    </header>
+    <section class="assistant-shell">
+      <header class="assistant-header"><div class="identity"><span class="bot-logo"><app-icon name="robot" /></span><div><h1>AI Assistant</h1><p>{{ administrator ? 'Your smart assistant for E-Shop management. Ask questions, get insights, and perform actions.' : 'Your E-Shop shopping assistant. Find products and get help with your orders.' }}</p></div></div></header>
+      
+      @if (showTools || showSources) {
+        <section class="information-panel">
+          <div class="panel-heading"><h2>{{ showTools ? 'Assistant tools' : 'Knowledge base' }}</h2><button (click)="showTools = false; showSources = false">Close</button></div>
+          <p>{{ showTools ? 'Find products, check stock, review orders, and explore reports. Available actions depend on your permissions. Changes require review and confirmation.' : 'The assistant uses approved E-Shop documents when they are available. Ask about a policy or contact support for verified store guidance.' }}</p>
+        </section>
+      }
+      <div class="workspace">
+    <section class="chat-panel" aria-label="Assistant conversation">
+      <div class="chat-toolbar"><span>Conversation</span><button (click)="newConversation()" [disabled]="busy()"><app-icon name="trash" />Clear Chat</button></div>
+      <div #chatScroll
+        class="chat-scroll"
+        aria-live="polite"
+        aria-relevant="additions text" role="log" aria-label="Chat messages"
+      >
+        <article class="message">
+          <span class="bot-avatar"><app-icon name="robot" /></span>
+          <div class="bubble welcome">
+            <p>
+              Hi! 👋 I’m your E-Shop AI Assistant{{
+                administrator ? " for Admin" : ""
+              }}.
+            </p>
+            <p>I can help you with:</p>
+            <ul>
+              <li>Products, inventory, promotions</li>
+              <li>Orders, payments, returns</li>
+              <li>Customers and analytics</li>
+              <li>E-Shop policies and documentation</li>
+            </ul>
+            <p>How can I help you today?</p>
+          </div>
+        </article>
+        @for (message of current()?.messages || []; track $index) {
+          <article
+            class="message"
+            [class.user-message]="message.role === 'user'"
+          >
+            <span class="bot-avatar"
+              ><app-icon [name]="message.role === 'user' ? 'user' : 'robot'"
+            /></span>
+            <div class="message-body">
+              <div class="bubble">
+                <p>{{ message.text }}</p>
+                @if (message.result; as result) {
+                  @if (records(result.data); as rows) {
+                    @if (rows.length) {
+                      <div class="result-table">
+                        <table>
+                          <thead>
+                            <tr>
+                              @for (column of columns(rows); track column) {
+                                <th>{{ column.replaceAll("_", " ") }}</th>
+                              }
+                            </tr>
+                          </thead>
+                          <tbody>
+                            @for (row of rows.slice(0, 20); track $index) {
+                              <tr>
+                                @for (column of columns(rows); track column) {
+                                  <td>{{ cell(row[column]) }}</td>
+                                }
+                              </tr>
+                            }
+                          </tbody>
+                        </table>
+                      </div>
+                      <small>{{
+                        rows.length > 20
+                          ? "Showing the first 20 returned records."
+                          : "Data returned by E-Shop."
+                      }}</small>
+                    } @else if (result.data) {
+                      <details class="result-details">
+                        <summary>View result details</summary>
+                        <pre>{{ result.data | json }}</pre>
+                      </details>
+                    }
+                  }
+                  @if (result.status !== "SUCCESS") {
+                    <span class="result-status">{{
+                      result.status.replaceAll("_", " ")
+                    }}</span>
+                  }
+                  @if (result.errorCode === "CONFIRMATION_REQUIRED") {
+                    <p>
+                      Review this action in the relevant management screen
+                      before proceeding.
+                    </p>
+                  }
+                }
+                <time>{{ message.time | date: "h:mm a" }}</time>
+              </div>
+              @if (message.result; as result) {
+                <div class="response-actions">
+                  @if (result.data) {
+                    <button (click)="exportResult(result)">
+                      <app-icon name="download" />Export Report
+                    </button>
+                  }
+                  <a [routerLink]="administrator ? '/admin/products' : '/shop'"
+                    ><app-icon name="search" />Show All Products</a
+                  >
+                  @if (result.status === "RUNNING") {
+                    <button (click)="check(message)" [disabled]="busy()">
+                      Check Progress
+                    </button>
+                  }
+                  @for (
+                    suggestion of message.suggestions || [];
+                    track suggestion
+                  ) {
+                    <button (click)="choose(suggestion)">
+                      {{ suggestion }}
+                    </button>
+                  }
+                </div>
+              }
+            </div>
+          </article>
+        }
+        @if (busy()) {
+          <div class="thinking">
+            <span></span><span></span><span></span> Working on your request…
+          </div>
+        }
+        <app-status [error]="error()" />
+      </div>
+      <form class="composer" (ngSubmit)="send()">
+        <textarea #promptInput
+          name="prompt"
+          [(ngModel)]="prompt"
+          maxlength="4000"
+          required
+          rows="2"
+          aria-label="Your message"
+          placeholder="Type your message here… (e.g. ‘show low stock products’, ‘find orders’, ‘check promotions’)"
+          [disabled]="busy()"
+        ></textarea>
+        <div class="composer-footer">
+          <div>
+            <app-icon name="list" /><select
+              name="topic"
+              [(ngModel)]="topic"
+              aria-label="Request topic"
+              (ngModelChange)="
+                choose(
+                  $event === 'Product Search'
+                    ? 'Search products'
+                    : $event === 'Orders'
+                      ? 'Show orders for today'
+                      : $event === 'Inventory'
+                        ? 'Show low stock items'
+                        : 'Explain the return policy'
+                )
+              "
+            >
+              <option>Product Search</option>
+              <option>Orders</option>
+              <option>Inventory</option>
+              <option>Policies</option>
+            </select>
+          </div>
+          <button
+            class="send"
+            [disabled]="busy() || !prompt.trim()"
+            aria-label="Send message"
+          >
+            <app-icon name="send" />
+          </button>
+        </div>
+      </form>
+    </section>
+        <aside class="support-column">
+          <section class="panel-card"><div class="panel-heading"><h2>Quick Actions</h2><button (click)="showAllActions = !showAllActions">{{ showAllActions ? 'Show Less' : 'View All' }}</button></div>
+            <div class="quick-grid">
+              @for (item of (showAllActions ? actions.concat(extraActions) : actions); track item[0]) {
+                <button [class]="'quick-action ' + item[3]" (click)="choose(item[2])" [disabled]="busy()"><app-icon [name]="item[1]" /><span>{{ item[0] }}</span></button>
+              }
+            </div>
+          </section>
+          <section #recentPanel class="panel-card recent-panel"><div class="panel-heading"><h2>Recent Conversations</h2><button (click)="showAllConversations = !showAllConversations">{{ showAllConversations ? 'Show Less' : 'View All' }}</button></div>
+            @for (conversation of conversations().slice(0, showAllConversations ? conversations().length : 8); track conversation.localId) {
+              <button class="recent-row" [class.selected]="current()?.localId === conversation.localId" (click)="open(conversation)" [disabled]="busy()"><app-icon name="mail" /><span>{{ conversation.title }}</span><time>{{ conversation.time | date: 'h:mm a' }}</time></button>
+            } @empty {
+              <div class="empty-history"><span><app-icon name="mail" /></span><strong>Your next idea starts here</strong><p>Start a conversation or choose a quick action. Your chats will appear here during this visit.</p></div>
+            }
+          </section>
+        </aside>
+      </div>
+    </section>
+  </div>
+</div>

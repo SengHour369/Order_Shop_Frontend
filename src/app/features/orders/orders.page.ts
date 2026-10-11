@@ -1,0 +1,206 @@
+import { Component, inject, signal } from "@angular/core";
+import { CurrencyPipe, DatePipe } from "@angular/common";
+import { FormsModule } from "@angular/forms";
+import { RouterLink } from "@angular/router";
+import { OrdersApi } from "./orders.api";
+import { Order } from "../../core/api/models";
+import { AuthService } from "../../core/auth/auth.service";
+import { Icon } from "../../shared/icon";
+import { OrderProgress } from "../../shared/order-progress";
+import { SignInCard } from "../../shared/sign-in-card";
+import { PageState } from "../../shared/page-state";
+import { Status } from "../../shared/status";
+@Component({
+  imports: [
+    CurrencyPipe,
+    DatePipe,
+    FormsModule,
+    RouterLink,
+    Icon,
+    OrderProgress,
+    SignInCard,
+    Status,
+  ],
+  template: `<div class="page-heading">
+      <div>
+        <h1>My Orders</h1>
+        <p>Track, manage and view all your orders in one place.</p>
+      </div>
+      <div class="inline-search">
+        <app-icon name="search" /><input
+          aria-label="Search orders on this page"
+          [(ngModel)]="search"
+          placeholder="Search order number on this page..."
+        />
+      </div>
+    </div>
+    <div class="toolbar order-toolbar">
+      <div class="filter-tabs">
+        @for (t of tabs; track t.value) {
+          <button
+            class="tab"
+            [class.active]="status === t.value"
+            (click)="filter(t.value)"
+            [disabled]="busy()"
+          >
+            <app-icon [name]="t.icon" />{{ t.label }}
+          </button>
+        }
+      </div>
+      <span class="small muted">Newest First</span>
+    </div>
+    <app-status [busy]="busy()" [error]="error()" />
+    @if (!auth.session()) {
+      <app-sign-in-card
+        action="view and manage your orders"
+        path="/account/orders"
+      />
+    }
+    <div class="customer-orders-layout">
+      <section class="customer-order-list" aria-label="Your orders">
+        @for (o of filtered(); track o.id) {
+          <button
+            class="customer-order-choice"
+            [class.selected]="selectedOrder().id === o.id"
+            (click)="selectedId.set(o.id)"
+          >
+            <span class="order-choice-icon"><app-icon name="box" /></span
+            ><span class="grow"
+              ><strong>{{ o.order_number }}</strong
+              ><small
+                >{{ o.order_date | date: "mediumDate" }} ·
+                {{ o.items?.length || 0 }} items</small
+              ><span class="order-choice-footer"
+                ><span
+                  class="badge"
+                  [class.cancelled]="o.status === 'CANCELLED'"
+                  >{{ o.status }}</span
+                ><b>{{ o.total_amount | currency: "USD" }}</b></span
+              ></span
+            ><app-icon name="chevron" />
+          </button>
+        } @empty {
+          @if (auth.session() && !busy() && !error()) {
+            <div class="empty">
+              <app-icon name="box" />
+              <h2>No orders found</h2>
+              <p>
+                {{
+                  search
+                    ? "Try another order number."
+                    : "Your orders will appear here after checkout."
+                }}
+              </p>
+              <a routerLink="/shop" class="button primary">Start Shopping</a>
+            </div>
+          }
+        }
+      </section>
+      @if (selectedOrder(); as o) {
+        <section class="panel order-preview">
+          <div class="section-heading">
+            <h2>Order #{{ o.order_number }}</h2>
+            <span class="badge" [class.cancelled]="o.status === 'CANCELLED'">{{
+              o.status
+            }}</span>
+          </div>
+          <p>Placed on {{ o.order_date | date: "medium" }}</p>
+          @if (
+            !["CANCELLED", "FAILED", "REFUNDED", "CHECKOUT_PENDING"].includes(
+              o.status
+            )
+          ) {
+            <app-order-progress [status]="o.status" />
+          }
+          <div class="order-preview-items">
+            <h3>Items ({{ o.items?.length || 0 }})</h3>
+            @for (item of o.items || []; track item.id) {
+              <div class="line-item">
+                <span class="icon-circle"><app-icon name="box" /></span>
+                <div class="grow">
+                  <h3>Product SKU #{{ item.product_sku_id }}</h3>
+                  <p>Quantity: {{ item.quantity }}</p>
+                </div>
+                <strong>{{ item.total_price | currency: "USD" }}</strong>
+              </div>
+            }
+          </div>
+          <div class="total">
+            <span>Total</span
+            ><strong>{{ o.total_amount | currency: "USD" }}</strong>
+          </div>
+          <a
+            class="button primary full"
+            [routerLink]="['/account/orders', o.id]"
+            >View Order Details <app-icon name="arrow"
+          /></a>
+          <a
+            class="button outline full"
+            [routerLink]="['/account/orders', o.id]"
+            fragment="tracking"
+            >Track Order <app-icon name="truck"
+          /></a>
+        </section>
+      }
+    </div>
+    @if (auth.session()) {
+      <div class="pagination">
+        <button
+          [disabled]="page === 0 || busy()"
+          (click)="page = page - 1; load()"
+        >
+          Previous</button
+        ><span>Page {{ page + 1 }} of {{ pages || 1 }}</span
+        ><button
+          [disabled]="page + 1 >= pages || busy()"
+          (click)="page = page + 1; load()"
+        >
+          Next
+        </button>
+      </div>
+    }`,
+})
+export class OrdersPage extends PageState {
+  api = inject(OrdersApi);
+  auth = inject(AuthService);
+  orders = signal<Order[]>([]);
+  selectedId = signal<number | null>(null);
+  selectedOrder() {
+    const rows = this.filtered();
+    return rows.find((o) => o.id === this.selectedId()) || rows[0];
+  }
+  page = 0;
+  pages = 0;
+  search = "";
+  status = "";
+  tabs = [
+    { label: "All Orders", value: "", icon: "box" },
+    { label: "Pending", value: "PENDING", icon: "clock" },
+    { label: "Processing", value: "PROCESSING", icon: "box" },
+    { label: "Shipped", value: "SHIPPED", icon: "truck" },
+    { label: "Delivered", value: "DELIVERED", icon: "check" },
+    { label: "Cancelled", value: "CANCELLED", icon: "close" },
+  ];
+  constructor() {
+    super();
+    this.load();
+  }
+  filter(value: string) {
+    this.status = value;
+    this.page = 0;
+    this.load();
+  }
+  load() {
+    if (!this.auth.session()) return;
+    this.run(this.api.history(this.page, this.status), (r) => {
+      this.orders.set(r.content);
+      this.pages = r.totalPages;
+    });
+  }
+  filtered() {
+    const q = this.search.toLowerCase();
+    return this.orders().filter((o) =>
+      (o.order_number || "").toLowerCase().includes(q),
+    );
+  }
+}

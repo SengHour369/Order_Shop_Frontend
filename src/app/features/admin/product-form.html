@@ -1,0 +1,654 @@
+<section class="product-editor">
+  <form class="adm-form full" (ngSubmit)="save()">
+    <header class="adm-page-head">
+      <div class="editor-heading">
+        <a
+          class="adm-btn icon"
+          routerLink="/admin/products"
+          aria-label="Back to products"
+          ><app-icon name="arrow-left"
+        /></a>
+        <div>
+          <h2>{{ id ? "Edit Product" : "Add Product" }}</h2>
+          <div class="adm-crumbs">
+            <a routerLink="/admin">Dashboard</a><span>›</span
+            ><a routerLink="/admin/products">Products</a><span>›</span
+            ><span>{{ id ? "Edit Product" : "Add Product" }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="adm-head-actions">
+        <a class="adm-btn" routerLink="/admin/products">Cancel</a>
+        <button class="adm-btn adm-primary" [disabled]="busy()">
+          <app-icon name="save" />{{ id ? "Update Product" : "Save Product" }}
+        </button>
+      </div>
+    </header>
+    <app-status [busy]="busy()" [error]="error()" [message]="message()" />
+    <div class="editor-columns">
+      <div class="adm-stack">
+        <article class="adm-panel">
+          <h3>Basic Information</h3>
+          <div class="adm-form-grid">
+            <label
+              >Product Name <span class="adm-req">*</span
+              ><input
+                name="name"
+                [(ngModel)]="name"
+                placeholder="e.g. Nike Air Max 270"
+                required
+            /></label>
+            <label
+              >SKU Description <span class="adm-req">*</span
+              ><input
+                name="baseDescription"
+                [(ngModel)]="variants[0].description"
+                placeholder="e.g. Air Max 270 — Black"
+              /><small class="adm-help"
+                >SKU codes are assigned by the shop.</small
+              ></label
+            >
+            <label
+              >Category <span class="adm-req">*</span
+              ><select
+                name="category"
+                [ngModel]="categoryId"
+                (ngModelChange)="setCategory($event)"
+              >
+                <option [ngValue]="0">Select category</option>
+                @for (category of categories(); track field(category, "id")) {
+                  <option [ngValue]="+field(category, 'id')">
+                    {{ field(category, "name") }}
+                  </option>
+                }
+              </select></label
+            >
+            <label
+              >Brand / Sub-Category <span class="adm-req">*</span
+              ><select
+                name="brand"
+                [(ngModel)]="subCategoryId"
+                [disabled]="!categoryId"
+              >
+                <option [ngValue]="0">{{ subCategoryPlaceholder() }}</option>
+                @for (brand of brandChoices(); track field(brand, "id")) {
+                  <option [ngValue]="+field(brand, 'id')">
+                    {{ field(brand, "name") }}
+                  </option>
+                }
+              </select></label
+            >
+          </div>
+          <label
+            >Short Description<input
+              disabled
+              placeholder="Not provided by the product API"
+          /></label>
+          <label class="description-field"
+            >Description <span class="adm-req">*</span>
+            <div class="description-toolbar">
+              <span>Plain text</span><span>│</span
+              ><span title="The product API stores plain text"
+                >B　I　U　☷　☰　↗　▧</span
+              >
+            </div>
+            <textarea
+              name="description"
+              rows="6"
+              [(ngModel)]="description"
+              placeholder="Describe the product, materials and key features."
+              required
+            ></textarea
+            ><small class="character-count"
+              >{{ description.length }} characters</small
+            ></label
+          >
+        </article>
+        <article class="adm-panel">
+          <h3>Pricing &amp; Inventory</h3>
+          <div class="pricing-grid">
+            <label
+              >Regular Price <span class="adm-req">*</span>
+              <div class="money-input">
+                <span>$</span
+                ><input
+                  name="regularPrice"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  [(ngModel)]="basePrice"
+                  (ngModelChange)="syncSingleVariant()"
+                /></div
+            ></label>
+            <label
+              >Sale Price
+              <div class="money-input">
+                <span>$</span
+                ><input disabled placeholder="Use Promotions" /></div
+            ></label>
+            <label
+              >Cost Price
+              <div class="money-input">
+                <span>$</span><input disabled placeholder="Unavailable" /></div
+            ></label>
+            <label
+              >Stock Quantity <span class="adm-req">*</span
+              ><input
+                name="stockQuantity"
+                type="number"
+                min="0"
+                step="1"
+                [(ngModel)]="baseQuantity"
+                (ngModelChange)="syncSingleVariant()"
+            /></label>
+            <label
+              >Low Stock Threshold<input
+                name="threshold"
+                type="number"
+                min="0"
+                step="1"
+                [(ngModel)]="lowStockThreshold"
+            /></label>
+          </div>
+          <div class="adm-form-grid">
+            <label
+              >Warehouse Location<input
+                name="warehouse"
+                [(ngModel)]="baseWarehouse"
+                (ngModelChange)="syncSingleVariant()"
+                placeholder="Warehouse A"
+            /></label>
+            <label
+              >Barcode<input
+                name="barcode"
+                [(ngModel)]="variants[0].barcode"
+                maxlength="64"
+                placeholder="Optional retail barcode"
+            /></label>
+          </div>
+          <div class="reference-grid">
+            <label class="variant-toggle"
+              ><input type="checkbox" checked disabled /> Track Inventory</label
+            ><label
+              >Unit<select disabled>
+                <option>Not configured by API</option>
+              </select></label
+            >
+          </div>
+          <p class="adm-help">
+            Prices are in USD. Sale discounts are managed in Promotions.
+          </p>
+        </article>
+        <article class="adm-panel variants-panel">
+          <div class="adm-section-title">
+            <div>
+              <h3>Product Variants</h3>
+              <label class="variant-toggle"
+                ><input
+                  name="hasVariants"
+                  type="checkbox"
+                  [ngModel]="hasVariants"
+                  (ngModelChange)="setHasVariants($event)"
+                  [disabled]="!!id"
+                />
+                This product has variants</label
+              >
+            </div>
+            @if (hasVariants && !id) {
+              <button
+                type="button"
+                class="adm-btn generate-btn"
+                (click)="generateVariants()"
+                [disabled]="busy()"
+              >
+                <app-icon name="grid" />Generate Variants
+              </button>
+            }
+          </div>
+          @if (hasVariants && !id) {
+            <h4>Variant Attributes</h4>
+            @for (
+              attribute of variantAttributes;
+              track $index;
+              let index = $index
+            ) {
+              <div class="attribute-builder">
+                <input
+                  [name]="'attributeName' + index"
+                  [(ngModel)]="attribute.name"
+                  placeholder="Size or Color"
+                  [attr.aria-label]="'Attribute name ' + (index + 1)"
+                />
+                <input
+                  [name]="'attributeValues' + index"
+                  [(ngModel)]="attribute.input"
+                  placeholder="S, M, L or Black, White"
+                  [attr.aria-label]="'Attribute values ' + (index + 1)"
+                />
+                <button
+                  type="button"
+                  class="adm-btn icon"
+                  (click)="removeGeneratorAttribute(index)"
+                  aria-label="Remove variant attribute"
+                >
+                  <app-icon name="trash" />
+                </button>
+              </div>
+              <div class="value-chips">
+                @for (value of splitValues(attribute.input); track value) {
+                  <span
+                    >{{ value }}
+                    <button
+                      type="button"
+                      (click)="removeGeneratorValue(index, value)"
+                      [attr.aria-label]="
+                        'Remove ' + value + ' from ' + attribute.name
+                      "
+                    >
+                      ×
+                    </button></span
+                  >
+                }
+              </div>
+            }
+            <button
+              type="button"
+              class="adm-btn small"
+              (click)="addGeneratorAttribute()"
+            >
+              + Add Attribute
+            </button>
+            <p class="adm-help">
+              Separate values with commas. Generate up to 100 combinations;
+              generating replaces unsaved rows.
+            </p>
+          }
+          @if (hasVariants || id) {
+            <div class="variant-table-heading">
+              <h4>Variants ({{ variants.length }})</h4>
+              <button
+                type="button"
+                class="adm-btn small"
+                (click)="addVariant()"
+              >
+                + Add SKU
+              </button>
+            </div>
+            <div class="variant-table-scroll">
+              <table class="variant-table">
+                <thead>
+                  <tr>
+                    <th>Default</th>
+                    <th>SKU</th>
+                    <th>Variant / SKU Description</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Barcode</th>
+                    <th>Image</th>
+                    <th>Status</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (variant of variants; track $index; let index = $index) {
+                    <tr>
+                      <td>
+                        <input
+                          type="radio"
+                          name="defaultVariant"
+                          [checked]="defaultVariant === index"
+                          (change)="defaultVariant = index"
+                          [attr.aria-label]="'Default variant ' + (index + 1)"
+                        />
+                      </td>
+                      <td>{{ variant.sku || "Assigned on save" }}</td>
+                      <td>
+                        <input
+                          [name]="'variantDescription' + index"
+                          [(ngModel)]="variant.description"
+                          [attr.aria-label]="
+                            'Variant description ' + (index + 1)
+                          "
+                        /><small>{{ variantSummary(variant) }}</small>
+                      </td>
+                      <td>
+                        <input
+                          [name]="'variantPrice' + index"
+                          type="number"
+                          min="0.01"
+                          step="0.01"
+                          [(ngModel)]="variant.price"
+                          [attr.aria-label]="'Variant price ' + (index + 1)"
+                        />
+                      </td>
+                      <td>
+                        <input
+                          [name]="'variantStock' + index"
+                          type="number"
+                          min="0"
+                          step="1"
+                          [(ngModel)]="variant.quantity"
+                          [attr.aria-label]="'Variant stock ' + (index + 1)"
+                        />
+                      </td>
+                      <td>
+                        <input
+                          [name]="'variantBarcode' + index"
+                          [(ngModel)]="variant.barcode"
+                          [attr.aria-label]="'Variant barcode ' + (index + 1)"
+                        />
+                      </td>
+                      <td>
+                        @if (previews()[0] || images()[0]) {
+                          <img
+                            appProductImage
+                            [src]="previews()[0] || images()[0]"
+                            alt="Product variant image"
+                            style="
+                              width: 36px;
+                              height: 30px;
+                              object-fit: contain;
+                            "
+                          />
+                        } @else {
+                          —
+                        }
+                      </td>
+                      <td>
+                        <span class="status-pill" [class.inactive]="!active">{{
+                          active ? "Active" : "Inactive"
+                        }}</span>
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          class="adm-btn icon"
+                          (click)="
+                            editingVariant =
+                              editingVariant === index ? -1 : index
+                          "
+                          [attr.aria-label]="
+                            'Edit variant attributes ' + (index + 1)
+                          "
+                        >
+                          <app-icon name="edit" />
+                        </button>
+                        <button
+                          type="button"
+                          class="adm-btn icon"
+                          (click)="removeVariant(index)"
+                          [disabled]="variants.length === 1"
+                          [attr.aria-label]="'Remove variant ' + (index + 1)"
+                        >
+                          <app-icon name="trash" />
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            @if (editingVariant >= 0 && variants[editingVariant]; as variant) {
+              <div class="adm-sku">
+                <h4>Variant {{ editingVariant + 1 }} Details</h4>
+                <label
+                  >Warehouse Location<input
+                    name="selectedWarehouse"
+                    [(ngModel)]="variant.warehouse"
+                /></label>
+                <label class="variant-toggle"
+                  ><input
+                    name="selectedUseAttributes"
+                    type="checkbox"
+                    [ngModel]="variant.useAttributes"
+                    (ngModelChange)="toggleAttributes(editingVariant, $event)"
+                  />
+                  Product Attributes</label
+                >
+                @if (variant.useAttributes) {
+                  @for (
+                    attribute of variant.attributes;
+                    track $index;
+                    let group = $index
+                  ) {
+                    <div class="adm-attr">
+                      <label
+                        >Attribute Name<input
+                          [name]="'editAttributeName' + group"
+                          [(ngModel)]="attribute.name"
+                      /></label>
+                      @for (
+                        value of attribute.values;
+                        track $index;
+                        let valueIndex = $index
+                      ) {
+                        <div class="attribute-value-row">
+                          <input
+                            [name]="'editValue' + group + '-' + valueIndex"
+                            [(ngModel)]="attribute.values[valueIndex]"
+                            [attr.aria-label]="
+                              'Attribute value ' + (valueIndex + 1)
+                            "
+                          /><button
+                            type="button"
+                            class="adm-btn"
+                            (click)="
+                              removeValue(editingVariant, group, valueIndex)
+                            "
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      }
+                      <div class="adm-actions">
+                        <button
+                          type="button"
+                          class="adm-btn"
+                          (click)="addValue(editingVariant, group)"
+                        >
+                          + Add Value</button
+                        ><button
+                          type="button"
+                          class="adm-btn"
+                          (click)="removeAttribute(editingVariant, group)"
+                        >
+                          Remove Attribute
+                        </button>
+                      </div>
+                    </div>
+                  }
+                  <button
+                    type="button"
+                    class="adm-btn"
+                    (click)="addAttribute(editingVariant)"
+                  >
+                    + Add Attribute
+                  </button>
+                }
+              </div>
+            }
+            <div class="bulk-actions">
+              <strong>Bulk Actions</strong
+              ><select
+                name="bulkField"
+                [(ngModel)]="bulkField"
+                aria-label="Bulk field"
+              >
+                <option value="price">Update Price</option>
+                <option value="quantity">Update Stock</option></select
+              ><input
+                name="bulkValue"
+                type="number"
+                min="0"
+                [(ngModel)]="bulkValue"
+                aria-label="Bulk value"
+              /><select
+                name="bulkMode"
+                [(ngModel)]="bulkMode"
+                aria-label="Bulk update mode"
+              >
+                <option value="SET">Set Value</option>
+                <option value="INCREASE">Increase By (Fixed)</option>
+                <option value="PERCENTAGE">Increase By (%)</option></select
+              ><button
+                type="button"
+                class="adm-btn adm-primary"
+                (click)="applyBulk()"
+              >
+                Apply to All
+              </button>
+            </div>
+          }
+        </article>
+      </div>
+      <aside class="adm-stack editor-aside">
+        <article class="adm-panel">
+          <h3>
+            Product Images
+            <small style="float: right"
+              >{{ files.length || images().length }} / 6</small
+            >
+          </h3>
+          <label
+            class="adm-drop"
+            (dragover)="allowDrop($event)"
+            (drop)="dropFiles($event)"
+            ><app-icon name="upload" /><strong>Upload Product Images</strong
+            ><span>Drag &amp; drop images here, or click to browse</span
+            ><small>PNG, JPG, WEBP up to 5 MB</small
+            ><input
+              name="files"
+              #productFiles
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              multiple
+              (change)="pick($event)"
+          /></label>
+          @if (previews().length) {
+            <div class="image-grid">
+              @for (url of previews(); track url; let index = $index) {
+                <div class="image-tile">
+                  <img
+                    appProductImage
+                    [src]="url"
+                    [alt]="'Product image ' + (index + 1)"
+                  /><button
+                    type="button"
+                    class="image-remove"
+                    (click)="removeFile(index)"
+                    [attr.aria-label]="'Remove image ' + (index + 1)"
+                  >
+                    ×
+                  </button>
+                  @if (index === 0) {
+                    <span class="primary-image">Primary</span>
+                  } @else {
+                    <button
+                      type="button"
+                      class="make-primary"
+                      (click)="makePrimary(index)"
+                    >
+                      Make primary
+                    </button>
+                  }
+                </div>
+              }
+            </div>
+          }
+          @if (!previews().length && images().length) {
+            <div class="image-grid">
+              @for (url of images(); track $index) {
+                <div class="image-tile">
+                  <img
+                    appProductImage
+                    [src]="url"
+                    [alt]="'Current product image ' + ($index + 1)"
+                  />
+                </div>
+              }
+            </div>
+            <p class="adm-help">New uploads replace the current image set.</p>
+          }
+          <button
+            type="button"
+            class="adm-btn"
+            (click)="productFiles.click()"
+            [disabled]="files.length >= 6"
+          >
+            ＋ Add More
+          </button>
+          <p class="adm-help">
+            Up to 6 images. The first upload is the primary image.
+          </p>
+        </article>
+        <article class="adm-panel">
+          <h3>Publishing</h3>
+          <label
+            >Status <span class="adm-req">*</span
+            ><select name="active" [(ngModel)]="active">
+              <option [ngValue]="true">Active</option>
+              <option [ngValue]="false">Inactive</option>
+            </select></label
+          >
+          <label
+            >Visibility<select disabled>
+              <option>Follows active status</option>
+            </select></label
+          ><label class="variant-toggle"
+            >Featured Product <input type="checkbox" disabled
+          /></label>
+          <p class="adm-help">
+            Active products are available in the storefront. Stock is checked
+            when customers add to cart.
+          </p>
+        </article>
+        <article class="adm-panel">
+          <h3>SEO <small>(Optional)</small></h3>
+          <label
+            >Meta Title<input
+              disabled
+              placeholder="Not supported by the product API" /></label
+          ><label>Meta Description<textarea rows="3" disabled></textarea></label
+          ><label>URL Slug<input disabled /></label>
+        </article>
+        <article class="adm-panel">
+          <h3>Additional Information <small>(Optional)</small></h3>
+          <label>Tags<input disabled placeholder="Unavailable" /></label>
+          <div class="reference-grid">
+            <label>Weight (kg)<input type="number" disabled /></label
+            ><label
+              >Dimensions (cm)<input disabled placeholder="L × W × H"
+            /></label>
+          </div>
+          <p class="adm-help">
+            SEO, cost, unit, featured status and shipping dimensions need
+            backend fields before they can be saved.
+          </p>
+        </article>
+        <article class="adm-panel product-checklist">
+          <h3>Product Overview</h3>
+          <div>
+            <span>Product</span
+            ><strong>{{ name || "Untitled product" }}</strong>
+          </div>
+          <div>
+            <span>Sellable SKUs</span><strong>{{ variants.length }}</strong>
+          </div>
+          <div>
+            <span>Total stock</span><strong>{{ totalStock() }}</strong>
+          </div>
+          <div>
+            <span>Images</span
+            ><strong>{{ files.length || images().length }} / 6</strong>
+          </div>
+          <div>
+            <span>Publishing</span
+            ><strong class="status-pill" [class.inactive]="!active">{{
+              active ? "Active" : "Inactive"
+            }}</strong>
+          </div>
+        </article>
+      </aside>
+    </div>
+  </form>
+</section>

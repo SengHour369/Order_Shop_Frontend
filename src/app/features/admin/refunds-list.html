@@ -1,0 +1,249 @@
+<section class="refund-ui">
+  <header class="refund-heading">
+    <div>
+      <h2>Refund Management</h2>
+      <p>Manage and process customer refunds</p>
+      <div class="refund-crumbs">
+        <a routerLink="/admin">Dashboard</a><span>›</span
+        ><a routerLink="/admin/returns">Returns</a><span>›</span
+        ><span>Refunds</span>
+      </div>
+    </div>
+  </header>
+  <div class="refund-stats">
+    <article>
+      <span class="stat-icon purple"><app-icon name="bank" /></span>
+      <div>
+        <span>Total Refunds</span
+        ><strong>{{ statistic("total_refunds") }}</strong
+        ><small>All time</small>
+      </div>
+    </article>
+    <article>
+      <span class="stat-icon amber"><app-icon name="clock" /></span>
+      <div>
+        <span>Pending Refunds</span
+        ><strong>{{ statistic("pending_refunds") }}</strong
+        ><small>Awaiting processing</small>
+      </div>
+    </article>
+    <article>
+      <span class="stat-icon green"><app-icon name="check" /></span>
+      <div>
+        <span>Completed</span
+        ><strong>{{ statistic("completed_refunds") }}</strong
+        ><small>Successfully processed</small>
+      </div>
+    </article>
+    <article>
+      <span class="stat-icon red"><app-icon name="close" /></span>
+      <div>
+        <span>Failed</span><strong>{{ failedCount() }}</strong
+        ><small>On this page</small>
+      </div>
+    </article>
+  </div>
+  <app-status [busy]="busy()" [error]="error()" />
+  <section class="refund-card list-card">
+    <form class="refund-filters" (ngSubmit)="apply()">
+      <label class="search-field"
+        ><input
+          name="query"
+          [(ngModel)]="query"
+          placeholder="Search by refund ID, order number, customer name..."
+          aria-label="Search refunds" /><button
+          aria-label="Search refunds"
+          [disabled]="busy()"
+        >
+          <app-icon name="search" /></button
+      ></label>
+      <select
+        name="status"
+        [(ngModel)]="status"
+        (ngModelChange)="apply()"
+        aria-label="Refund status"
+      >
+        <option value="">All Status</option>
+        @for (
+          option of [
+            "PENDING",
+            "APPROVED",
+            "PROCESSING",
+            "PROCESSED",
+            "CANCELLED",
+            "FAILED",
+          ];
+          track option
+        ) {
+          <option [value]="option">{{ option }}</option>
+        }
+      </select>
+      <select name="method" [(ngModel)]="method" aria-label="Payment method">
+        <option value="">All Payment Methods</option>
+        <option value="ABA">ABA PayWay</option>
+        <option value="VISA">Visa</option>
+        <option value="MASTERCARD">Mastercard</option>
+        <option value="BAKONG">Bakong</option>
+        <option value="CASH">Cash</option>
+      </select>
+      <button
+        class="refund-btn date-range-btn"
+        type="button"
+        (click)="filtersOpen = !filtersOpen"
+      >
+        <app-icon name="clock" />{{
+          from && to ? from + " — " + to : "Date Range"
+        }}<app-icon name="down" />
+      </button>
+      <button
+        class="refund-btn filter-btn"
+        type="button"
+        (click)="filtersOpen = !filtersOpen"
+      >
+        <app-icon name="list" />Filters <app-icon name="down" />
+      </button>
+      @if (filtersOpen) {
+        <div class="date-filters">
+          <label
+            >From date<input
+              type="date"
+              name="from"
+              [(ngModel)]="from" /></label
+          ><label
+            >To date<input
+              type="date"
+              name="to"
+              [(ngModel)]="to"
+              [min]="from" /></label
+          ><button
+            class="refund-btn primary"
+            [disabled]="busy() || !!from !== !!to || (!!from && to < from)"
+          >
+            Apply Filters</button
+          ><small
+            >Customer and payment filters apply to the current page.</small
+          >
+        </div>
+      }
+    </form>
+    <div class="refund-table-scroll">
+      <table class="refund-table">
+        <thead>
+          <tr>
+            <th>
+              <button class="sort-btn" (click)="sortAscending = !sortAscending">
+                Refund ID ↕
+              </button>
+            </th>
+            <th>Order #</th>
+            <th>Customer</th>
+            <th>Amount</th>
+            <th>Payment Method</th>
+            <th>Status</th>
+            <th>Request Date</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of visibleRows(); track field(row, "refund_id")) {
+            <tr>
+              <td>
+                <a
+                  class="refund-id"
+                  [routerLink]="['/admin/refunds', field(row, 'refund_id')]"
+                  >{{ text(field(row, "refund_id")) }}</a
+                >
+              </td>
+              <td>
+                <a
+                  [routerLink]="['/admin/refunds', field(row, 'refund_id')]"
+                  [queryParams]="{ tab: 'Order & Payment' }"
+                  >{{ text(field(row, "order_no", "orderNo")) }}</a
+                >
+              </td>
+              <td>
+                <div class="customer-cell">
+                  <span class="customer-avatar">{{
+                    customerName(row).slice(0, 1)
+                  }}</span>
+                  <div>
+                    <strong>{{ customerName(row) }}</strong
+                    ><small>{{ text(field(customer(row), "email")) }}</small>
+                  </div>
+                </div>
+              </td>
+              <td>{{ usd(field(row, "amount")) }}</td>
+              <td>
+                <span class="method-icon"><app-icon name="card" /></span
+                >{{ paymentMethod(row) }}
+              </td>
+              <td>
+                <span
+                  class="refund-badge"
+                  [class]="'refund-badge ' + tone(row)"
+                  >{{ text(field(row, "status")) }}</span
+                >
+              </td>
+              <td>{{ when(field(row, "requested_at", "requestedAt")) }}</td>
+              <td>
+                <div class="row-actions">
+                  <a
+                    class="refund-btn icon"
+                    [routerLink]="['/admin/refunds', field(row, 'refund_id')]"
+                    aria-label="View refund"
+                    ><app-icon name="eye" /></a
+                  ><a
+                    class="refund-btn icon"
+                    [routerLink]="['/admin/refunds', field(row, 'refund_id')]"
+                    [queryParams]="{ tab: 'Refund Process' }"
+                    aria-label="Refund actions"
+                    >⋯</a
+                  >
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="8" class="refund-empty">
+                {{
+                  busy() ? "Loading refunds…" : "No refunds match your filters."
+                }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <footer class="refund-pager">
+      <span>{{ range() }}</span>
+      <div>
+        <button
+          class="refund-btn icon"
+          aria-label="Previous page"
+          [disabled]="page <= 1 || busy()"
+          (click)="goto(page - 1)"
+        >
+          ‹
+        </button>
+        @for (n of pageList(); track n) {
+          <button
+            class="refund-btn"
+            [class.primary]="n === page"
+            [disabled]="busy()"
+            (click)="goto(n)"
+          >
+            {{ n }}
+          </button>
+        }
+        <button
+          class="refund-btn icon"
+          aria-label="Next page"
+          [disabled]="page >= pages() || busy()"
+          (click)="goto(page + 1)"
+        >
+          ›
+        </button>
+      </div>
+    </footer>
+  </section>
+</section>

@@ -1,0 +1,56 @@
+{
+  "checkedAt": "2026-10-05T11:37:10.025Z",
+  "baseUrl": "http://localhost:8080",
+  "authenticated": false,
+  "note": "Availability checks only. A 401 proves authentication is required; it does not validate an authenticated flow.",
+  "checks": [
+    {
+      "method": "GET",
+      "route": "/actuator/health",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "route": "/api/v1/promotions/active?page=1&size=1",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "route": "/api/notifications/unread-count",
+      "status": 401
+    },
+    {
+      "method": "GET",
+      "route": "/api/v1/admin/session",
+      "status": 404
+    },
+    {
+      "method": "GET",
+      "route": "/openapi/auth-service",
+      "status": 200,
+      "documentedPaths": 55
+    },
+    {
+      "method": "GET",
+      "route": "/openapi/catalog-service",
+      "status": 504
+    },
+    {
+      "method": "GET",
+      "route": "/openapi/order-service",
+      "status": 200,
+      "documentedPaths": 40
+    },
+    {
+      "method": "GET",
+      "route": "/openapi/payment-service",
+      "status": 200,
+      "documentedPaths": 17
+    },
+    {
+      "method": "GET",
+      "route": "/openapi/admin-service",
+      "status": 404
+    }
+  ]
+}

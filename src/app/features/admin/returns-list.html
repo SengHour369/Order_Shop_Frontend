@@ -1,0 +1,372 @@
+<section class="reference-page">
+  <header class="adm-page-head">
+    <div>
+      <h2>Returns Management</h2>
+      <p>Manage customer return requests and refunds</p>
+      <div class="adm-crumbs">
+        <a routerLink="/admin">Dashboard</a
+        ><span>›</span>Returns<span>›</span>Return Requests
+      </div>
+    </div>
+    <div class="adm-head-actions">
+      <button class="adm-btn" (click)="exportRows()">
+        <app-icon name="download" />Export</button
+      ><button class="adm-btn" (click)="filtersOpen = !filtersOpen">
+        More ⌄</button
+      ><button class="adm-btn adm-primary" (click)="creating.set(!creating())">
+        ＋ New Return
+      </button>
+    </div>
+  </header>
+  <div class="reference-stats five">
+    @for (stat of stats(); track stat.label) {
+      <article class="adm-panel">
+        <span class="stat-icon" [class]="'stat-icon ' + stat.tone"
+          ><app-icon [name]="stat.icon"
+        /></span>
+        <div>
+          <span>{{ stat.label }}</span
+          ><strong>{{ stat.value }}</strong
+          ><small>{{ stat.note }}</small>
+        </div>
+      </article>
+    }
+  </div>
+  @if (creating()) {
+    <div class="adm-page-head">
+      <div>
+        <h2>Create Return</h2>
+        <div class="adm-crumbs">
+          <a routerLink="/admin">Dashboard</a>
+          <span>›</span>
+          <a routerLink="/admin/returns">Returns</a>
+          <span>›</span>
+          <span>Create Return</span>
+        </div>
+      </div>
+      <div class="adm-head-actions">
+        <button class="adm-btn" type="button" (click)="creating.set(false)">
+          Cancel
+        </button>
+        <button
+          class="adm-btn adm-primary"
+          type="submit"
+          form="return-form"
+          [disabled]="busy() || !found()"
+        >
+          Request return
+        </button>
+      </div>
+    </div>
+    <form id="return-form" class="adm-cols-2" (ngSubmit)="submitReturn()">
+      <article class="adm-panel">
+        <div class="adm-section-title">
+          <div>
+            <h3>Return Information</h3>
+            <p>
+              Find the order, then confirm the product, type, reason, and
+              amount.
+            </p>
+          </div>
+        </div>
+        <div class="adm-form full">
+          <label>
+            Order number
+            <span class="adm-req">*</span>
+            <input
+              name="orderNumber"
+              [(ngModel)]="orderNumber"
+              placeholder="Order number"
+              required
+            />
+          </label>
+          <div class="adm-actions">
+            <button class="adm-btn" type="button" (click)="lookupOrder()">
+              Find order
+            </button>
+          </div>
+          @if (lookupError()) {
+            <p class="adm-badge off">{{ lookupError() }}</p>
+          }
+          @if (found(); as order) {
+            <p>
+              Order {{ text(field(order, "order_number")) }} · customer
+              {{ text(field(order, "customer_id")) }}
+            </p>
+            <label>
+              Line
+              <select
+                name="line"
+                [(ngModel)]="lineIndex"
+                (ngModelChange)="applyLine()"
+              >
+                <option [ngValue]="-1">Select a line</option>
+                @for (item of lines(); track $index) {
+                  <option [ngValue]="$index">
+                    {{ text(item["product_name"]) }} · SKU
+                    {{ text(field(item, "product_sku_id")) }} · qty
+                    {{ text(field(item, "quantity")) }} ·
+                    {{ usd(field(item, "total_price")) }}
+                  </option>
+                }
+              </select>
+            </label>
+            <label>
+              Product id
+              <span class="adm-req">*</span>
+              <input
+                name="product"
+                type="number"
+                [(ngModel)]="productId"
+                readonly
+                required
+              />
+            </label>
+            <p class="adm-help">
+              The product is selected from the order's catalog record.
+            </p>
+            <label>
+              Type
+              <span class="adm-req">*</span>
+              <select name="type" [(ngModel)]="returnType">
+                <option value="REFUND">REFUND</option>
+                <option value="EXCHANGE">EXCHANGE</option>
+                <option value="RETURN">RETURN</option>
+              </select>
+            </label>
+            <label>
+              Reason
+              <textarea
+                name="reason"
+                rows="4"
+                [(ngModel)]="reason"
+                placeholder="Why is this item being returned?"
+              ></textarea>
+            </label>
+            <label>
+              Amount (USD)
+              <span class="adm-req">*</span>
+              <input
+                name="amount"
+                type="number"
+                min="0.01"
+                step="0.01"
+                [(ngModel)]="amount"
+                required
+              />
+            </label>
+          }
+        </div>
+      </article>
+      <aside class="adm-panel adm-preview">
+        <h3>{{ returnType }}</h3>
+        <p>{{ reason || "Reason appears here as you type." }}</p>
+        <p>{{ usd(amount) }}</p>
+      </aside>
+    </form>
+  }
+
+  <app-status [busy]="busy()" [error]="error()" [message]="message()" />
+  <section class="adm-panel reference-table">
+    <div class="reference-filters">
+      <input
+        aria-label="Search returns"
+        [(ngModel)]="query"
+        placeholder="Search by return ID, order number, customer name..."
+        (keyup.enter)="page = 1; load()"
+      /><select
+        aria-label="Return status"
+        [ngModel]="status"
+        (ngModelChange)="setStatus($event)"
+      >
+        <option value="">All Status</option>
+        @for (s of returnStatuses; track s) {
+          <option [value]="s">{{ pretty(s) }}</option>
+        }</select
+      ><select aria-label="Payment method on this page" [(ngModel)]="method">
+        <option value="">All Payment Methods</option>
+        <option value="CARD">Card</option>
+        <option value="BAKONG">Bakong</option>
+        <option value="CASH">Cash</option></select
+      ><button class="adm-btn" (click)="filtersOpen = !filtersOpen">
+        <app-icon name="calendar" />{{ from || "Start date" }} –
+        {{ to || "End date" }}</button
+      ><button class="adm-btn blue" (click)="filtersOpen = !filtersOpen">
+        <app-icon name="filter" />Filters
+      </button>
+    </div>
+    @if (filtersOpen) {
+      <div class="reference-filters">
+        <label>From<input type="date" [(ngModel)]="from" /></label
+        ><label>To<input type="date" [(ngModel)]="to" /></label
+        ><label
+          >Return type<select [(ngModel)]="typeFilter">
+            <option value="">All types</option>
+            <option value="REFUND">Refund</option>
+            <option value="EXCHANGE">Exchange</option>
+          </select></label
+        ><button class="adm-btn adm-primary" (click)="page = 1; load()">
+          Apply filters</button
+        ><button
+          class="adm-btn"
+          (click)="
+            clearClient();
+            status = '';
+            from = '';
+            to = '';
+            method = '';
+            page = 1;
+            load()
+          "
+        >
+          Clear
+        </button>
+      </div>
+    }
+    <div class="adm-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>
+              <input
+                type="checkbox"
+                aria-label="Select visible returns"
+                (change)="selectAll($any($event.target).checked)"
+              />
+            </th>
+            <th>RETURN ID</th>
+            <th>ORDER #</th>
+            <th>CUSTOMER</th>
+            <th>PRODUCTS</th>
+            <th>REFUND AMOUNT</th>
+            <th>STATUS</th>
+            <th>REQUEST DATE</th>
+            <th>PROCESSED DATE</th>
+            <th>ACTION</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of visible(); track row["return_id"]) {
+            <tr>
+              <td>
+                <input
+                  type="checkbox"
+                  [checked]="selected.has('' + row['return_id'])"
+                  (change)="
+                    selectRow(
+                      '' + row['return_id'],
+                      $any($event.target).checked
+                    )
+                  "
+                  [attr.aria-label]="'Select ' + row['return_id']"
+                />
+              </td>
+              <td>{{ text(row["return_id"]) }}</td>
+              <td>
+                <a [routerLink]="['/admin/returns', row['return_id']]">{{
+                  text(row["order_no"])
+                }}</a>
+              </td>
+              <td>
+                <div class="customer-cell">
+                  <span class="customer-avatar">{{
+                    customerName(row).slice(0, 1)
+                  }}</span>
+                  <div>
+                    <strong>{{ customerName(row) }}</strong
+                    ><small>{{ text($any(row["customer"])?.email) }}</small>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div class="product-thumbs">
+                  @for (product of productsOf(row).slice(0, 1); track $index) {
+                    @if (product["image_url"]) {
+                      <img
+                        appProductImage
+                        [src]="product['image_url']"
+                        [alt]="text(product['product_name'])"
+                      />
+                    } @else {
+                      <app-icon name="box" />
+                    }
+                  }
+                  @if (productsOf(row).length > 1) {
+                    <span>+{{ productsOf(row).length - 1 }}</span>
+                  }
+                </div>
+              </td>
+              <td>{{ usd(row["amount"]) }}</td>
+              <td>
+                <span
+                  class="reference-badge"
+                  [class]="'reference-badge ' + returnTone(row)"
+                  >{{ pretty(row["status"]) }}</span
+                >
+              </td>
+              <td class="muted">{{ when(row["requested_at"]) }}</td>
+              <td class="muted">
+                {{
+                  when(field(row, "completed_at", "approved_at", "rejected_at"))
+                }}
+              </td>
+              <td>
+                <div class="adm-actions">
+                  <a
+                    class="adm-btn icon"
+                    [routerLink]="['/admin/returns', row['return_id']]"
+                    aria-label="View return"
+                    ><app-icon name="eye" /></a
+                  ><button
+                    class="adm-btn icon"
+                    (click)="
+                      selectRow('' + row['return_id'], true); exportRows()
+                    "
+                    aria-label="Export return"
+                  >
+                    ⋯
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="10">
+                {{ busy() ? "Loading returns..." : "No matching returns." }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <footer class="adm-pager">
+      <span>{{ range() }}</span
+      ><span class="adm-pages"
+        ><button
+          class="adm-btn"
+          (click)="goto(page - 1)"
+          [disabled]="page <= 1 || busy()"
+        >
+          ‹
+        </button>
+        @for (n of pageList(); track n) {
+          <button
+            class="adm-btn"
+            [class.adm-primary]="n === page"
+            (click)="goto(n)"
+            [disabled]="busy()"
+          >
+            {{ n }}
+          </button>
+        }
+        <button
+          class="adm-btn"
+          (click)="goto(page + 1)"
+          [disabled]="page >= pages() || busy()"
+        >
+          ›
+        </button></span
+      >
+    </footer>
+  </section>
+</section>

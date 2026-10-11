@@ -1,0 +1,353 @@
+:host {
+  display: block;
+}
+.dashboard-metrics {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.metric {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  text-decoration: none;
+  color: inherit;
+  min-height: 115px;
+}
+.metric-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.blue {
+  color: #2563eb;
+  background: #eaf0ff;
+}
+.green {
+  color: #1caa75;
+  background: #e6f8ef;
+}
+.purple {
+  color: #8a50d4;
+  background: #f1e9fd;
+}
+.amber {
+  color: #d69b26;
+  background: #fff5dd;
+}
+.rose {
+  color: #dc5878;
+  background: #ffeaf0;
+}
+.metric div > span,
+.metric small {
+  display: block;
+  font-size: 11px;
+  color: #6b7280;
+}
+.metric strong {
+  display: block;
+  font-size: 22px;
+  line-height: 1.4;
+  margin: 7px 0;
+  overflow-wrap: anywhere;
+}
+.metric:first-child strong {
+  font-size: 19px;
+}
+.metric small {
+  font-size: 10px;
+}
+.dashboard-period {
+  font-size: 11px;
+  color: #64748b;
+  padding: 9px;
+  border: 1px solid #e8ecf3;
+  border-radius: 5px;
+  background: #fff;
+}
+.dashboard-main-grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr 1.1fr;
+  gap: 14px;
+}
+.dashboard-main-grid > .adm-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.adm-section-title {
+  margin-bottom: 15px;
+  gap: 10px;
+}
+.adm-section-title h3 {
+  margin: 0;
+}
+.adm-section-title a,
+.subtle {
+  font-size: 10px;
+}
+.adm-section-title select {
+  max-width: 115px;
+  padding: 5px;
+  font-size: 11px;
+}
+.sales-total {
+  font-size: 23px;
+}
+.sales-panel > p {
+  font-size: 10px;
+  color: #7d8594;
+  margin: 6px 0 0;
+}
+.sales-plot {
+  width: 100%;
+  height: 190px;
+  margin-top: 15px;
+}
+.month-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 8px;
+  color: #788294;
+  gap: 2px;
+}
+.chart-values {
+  font-size: 10px;
+  margin: 12px 0;
+  color: #64748b;
+}
+.chart-values summary {
+  cursor: pointer;
+}
+.panel-footer {
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid #f0f2f6;
+  font-size: 10px;
+  display: flex;
+  justify-content: space-between;
+  text-decoration: none;
+  color: #2563eb;
+}
+.sales-panel .panel-footer {
+  margin-top: 12px;
+}
+.order-chart {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 25px 0;
+}
+.order-donut {
+  width: 145px;
+  height: 145px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.order-donut > div {
+  width: 105px;
+  height: 105px;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+.order-donut strong {
+  font-size: 25px;
+}
+.order-donut span {
+  font-size: 10px;
+  color: #7b8494;
+}
+.chart-legend {
+  flex: 1;
+  min-width: 110px;
+}
+.chart-legend > div {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10px;
+  margin: 11px 0;
+}
+.chart-legend i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.chart-legend b {
+  margin-left: auto;
+  font-weight: 500;
+}
+.recent-order {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 13px 0;
+  border-bottom: 1px solid #f5f6f9;
+  color: inherit;
+  text-decoration: none;
+}
+.recent-order > div {
+  flex: 1;
+  min-width: 0;
+}
+.recent-order b {
+  display: block;
+  font-size: 10px;
+  overflow-wrap: anywhere;
+}
+.recent-order small {
+  font-size: 9px;
+  color: #788294;
+  display: block;
+  margin-top: 4px;
+}
+.recent-order .adm-badge {
+  font-size: 8px;
+  padding: 3px 5px;
+}
+.order-mini-icon {
+  background: #f0f4fc;
+  color: #657796;
+  border-radius: 50%;
+  width: 27px;
+  height: 27px;
+  display: grid;
+  place-items: center;
+}
+.order-mini-icon app-icon {
+  width: 14px;
+  height: 14px;
+}
+.dashboard-bottom-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 14px;
+  margin-top: 14px;
+}
+.dashboard-bottom-grid > .adm-panel {
+  display: flex;
+  flex-direction: column;
+}
+.weekly-chart {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+  height: 185px;
+  padding-top: 12px;
+}
+.weekly-chart > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  font-size: 10px;
+  color: #748095;
+}
+.weekly-chart i {
+  width: 65%;
+  min-height: 2px;
+  background: #83a6f4;
+  border-radius: 4px 4px 0 0;
+}
+.weekly-chart b {
+  font-weight: 500;
+}
+.inventory-summary > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 17px 0;
+  border-bottom: 1px solid #f3f5f8;
+  font-size: 12px;
+  color: #64748b;
+}
+.inventory-summary strong {
+  font-size: 20px;
+  color: #172338;
+}
+.inventory-summary {
+  margin-bottom: 15px;
+}
+.dashboard-actions a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 0;
+  text-decoration: none;
+  font-size: 12px;
+  border-bottom: 1px solid #f3f5f8;
+  color: #475569;
+}
+.dashboard-actions a span {
+  margin-left: auto;
+  color: #2563eb;
+}
+.dashboard-actions app-icon {
+  color: #2563eb;
+}
+.dashboard-empty {
+  padding: 55px 12px;
+  text-align: center;
+  color: #8690a0;
+  font-size: 12px;
+}
+@media (max-width: 1250px) {
+  .dashboard-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .dashboard-main-grid {
+    grid-template-columns: 1.2fr 1fr;
+  }
+  .recent-panel {
+    grid-column: 1/-1;
+  }
+  .recent-order {
+    padding: 10px;
+  }
+  .dashboard-bottom-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 700px) {
+  .dashboard-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .dashboard-main-grid,
+  .dashboard-bottom-grid {
+    grid-template-columns: 1fr;
+  }
+  .recent-panel {
+    grid-column: auto;
+  }
+  .dashboard-period {
+    display: none;
+  }
+  .metric {
+    padding: 12px;
+    gap: 8px;
+  }
+  .metric strong {
+    font-size: 20px;
+  }
+  .metric:first-child strong {
+    font-size: 16px;
+  }
+  .metric-icon {
+    width: 28px;
+    height: 28px;
+  }
+}

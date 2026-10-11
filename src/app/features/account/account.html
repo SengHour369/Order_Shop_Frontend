@@ -1,0 +1,270 @@
+<section class="auth-layout customer-auth">
+  <div class="auth-story">
+    <span class="eyebrow">{{
+      mode === "Sign in"
+        ? "WELCOME BACK"
+        : mode === "Register"
+          ? "JOIN E-SHOP"
+          : "YOUR ACCOUNT"
+    }}</span>
+    <h1>
+      {{
+        mode === "Sign in"
+          ? "Welcome Back"
+          : mode === "Register"
+            ? "Shop Smarter"
+            : "Keep Your Account"
+      }}<br /><span>{{
+        mode === "Sign in"
+          ? "to E-Shop"
+          : mode === "Register"
+            ? "Live Better"
+            : "Safe & Secure"
+      }}</span>
+    </h1>
+    <p>
+      {{
+        mode === "Sign in"
+          ? "Sign in to continue shopping your favorite products."
+          : mode === "Register"
+            ? "Create an account to save your favorites, manage orders, and check out easily."
+            : "A few simple steps to get you back to shopping."
+      }}
+    </p>
+    <ul class="auth-benefits">
+      <li>
+        <app-icon name="gift" /><span
+          ><strong>Discover More</strong
+          ><small>Explore products for your everyday</small></span
+        >
+      </li>
+      <li>
+        <app-icon name="shield" /><span
+          ><strong>Your Account, Protected</strong
+          ><small>Keep your information safe</small></span
+        >
+      </li>
+      <li>
+        <app-icon name="box" /><span
+          ><strong>Track Your Orders</strong
+          ><small>All your purchases in one place</small></span
+        >
+      </li>
+    </ul>
+    <img src="/images/eshop-scene.svg" alt="E-Shop shopping essentials" />
+  </div>
+  <div class="panel auth-form">
+    <a class="auth-brand" routerLink="/"
+      ><span class="brand-bag"><app-icon name="check" /></span>E-Shop</a
+    >
+    @if (auth.session() && mode === "Sign in") {
+      <h2>Hello, {{ auth.session()?.username }}</h2>
+      <p>{{ auth.session()?.email }}</p>
+      <button (click)="logout()" [disabled]="busy()">Sign out</button>
+    } @else {
+      <h2>
+        {{
+          mode === "Register"
+            ? "Create Your Account"
+            : mode === "Forgot password"
+              ? "Forgot Password?"
+              : mode === "Reset password"
+                ? "Reset Your Password"
+                : mode === "Verify"
+                  ? "Verify Your Email"
+                  : "Sign In"
+        }}
+      </h2>
+      <p class="auth-intro">
+        {{
+          mode === "Sign in"
+            ? "Welcome back! Please enter your details."
+            : mode === "Register"
+              ? "Fill in your details to get started."
+              : mode === "Forgot password"
+                ? "Enter your email and we’ll send you reset instructions."
+                : mode === "Verify"
+                  ? "Enter the verification code sent to your email."
+                  : "Enter and confirm your new password."
+        }}
+      </p>
+      <form #form="ngForm" (ngSubmit)="submit()">
+        @if (mode === "Register") {
+          <label
+            >Full Name <b>*</b
+            ><input
+              name="fullName"
+              [(ngModel)]="fullName"
+              required
+              autocomplete="name"
+              placeholder="Your full name"
+          /></label>
+        }
+        @if (mode === "Sign in" || mode === "Register") {
+          <label
+            >{{ mode === "Register" ? "Username" : "Email or Username" }}
+            <b>*</b
+            ><input
+              name="username"
+              [(ngModel)]="username"
+              required
+              autocomplete="username"
+              placeholder="Enter your username"
+          /></label>
+        }
+        @if (
+          mode === "Register" || mode === "Verify" || mode === "Forgot password"
+        ) {
+          <label
+            >Email Address <b>*</b
+            ><input
+              type="email"
+              name="email"
+              [(ngModel)]="email"
+              required
+              email
+              autocomplete="email"
+              placeholder="you@example.com"
+          /></label>
+        }
+        @if (mode === "Register") {
+          <label
+            >Phone Number <b>*</b
+            ><input
+              type="tel"
+              autocomplete="tel"
+              name="phone"
+              [(ngModel)]="phone"
+              required
+              placeholder="+855 12 345 678"
+          /></label>
+        }
+        @if (
+          mode === "Sign in" || mode === "Register" || mode === "Reset password"
+        ) {
+          <label
+            >{{ mode === "Reset password" ? "New Password" : "Password" }}
+            <b>*</b
+            ><span class="password-field"
+              ><input
+                [type]="showPassword ? 'text' : 'password'"
+                name="password"
+                [(ngModel)]="password"
+                required
+                minlength="6"
+                [autocomplete]="
+                  mode === 'Sign in' ? 'current-password' : 'new-password'
+                "
+                placeholder="Enter your password" /><button
+                type="button"
+                (click)="showPassword = !showPassword"
+                [attr.aria-label]="
+                  showPassword ? 'Hide password' : 'Show password'
+                "
+                [attr.aria-pressed]="showPassword"
+              >
+                <app-icon name="eye" /></button></span
+          ></label>
+        }
+        @if (mode === "Register" || mode === "Reset password") {
+          <label
+            >Confirm Password <b>*</b
+            ><input
+              [type]="showPassword ? 'text' : 'password'"
+              name="confirmation"
+              [(ngModel)]="confirmation"
+              required
+              autocomplete="new-password"
+              placeholder="Confirm your password"
+          /></label>
+          @if (confirmation && confirmation !== password) {
+            <p class="field-error" role="status">
+              Your passwords do not match.
+            </p>
+          }
+          <p class="password-help">
+            <app-icon name="shield" />Use at least 6 characters. A unique
+            password with letters, numbers, and symbols is recommended.
+          </p>
+        }
+        @if (mode === "Verify") {
+          <label
+            >Verification Code <b>*</b
+            ><input
+              autocomplete="one-time-code"
+              name="code"
+              [(ngModel)]="code"
+              required
+              placeholder="Enter your verification code"
+          /></label>
+        }
+        @if (mode === "Reset password") {
+          <label
+            >Reset Token <b>*</b
+            ><input
+              name="token"
+              [(ngModel)]="token"
+              required
+              placeholder="Paste the token from your email"
+          /></label>
+        }
+        @if (mode === "Sign in") {
+          <button
+            class="text-button forgot-link"
+            type="button"
+            (click)="changeMode('Forgot password')"
+          >
+            Forgot password?
+          </button>
+        }
+        <button
+          class="primary full"
+          [disabled]="
+            form.invalid ||
+            busy() ||
+            ((mode === 'Register' || mode === 'Reset password') &&
+              password !== confirmation)
+          "
+        >
+          {{
+            busy()
+              ? "Please wait…"
+              : mode === "Register"
+                ? "Create Account"
+                : mode === "Forgot password"
+                  ? "Send Reset Instructions"
+                  : mode === "Reset password"
+                    ? "Reset Password"
+                    : mode === "Verify"
+                      ? "Verify Email"
+                      : "Sign In"
+          }}
+        </button>
+      </form>
+      @if (mode === "Sign in") {
+        <p class="auth-switch">
+          Don’t have an account?
+          <button class="text-button" (click)="changeMode('Register')">
+            Register now
+          </button>
+        </p>
+      } @else {
+        <p class="auth-switch">
+          <button class="text-button" (click)="changeMode('Sign in')">
+            ← Back to Sign In
+          </button>
+        </p>
+      }
+      @if (mode === "Verify") {
+        <button
+          class="text-button"
+          (click)="resend()"
+          [disabled]="!email || busy()"
+        >
+          Resend verification code
+        </button>
+      }
+    }
+    <app-status [busy]="busy()" [error]="error()" [message]="message()" />
+  </div>
+</section>

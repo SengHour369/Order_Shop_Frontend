@@ -1,0 +1,691 @@
+<section class="reference-page">
+  <header class="adm-page-head">
+    <div>
+      <h2>{{ title() }}</h2>
+      <div class="adm-crumbs">
+        <a routerLink="/admin">Dashboard</a><span>›</span
+        ><a routerLink="/admin/inventory">Inventory</a><span>›</span
+        >{{ action ? "Create " + title() : "All Inventory" }}
+      </div>
+    </div>
+    @if (!action) {
+      <div class="adm-head-actions">
+        <button class="adm-btn" disabled title="Bulk import is not available">
+          Import
+        </button>
+        <button class="adm-btn" (click)="export()">
+          <app-icon name="download" />Export
+        </button>
+        <a class="adm-btn adm-primary" routerLink="/admin/inventory/stock-in"
+          >＋ Stock In</a
+        >
+        <a class="adm-btn" routerLink="/admin/inventory/stock-out">Stock Out</a>
+      </div>
+    }
+  </header>
+  <app-status [busy]="busy()" [error]="error()" [message]="message()" />
+  @if (!action) {
+    <div class="reference-stats">
+      <article class="adm-panel">
+        <span class="stat-icon blue"><app-icon name="box" /></span>
+        <div>
+          Total Stock<strong>{{ summary()?.total_stock ?? "—" }}</strong
+          ><small>Units across inventory</small>
+        </div>
+      </article>
+      <article class="adm-panel">
+        <span class="stat-icon green"><app-icon name="bag" /></span>
+        <div>
+          Total Products<strong>{{ summary()?.total_products ?? "—" }}</strong
+          ><small>Inventory summary</small>
+        </div>
+      </article>
+      <article class="adm-panel">
+        <span class="stat-icon amber"><app-icon name="bell" /></span>
+        <div>
+          Low Stock<strong>{{ summary()?.low_stock ?? "—" }}</strong
+          ><small>Inventory summary</small>
+        </div>
+      </article>
+      <article class="adm-panel">
+        <span class="stat-icon red"><app-icon name="close" /></span>
+        <div>
+          Out of Stock<strong>{{ summary()?.out_of_stock ?? "—" }}</strong
+          ><small>Inventory summary</small>
+        </div>
+      </article>
+    </div>
+    <div class="ops-work" [class.no-detail]="!selected()">
+      <article class="adm-panel reference-table">
+        <form class="reference-filters" (ngSubmit)="filter()">
+          <input
+            name="search"
+            [(ngModel)]="search"
+            aria-label="Search inventory"
+            placeholder="Search product name or SKU..."
+          />
+          <input
+            name="warehouse"
+            [(ngModel)]="warehouse"
+            aria-label="Warehouse filter"
+            placeholder="Warehouse location"
+          />
+          <select name="status" [(ngModel)]="status" aria-label="Stock status">
+            <option value="">All Status</option>
+            <option value="IN_STOCK">In Stock</option>
+            <option value="LOW_STOCK">Low Stock</option>
+            <option value="OUT_OF_STOCK">Out of Stock</option>
+          </select>
+          <button class="adm-btn adm-primary" [disabled]="busy()">Filter</button
+          ><button type="button" class="adm-btn" (click)="reset()">
+            Reset
+          </button>
+        </form>
+        <nav class="reference-tabs">
+          <button [class.active]="!status" (click)="filter('')">All</button
+          ><button
+            [class.active]="status === 'IN_STOCK'"
+            (click)="filter('IN_STOCK')"
+          >
+            In Stock</button
+          ><button
+            [class.active]="status === 'LOW_STOCK'"
+            (click)="filter('LOW_STOCK')"
+          >
+            Low Stock</button
+          ><button
+            [class.active]="status === 'OUT_OF_STOCK'"
+            (click)="filter('OUT_OF_STOCK')"
+          >
+            Out of Stock
+          </button>
+        </nav>
+        <div class="adm-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Product</th>
+                <th>SKU</th>
+                <th>Warehouse</th>
+                <th>Stock</th>
+                <th>Reserved</th>
+                <th>Available</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of rows(); track row["id"]; let index = $index) {
+                <tr [class.selected-row]="selected()?.['id'] === row['id']">
+                  <td>{{ (page - 1) * size + index + 1 }}</td>
+                  <td>
+                    <button class="text-link" (click)="inspect(row)">
+                      <b>{{ text(row["product_name"]) }}</b
+                      ><small>{{ text(row["description"]) }}</small>
+                    </button>
+                  </td>
+                  <td>{{ text(row["sku"]) }}</td>
+                  <td>{{ text(row["warehouse_location"]) }}</td>
+                  <td>{{ stock(row) }}</td>
+                  <td>{{ text(row["reserved_qty"]) }}</td>
+                  <td>{{ text(row["available_qty"]) }}</td>
+                  <td>
+                    <span
+                      class="reference-badge"
+                      [class.green]="row['stock_status'] === 'IN_STOCK'"
+                      [class.red]="row['stock_status'] !== 'IN_STOCK'"
+                      >{{
+                        text(row["stock_status"]).replaceAll("_", " ")
+                      }}</span
+                    >
+                  </td>
+                  <td>
+                    <button
+                      class="adm-btn icon"
+                      aria-label="View inventory"
+                      (click)="inspect(row)"
+                    >
+                      <app-icon name="eye" /></button
+                    ><a
+                      class="adm-btn icon"
+                      aria-label="Adjust stock"
+                      routerLink="/admin/inventory/adjustments"
+                      [queryParams]="{ id: row['id'] }"
+                      ><app-icon name="edit"
+                    /></a>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="9">
+                    {{
+                      busy()
+                        ? "Loading inventory..."
+                        : "No inventory records match these filters."
+                    }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="adm-pager">
+          <span>{{ total }} items · Page {{ page }} of {{ pages }}</span>
+          <div class="adm-actions">
+            <button
+              class="adm-btn"
+              [disabled]="page <= 1 || busy()"
+              (click)="go(-1)"
+            >
+              ‹</button
+            ><button class="adm-btn adm-primary">{{ page }}</button
+            ><button
+              class="adm-btn"
+              [disabled]="page >= pages || busy()"
+              (click)="go(1)"
+            >
+              ›</button
+            ><select
+              aria-label="Rows per page"
+              [(ngModel)]="size"
+              (ngModelChange)="filter()"
+            >
+              <option [ngValue]="10">10 / page</option>
+              <option [ngValue]="20">20 / page</option>
+              <option [ngValue]="50">50 / page</option>
+            </select>
+          </div>
+        </div>
+      </article>
+      @if (selected(); as row) {
+        <aside class="adm-panel ops-detail">
+          <div class="adm-section-title">
+            <h3>Product Inventory Detail</h3>
+            <button
+              class="adm-btn icon"
+              aria-label="Close inventory details"
+              (click)="selected.set(null)"
+            >
+              ×
+            </button>
+          </div>
+          <div class="ops-profile">
+            <img
+              appProductImage
+              [src]="row['image_url'] || '/images/product-placeholder.svg'"
+              alt="Product"
+            />
+            <div>
+              <h3>{{ text(row["product_name"]) }}</h3>
+              <p>SKU: {{ text(row["sku"]) }}</p>
+              <a [routerLink]="['/admin/products/view', row['product_id']]"
+                >View product</a
+              >
+            </div>
+          </div>
+          <nav class="reference-tabs">
+            @for (
+              tab of ["Stock Detail", "Variants", "Movement History"];
+              track tab
+            ) {
+              <button
+                [class.active]="detailTab === tab"
+                (click)="detailTab = tab"
+              >
+                {{ tab }}
+              </button>
+            }
+          </nav>
+          @if (detailTab === "Stock Detail") {
+            <div class="ops-metrics">
+              <div>
+                Total Stock<strong>{{ stock(row) }}</strong>
+              </div>
+              <div>
+                Reserved Stock<strong>{{ text(row["reserved_qty"]) }}</strong>
+              </div>
+              <div>
+                Available Stock<strong>{{ text(row["available_qty"]) }}</strong>
+              </div>
+              <div>
+                Low Stock Threshold<strong>{{
+                  text(row["low_stock_threshold"])
+                }}</strong>
+              </div>
+            </div>
+            <dl class="reference-info">
+              <dt>Warehouse</dt>
+              <dd>{{ text(row["warehouse_location"]) }}</dd>
+              <dt>Last Stock In</dt>
+              <dd>{{ when(row["last_restocked_at"]) }}</dd>
+              <dt>Last Updated</dt>
+              <dd>{{ when(row["updated_at"]) }}</dd>
+              <dt>Status</dt>
+              <dd>{{ text(row["stock_status"]).replaceAll("_", " ") }}</dd>
+            </dl>
+          } @else if (detailTab === "Variants") {
+            <p>View all variants and attributes for this product.</p>
+            <a
+              class="adm-btn"
+              [routerLink]="['/admin/products/view', row['product_id']]"
+              >View Product Variants</a
+            >
+          } @else {
+            <div class="ops-history">
+              @for (move of history(); track $index) {
+                <article>
+                  <b>{{
+                    text(field(move, "movement_type", "movementType"))
+                  }}</b>
+                  <p>
+                    {{ text(field(move, "quantity_change", "quantityChange")) }}
+                    units · {{ when(field(move, "created_at", "createdAt")) }}
+                  </p>
+                  <small>{{ text(field(move, "remark", "reason")) }}</small>
+                </article>
+              } @empty {
+                <p>No movement history found.</p>
+              }
+            </div>
+          }
+          <div class="adm-actions">
+            <a
+              class="adm-btn"
+              routerLink="/admin/inventory/adjustments"
+              [queryParams]="{ id: row['id'] }"
+              >Adjust Stock</a
+            ><a
+              class="adm-btn adm-primary"
+              routerLink="/admin/inventory/stock-in"
+              [queryParams]="{ id: row['id'] }"
+              >Stock In</a
+            ><a
+              class="adm-btn danger"
+              routerLink="/admin/inventory/stock-out"
+              [queryParams]="{ id: row['id'] }"
+              >Stock Out</a
+            >
+          </div>
+        </aside>
+      }
+    </div>
+  } @else {
+    <nav class="ops-steps">
+      @for (
+        label of ["Basic Information", "Select Products", "Review", "Complete"];
+        track label;
+        let index = $index
+      ) {
+        <div [class.current]="step >= index + 1">
+          <span>{{ step > index + 1 ? "✓" : index + 1 }}</span>
+          <div>
+            <b>{{ label }}</b
+            ><small>{{
+              [
+                "Enter stock details",
+                "Choose products and quantities",
+                "Check information",
+                "Stock updated",
+              ][index]
+            }}</small>
+          </div>
+        </div>
+      }
+    </nav>
+    @if (step === 4) {
+      <article class="ops-success">
+        <span>✓</span>
+        <h2>{{ title() }} Completed Successfully!</h2>
+        <p>All {{ lines.length }} selected inventory records were updated.</p>
+        <button class="adm-btn" (click)="print()">Print</button
+        ><button class="adm-btn adm-primary" (click)="startAgain()">
+          ＋ Create Another {{ title() }}
+        </button>
+      </article>
+    }
+    @if (step === 1) {
+      <div class="ops-work">
+        <article class="adm-panel">
+          <h3>Basic Information</h3>
+          <p>Enter the details for this stock operation.</p>
+          <div class="ops-form-grid">
+            <label
+              >Reference No. *
+              <div class="ops-input-action">
+                <input [(ngModel)]="reference" /><button
+                  class="adm-btn"
+                  aria-label="Generate reference"
+                  (click)="regenerate()"
+                >
+                  ↻
+                </button>
+              </div></label
+            ><label
+              >Date & Time *<input
+                type="datetime-local"
+                [(ngModel)]="date" /></label
+            ><label
+              >Warehouse<input
+                disabled
+                value="Use each selected product’s location" /></label
+            ><label
+              >{{
+                action === "in"
+                  ? "Receiving Type"
+                  : action === "out"
+                    ? "Stock Out Type"
+                    : "Adjustment Type"
+              }}<select disabled>
+                <option>
+                  {{
+                    action === "in"
+                      ? "Restock"
+                      : action === "out"
+                        ? "Manual stock deduction"
+                        : "Quantity correction"
+                  }}
+                </option>
+              </select></label
+            ><label
+              >Reason *<input
+                [(ngModel)]="reason"
+                placeholder="Reason for this stock change" /></label
+            ><label
+              >Related Reference<input
+                disabled
+                placeholder="Not available" /></label
+            ><label class="full"
+              >Notes (Optional)<textarea
+                [(ngModel)]="notes"
+                maxlength="500"
+                rows="4"
+              ></textarea
+              ><small>{{ notes.length }}/500</small></label
+            >
+          </div>
+          <div class="ops-upload disabled">
+            <app-icon name="upload" /><b>Attachment</b
+            ><span>Attachments cannot be saved yet.</span>
+          </div>
+        </article>
+        <aside class="adm-panel ops-help">
+          <h3>Information</h3>
+          <h4>Reference and notes</h4>
+          <p>
+            Included in this review and printout. The current service saves
+            quantity movements only, not a stock document.
+          </p>
+          <h4>Warehouse</h4>
+          <p>
+            Stock changes apply to the location already assigned to each
+            product.
+          </p>
+          <h4>Quantities</h4>
+          <p>
+            {{
+              action === "adjust"
+                ? "Enter positive quantities to increase stock or negative quantities to decrease it."
+                : action === "out"
+                  ? "Enter the number of units to remove. Reserved units cannot be removed."
+                  : "Enter the number of units received."
+            }}
+          </p>
+          <h4>Costs and suppliers</h4>
+          <p>
+            Supplier, purchase order, invoice and unit cost records are not
+            available.
+          </p>
+        </aside>
+      </div>
+    } @else {
+      @if (step >= 3) {
+        <article class="adm-panel">
+          <div class="adm-section-title">
+            <h3>
+              {{
+                step === 4
+                  ? title() + " Information"
+                  : "Review " + title() + " Information"
+              }}
+            </h3>
+            @if (step === 3) {
+              <button class="adm-btn" [disabled]="busy()" (click)="step = 1">
+                Edit
+              </button>
+            }
+          </div>
+          <dl class="reference-info">
+            <dt>Reference No.</dt>
+            <dd>{{ reference }}</dd>
+            <dt>Date & Time</dt>
+            <dd>{{ when(date) }}</dd>
+            <dt>Reason</dt>
+            <dd>{{ reason }}</dd>
+            <dt>Notes</dt>
+            <dd>{{ notes || "—" }}</dd>
+          </dl>
+          <p class="muted">
+            Reference and notes are for this session’s review and printout.
+            Quantity movements are saved separately for each product.
+          </p>
+        </article>
+      }
+      <div class="ops-work" [class.no-detail]="step >= 3">
+        <article class="adm-panel reference-table">
+          <div class="ops-panel-head">
+            <h3>
+              {{ step === 2 ? "Select Products" : "Products" }} ({{
+                lines.length
+              }})
+            </h3>
+            @if (step === 2) {
+              <div class="adm-actions">
+                <button
+                  class="adm-btn"
+                  (click)="refreshLines()"
+                  [disabled]="busy()"
+                >
+                  Refresh Stock</button
+                ><button class="adm-btn" disabled>Scan Barcode</button
+                ><button class="adm-btn" (click)="picker = true">
+                  ＋ Add Products
+                </button>
+              </div>
+            }
+          </div>
+          <div class="adm-table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Product</th>
+                  <th>SKU</th>
+                  <th>Current Stock</th>
+                  <th>{{ title() }} Qty</th>
+                  <th>New Stock</th>
+                  <th>Unit Cost</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (line of lines; track line.row["id"]; let index = $index) {
+                  <tr>
+                    <td>{{ index + 1 }}</td>
+                    <td>
+                      <b>{{ text(line.row["product_name"]) }}</b
+                      ><small>{{ text(line.row["description"]) }}</small>
+                    </td>
+                    <td>{{ text(line.row["sku"]) }}</td>
+                    <td>{{ line.before }}</td>
+                    <td>
+                      @if (step === 2 && !line.saved) {
+                        <input
+                          type="number"
+                          [attr.aria-label]="'Quantity for ' + line.row['sku']"
+                          [(ngModel)]="line.quantity"
+                          [min]="action === 'adjust' ? null : 1"
+                          step="1"
+                        />
+                      } @else {
+                        {{ line.quantity }}
+                      }
+                    </td>
+                    <td>
+                      <b [class.ops-negative]="after(line) < 0">{{
+                        after(line)
+                      }}</b>
+                    </td>
+                    <td>—</td>
+                    <td>
+                      @if (line.saved) {
+                        <span class="reference-badge green">Saved</span>
+                      } @else if (step === 2) {
+                        <button
+                          class="adm-btn icon danger"
+                          [attr.aria-label]="'Remove ' + line.row['sku']"
+                          (click)="remove(index)"
+                        >
+                          <app-icon name="trash" />
+                        </button>
+                      }
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="8">Add products to begin.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="ops-total">
+            Total Products: <b>{{ lines.length }}</b> Total Quantity:
+            <b>{{ totalQuantity() }}</b> Total Cost: <b>Unavailable</b>
+          </div>
+        </article>
+        @if (step === 2) {
+          <aside class="adm-panel">
+            <h3>Selected Products ({{ lines.length }})</h3>
+            @for (line of lines; track line.row["id"]) {
+              <div class="ops-selected">
+                <app-icon name="box" />
+                <div>
+                  <b>{{ text(line.row["product_name"]) }}</b
+                  ><small>{{ text(line.row["sku"]) }}</small
+                  ><span>Qty: {{ line.quantity }}</span>
+                </div>
+              </div>
+            }
+            <div class="ops-total">
+              Total Quantity <b>{{ totalQuantity() }}</b>
+            </div>
+          </aside>
+        }
+      </div>
+    }
+    <footer class="ops-footer">
+      <a class="adm-btn" routerLink="/admin/inventory">{{
+        step === 4 ? "View Inventory" : "Cancel"
+      }}</a>
+      <div class="adm-actions">
+        @if (step > 1 && step < 4) {
+          <button class="adm-btn" [disabled]="busy()" (click)="step = step - 1">
+            ← Previous
+          </button>
+        }
+        @if (step < 3) {
+          <button
+            class="adm-btn adm-primary"
+            [disabled]="busy()"
+            (click)="next()"
+          >
+            Next: {{ step === 1 ? "Select Products" : "Review" }} →
+          </button>
+        } @else if (step === 3) {
+          <button
+            class="adm-btn adm-primary"
+            [disabled]="busy()"
+            (click)="confirm()"
+          >
+            Confirm {{ title() }}
+          </button>
+        } @else {
+          <button class="adm-btn adm-primary" (click)="startAgain()">
+            Create Another {{ title() }}
+          </button>
+        }
+      </div>
+    </footer>
+  }
+  @if (picker) {
+    <div class="ops-overlay">
+      <section
+        class="adm-panel ops-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Select inventory products"
+      >
+        <div class="adm-section-title">
+          <h3>Select Products</h3>
+          <button class="adm-btn" (click)="picker = false">Done</button>
+        </div>
+        <form class="reference-filters" (ngSubmit)="filter()">
+          <input
+            name="pickerSearch"
+            [(ngModel)]="search"
+            placeholder="Search product or SKU"
+          /><button class="adm-btn" [disabled]="busy()">Search</button>
+        </form>
+        <div class="adm-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Select</th>
+                <th>Product</th>
+                <th>SKU</th>
+                <th>Stock</th>
+                <th>Warehouse</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of rows(); track row["id"]) {
+                <tr>
+                  <td>
+                    <button
+                      class="adm-btn"
+                      [disabled]="contains(row)"
+                      (click)="add(row)"
+                    >
+                      {{ contains(row) ? "Selected" : "Add" }}
+                    </button>
+                  </td>
+                  <td>{{ text(row["product_name"]) }}</td>
+                  <td>{{ text(row["sku"]) }}</td>
+                  <td>{{ stock(row) }}</td>
+                  <td>{{ text(row["warehouse_location"]) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="adm-pager">
+          <button
+            class="adm-btn"
+            [disabled]="page <= 1 || busy()"
+            (click)="go(-1)"
+          >
+            Previous</button
+          ><span>{{ page }} / {{ pages }}</span
+          ><button
+            class="adm-btn"
+            [disabled]="page >= pages || busy()"
+            (click)="go(1)"
+          >
+            Next
+          </button>
+        </div>
+      </section>
+    </div>
+  }
+</section>

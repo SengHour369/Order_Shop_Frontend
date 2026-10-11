@@ -1,0 +1,1776 @@
+[
+  {
+    "method": "GET",
+    "path": "/api/v1/admin/monitor",
+    "source": "admin-service/src/main/java/com/example/eshop/admin/controller/AdminMonitorController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/admin/session",
+    "source": "admin-service/src/main/java/com/example/eshop/admin/controller/StaffSessionController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/admin/settings",
+    "source": "admin-service/src/main/java/com/example/eshop/admin/controller/StoreSettingsController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/admin/settings",
+    "source": "admin-service/src/main/java/com/example/eshop/admin/controller/StoreSettingsController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/ai/execute",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiController.java",
+    "clients": [
+      "src/app/features/assistant/assistant.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/ai/executions/{id}",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiController.java",
+    "clients": [
+      "src/app/features/assistant/assistant.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/gateway/routes",
+    "source": "api-gateway/src/main/java/com/example/eshop/gateway/controller/route/GatewayRouteController.java",
+    "clients": [],
+    "status": "Excluded: gateway infrastructure"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/gateway/routes",
+    "source": "api-gateway/src/main/java/com/example/eshop/gateway/controller/route/GatewayRouteController.java",
+    "clients": [],
+    "status": "Excluded: gateway infrastructure"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/gateway/routes/{id}",
+    "source": "api-gateway/src/main/java/com/example/eshop/gateway/controller/route/GatewayRouteController.java",
+    "clients": [],
+    "status": "Excluded: gateway infrastructure"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/gateway/routes/{id}",
+    "source": "api-gateway/src/main/java/com/example/eshop/gateway/controller/route/GatewayRouteController.java",
+    "clients": [],
+    "status": "Excluded: gateway infrastructure"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/gateway/routes/refresh",
+    "source": "api-gateway/src/main/java/com/example/eshop/gateway/controller/route/GatewayRouteController.java",
+    "clients": [],
+    "status": "Excluded: gateway infrastructure"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/addresses/user/{userId}",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/AddressController.java",
+    "clients": [
+      "src/app/features/addresses/addresses.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/addresses/user/{userId}/paged",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/AddressController.java",
+    "clients": [
+      "src/app/features/addresses/addresses.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/addresses/{id}",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/AddressController.java",
+    "clients": [
+      "src/app/features/addresses/addresses.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/addresses/user/{userId}",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/AddressController.java",
+    "clients": [
+      "src/app/features/addresses/addresses.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/addresses/{id}/user/{userId}",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/AddressController.java",
+    "clients": [
+      "src/app/features/addresses/addresses.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/addresses/{id}/user/{userId}",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/AddressController.java",
+    "clients": [
+      "src/app/features/addresses/addresses.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/functions/get/all",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/FunctionPermissionController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/functions/get/id",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/FunctionPermissionController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/functions/create",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/FunctionPermissionController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/functions/update",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/FunctionPermissionController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/functions/delete",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/FunctionPermissionController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/groups/create",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/GroupController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/groups/get/all",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/GroupController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/groups/get/{id}",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/GroupController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/groups/update/{id}",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/GroupController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/groups/delete/{id}",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/GroupController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/groups/activate/{id}",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/GroupController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/group-permissions/get/all",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/GroupPermissionController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/group-permissions/get/id",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/GroupPermissionController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/group-permissions/create",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/GroupPermissionController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/group-permissions/update",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/GroupPermissionController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/group-permissions/delete",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/GroupPermissionController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/internal/notifications/email",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/InternalNotificationController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/public/register",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/LoginController.java",
+    "clients": [
+      "src/app/features/account/account.page.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/public/verify",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/LoginController.java",
+    "clients": [
+      "src/app/core/auth/auth.service.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/public/resend",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/LoginController.java",
+    "clients": [
+      "src/app/features/account/account.page.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/public/email/username/login",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/LoginController.java",
+    "clients": [
+      "src/app/core/auth/auth.service.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/public/refresh",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/LoginController.java",
+    "clients": [
+      "src/app/core/auth/auth.service.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/public/logout",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/LoginController.java",
+    "clients": [
+      "src/app/core/auth/auth.service.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/public/forgot-password",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/LoginController.java",
+    "clients": [
+      "src/app/features/account/account.page.ts",
+      "src/app/features/account/security.page.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/public/reset-password",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/LoginController.java",
+    "clients": [
+      "src/app/features/account/account.page.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/public/reset-password-page",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/LoginController.java",
+    "clients": [],
+    "status": "Excluded: backend HTML page; Angular supplies reset form"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/public/check-user",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/LoginController.java",
+    "clients": [
+      "src/app/core/auth/auth.service.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/public/accounts/register",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/RegisterController.java",
+    "clients": [
+      "src/app/core/auth/auth.service.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/public/session/login",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/SessionController.java",
+    "clients": [],
+    "status": "Excluded: alternative cookie-session protocol; app uses bearer tokens"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/public/session/verify",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/SessionController.java",
+    "clients": [],
+    "status": "Excluded: alternative cookie-session protocol; app uses bearer tokens"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/public/session/refresh",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/SessionController.java",
+    "clients": [],
+    "status": "Excluded: alternative cookie-session protocol; app uses bearer tokens"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/public/session/logout",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/SessionController.java",
+    "clients": [],
+    "status": "Excluded: alternative cookie-session protocol; app uses bearer tokens"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/user/create",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/user/id",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/user/id/image",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserController.java",
+    "clients": [
+      "src/app/features/account/profile.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/user/id/user",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserController.java",
+    "clients": [
+      "src/app/features/account/profile.api.ts",
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/user/All",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/user/id/update",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserController.java",
+    "clients": [],
+    "status": "Blocked: backend @PathVariable id is missing from mapping"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/user/id/delete",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/user/count",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/user-groups/get/all",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserGroupController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/user-groups/get/id",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserGroupController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/user-groups/create",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserGroupController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/user-groups/update",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserGroupController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/user-groups/delete",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserGroupController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/user-permissions/get/all",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserPermissionController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/user-permissions/get/id",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserPermissionController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/user-permissions/create",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserPermissionController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/user-permissions/update",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserPermissionController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/user-permissions/delete",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserPermissionController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/ai/products/{id}",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/AiCatalogController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/ai/skus/{id}",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/AiCatalogController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "POST",
+    "path": "/internal/ai/promotions",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/AiCatalogController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/brand-logos/get/all",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/BrandLogoController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/brand-logos/id",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/BrandLogoController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/brand-logos/upload",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/BrandLogoController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/internal/catalog/checkouts/quote",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/CatalogCheckoutController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "POST",
+    "path": "/internal/catalog/checkouts",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/CatalogCheckoutController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "POST",
+    "path": "/internal/catalog/checkouts/{orderId}/confirm",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/CatalogCheckoutController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "POST",
+    "path": "/internal/catalog/checkouts/{orderId}/release",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/CatalogCheckoutController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/categories/get/all",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/CategoryController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/categories/id/get",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/CategoryController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/categories/name",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/CategoryController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts",
+      "src/app/features/catalog/catalog.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/categories/with-subcategories",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/CategoryController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/categories/create",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/CategoryController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/categories/id/update",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/CategoryController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/categories/id/icon",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/CategoryController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/categories/delete",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/CategoryController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/category-icons/get/all",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/CategoryIconController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/category-icons/id",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/CategoryIconController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/category-icons/upload",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/CategoryIconController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/inventory",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/InventoryController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/inventory/all",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/InventoryController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/inventory/id",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/InventoryController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/inventory/sku",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/InventoryController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/inventory/product",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/InventoryController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/inventory/low-stock",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/InventoryController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/inventory/restock",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/InventoryController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/inventory/exact",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/InventoryController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/inventory/delete",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/InventoryController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/inventory/summary",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/InventoryController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/inventory/search",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/InventoryController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/inventory/history/{inventoryId}",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/InventoryController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/attributes/{id}",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductAttributeController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts",
+      "src/app/features/catalog/catalog.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/attributes/name/{name}",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductAttributeController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts",
+      "src/app/features/catalog/catalog.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/attributes",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductAttributeController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts",
+      "src/app/features/catalog/catalog.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/attributes/{id}",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductAttributeController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/attribute-values/{id}",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductAttributeValueController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/attribute-values/attribute/{attributeId}",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductAttributeValueController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts",
+      "src/app/features/catalog/catalog.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/attribute-values/{id}",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductAttributeValueController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/attribute-values/{id}",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductAttributeValueController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/attribute-values",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductAttributeValueController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts",
+      "src/app/features/catalog/catalog.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/products/get/all",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts",
+      "src/app/features/catalog/catalog.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/products/create",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/products/update",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/products/update/status",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/products/delete",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/product-scanner/scan",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductScannerController.java",
+    "clients": [
+      "src/app/features/scanner/scanner.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/product-scanner/recognize",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductScannerController.java",
+    "clients": [
+      "src/app/features/scanner/scanner.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/admin/promotions",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/PromotionAdminController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/admin/promotions/{id}",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/PromotionAdminController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/admin/promotions/{id}",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/PromotionAdminController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/admin/promotions",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/PromotionAdminController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/admin/promotions/{id}",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/PromotionAdminController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/admin/promotions/{id}/skus",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/PromotionAdminController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/admin/promotions/{id}/skus",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/PromotionAdminController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/admin/promotions/{id}/skus/{skuId}",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/PromotionAdminController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/admin/promotions/{id}/schedule",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/PromotionAdminController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/admin/promotions/{id}/activate",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/PromotionAdminController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/admin/promotions/{id}/disable",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/PromotionAdminController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/promotions/active",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/PromotionController.java",
+    "clients": [
+      "src/app/features/catalog/catalog.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/promotions/{id}/products",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/PromotionController.java",
+    "clients": [
+      "src/app/features/catalog/catalog.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/subcategories/get/all",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/SubCategoryController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/subcategories/create",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/SubCategoryController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/subcategories/update",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/SubCategoryController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/subcategories/delete",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/SubCategoryController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/admin/audit-logs",
+    "source": "common-lib/src/main/java/com/example/eshop/common/audit/AuditLogController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present through gateway service-specific audit paths"
+  },
+  {
+    "method": "GET",
+    "path": "/api/notifications",
+    "source": "notification-service/src/main/java/com/example/eshop/notification/controller/NotificationController.java",
+    "clients": [
+      "src/app/features/notifications/notifications.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/notifications/{id}",
+    "source": "notification-service/src/main/java/com/example/eshop/notification/controller/NotificationController.java",
+    "clients": [
+      "src/app/features/notifications/notifications.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/notifications/unread-count",
+    "source": "notification-service/src/main/java/com/example/eshop/notification/controller/NotificationController.java",
+    "clients": [
+      "src/app/features/notifications/notifications.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/notifications/{id}/read",
+    "source": "notification-service/src/main/java/com/example/eshop/notification/controller/NotificationController.java",
+    "clients": [
+      "src/app/features/notifications/notifications.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/notifications/read-all",
+    "source": "notification-service/src/main/java/com/example/eshop/notification/controller/NotificationController.java",
+    "clients": [
+      "src/app/features/notifications/notifications.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/notifications/preferences",
+    "source": "notification-service/src/main/java/com/example/eshop/notification/controller/NotificationController.java",
+    "clients": [
+      "src/app/features/notifications/notifications.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/notifications/preferences",
+    "source": "notification-service/src/main/java/com/example/eshop/notification/controller/NotificationController.java",
+    "clients": [
+      "src/app/features/notifications/notifications.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/ai/orders/{number}",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/AiOrderController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/cancelations/summary",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/CancelationController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/cancelations/list",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/CancelationController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/cancelations/{orderNo}",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/CancelationController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/cart/user/id",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/CartController.java",
+    "clients": [
+      "src/app/features/cart/cart.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/cart/user/id/get-or-create",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/CartController.java",
+    "clients": [
+      "src/app/features/cart/cart.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/cart/user/id/items",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/CartController.java",
+    "clients": [
+      "src/app/features/cart/cart.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/cart/user/id/items/cartItemId",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/CartController.java",
+    "clients": [
+      "src/app/features/cart/cart.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/cart/user/userId/items/cartItemId",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/CartController.java",
+    "clients": [
+      "src/app/features/cart/cart.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/cart/user/userId/clear",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/CartController.java",
+    "clients": [
+      "src/app/features/cart/cart.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/orders",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/OrderController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/orders/get/all",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/OrderController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/orders/user/id",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/OrderController.java",
+    "clients": [
+      "src/app/features/orders/orders.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/orders/id",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/OrderController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/orders/number",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/OrderController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/orders/user/detail",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/OrderController.java",
+    "clients": [
+      "src/app/features/orders/orders.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/orders/user/history",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/OrderController.java",
+    "clients": [
+      "src/app/features/orders/orders.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/orders/status",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/OrderController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/orders/user/cancel",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/OrderController.java",
+    "clients": [
+      "src/app/features/orders/orders.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/orders/summary",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/OrderController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/orders/items",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/OrderController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/orders/user/from-cart",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/OrderController.java",
+    "clients": [
+      "src/app/features/orders/orders.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/orders/reports/weekly",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/OrderReportController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/orders/reports/monthly",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/OrderReportController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/refunds/summary",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/RefundController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts",
+      "src/app/features/after-sales/after-sales.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/refunds/list",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/RefundController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/refunds/{refundId}",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/RefundController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts",
+      "src/app/features/after-sales/after-sales.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/refunds/{refundId}/process",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/RefundController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/refunds/{refundId}/cancel",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/RefundController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/refunds/{refundId}/history",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/RefundController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts",
+      "src/app/features/after-sales/after-sales.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/refunds/{refundId}/similar-products",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/RefundController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/returns/user",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/ReturnController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts",
+      "src/app/features/after-sales/after-sales.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/returns/summary",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/ReturnController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts",
+      "src/app/features/after-sales/after-sales.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/returns/returns",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/ReturnController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/returns/{returnId}",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/ReturnController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts",
+      "src/app/features/after-sales/after-sales.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/returns/{returnId}/history",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/ReturnController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts",
+      "src/app/features/after-sales/after-sales.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/returns/{returnId}/approve",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/ReturnController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/returns/{returnId}/reject",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/ReturnController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/returns/{returnId}/receive",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/ReturnController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/returns/{returnId}/inspect/start",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/ReturnController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/returns/{returnId}/inspect/complete",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/ReturnController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/bakong/get-qr-image",
+    "source": "payment-service/src/main/java/com/example/eshop/payment/bakong/controller/BakongController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts",
+      "src/app/features/payments/payments.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/bakong/check-transaction",
+    "source": "payment-service/src/main/java/com/example/eshop/payment/bakong/controller/BakongController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts",
+      "src/app/features/payments/payments.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/payments/user/id",
+    "source": "payment-service/src/main/java/com/example/eshop/payment/controller/PaymentController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts",
+      "src/app/features/payments/payments.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/payments/user/detail",
+    "source": "payment-service/src/main/java/com/example/eshop/payment/controller/PaymentController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts",
+      "src/app/features/payments/payments.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/payments/get/all",
+    "source": "payment-service/src/main/java/com/example/eshop/payment/controller/PaymentController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/payments/order",
+    "source": "payment-service/src/main/java/com/example/eshop/payment/controller/PaymentController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/payments/transaction",
+    "source": "payment-service/src/main/java/com/example/eshop/payment/controller/PaymentController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/payments/user/history",
+    "source": "payment-service/src/main/java/com/example/eshop/payment/controller/PaymentController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts",
+      "src/app/features/payments/payments.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/payments/reports/monthly",
+    "source": "payment-service/src/main/java/com/example/eshop/payment/controller/PaymentReportController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/payment-transactions/get/all",
+    "source": "payment-service/src/main/java/com/example/eshop/payment/controller/PaymentTransactionController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/payment-transactions/{id}",
+    "source": "payment-service/src/main/java/com/example/eshop/payment/controller/PaymentTransactionController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/payment-transactions/no/{transactionNo}",
+    "source": "payment-service/src/main/java/com/example/eshop/payment/controller/PaymentTransactionController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts",
+      "src/app/features/payments/payments.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/payment-transactions/order/{orderId}",
+    "source": "payment-service/src/main/java/com/example/eshop/payment/controller/PaymentTransactionController.java",
+    "clients": [
+      "src/app/features/payments/payments.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/payment-transactions/customer/{customerId}",
+    "source": "payment-service/src/main/java/com/example/eshop/payment/controller/PaymentTransactionController.java",
+    "clients": [
+      "src/app/features/payments/payments.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/payment-transactions/{id}/status-history",
+    "source": "payment-service/src/main/java/com/example/eshop/payment/controller/PaymentTransactionController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts",
+      "src/app/features/payments/payments.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/payment-transactions",
+    "source": "payment-service/src/main/java/com/example/eshop/payment/controller/PaymentTransactionController.java",
+    "clients": [
+      "src/app/features/payments/payments.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/payment-transactions/{id}/status",
+    "source": "payment-service/src/main/java/com/example/eshop/payment/controller/PaymentTransactionController.java",
+    "clients": [
+      "src/app/features/admin/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  }
+]

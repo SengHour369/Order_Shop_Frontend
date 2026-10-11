@@ -1,0 +1,208 @@
+<div class="breadcrumbs">
+  <a routerLink="/">Home</a><span>›</span><a routerLink="/cart">Cart</a
+  ><span>›</span><span>Checkout</span>
+</div>
+<div class="page-heading">
+  <h1>Checkout</h1>
+  <ol class="checkout-steps" aria-label="Checkout progress">
+    @for (
+      label of ["Shipping Address", "Payment Method", "Review Order"];
+      track label;
+      let i = $index
+    ) {
+      <li [class.active]="step === i + 1" [class.complete]="step > i + 1">
+        <button
+          type="button"
+          [disabled]="i + 1 > step || locked()"
+          (click)="step = i + 1"
+          [attr.aria-current]="step === i + 1 ? 'step' : null"
+        >
+          <b>{{ i + 1 }}</b
+          ><span>{{ label }}</span>
+        </button>
+      </li>
+    }
+  </ol>
+</div>
+<app-status [busy]="busy()" [error]="error()" [message]="message()" />
+<div class="checkout-grid customer-checkout">
+  <form class="panel" #f="ngForm" (ngSubmit)="submit()">
+    @if (locked()) {
+      <p class="alert">
+        Your earlier checkout is awaiting confirmation. Retry to recover the
+        same order.
+      </p>
+    }
+    @if (step === 1) {
+      <div class="section-heading">
+        <div>
+          <h2>Shipping Address</h2>
+          <p>Choose where you want to receive your order.</p>
+        </div>
+        <a class="button primary small" routerLink="/account/addresses"
+          >+ Add Address</a
+        >
+      </div>
+      <div class="shipping-choices">
+        @for (a of addresses(); track a.id) {
+          <label class="shipping-choice" [class.selected]="addressId === a.id"
+            ><input
+              type="radio"
+              name="address"
+              [value]="a.id"
+              [(ngModel)]="addressId"
+              [disabled]="locked()"
+            /><span
+              ><strong
+                >{{ auth.session()?.username }}
+                @if (a.is_default) {
+                  <span class="badge">Default</span>
+                }</strong
+              ><span>{{ a.address_line1 }}</span
+              ><span>{{ a.city }}, {{ a.country }} {{ a.zip_code }}</span></span
+            ></label
+          >
+        } @empty {
+          <div class="empty">
+            <h3>Add a delivery address</h3>
+            <p>Save an address before continuing to payment.</p>
+            <a class="button outline" routerLink="/account/addresses"
+              >Manage Addresses</a
+            >
+          </div>
+        }
+      </div>
+      <button
+        class="primary checkout-next"
+        type="button"
+        (click)="next()"
+        [disabled]="!addressId || busy()"
+      >
+        Continue to Payment →
+      </button>
+    }
+    @if (step === 2) {
+      <h2>Payment Method</h2>
+      <p>Choose a payment provider for your order.</p>
+      <div class="payment-choices">
+        @for (
+          provider of ["BAKONG", "ABA", "ACLEDA", "RAZORPAY", "SINGE"];
+          track provider
+        ) {
+          <label class="payment-choice" [class.selected]="method === provider"
+            ><input
+              type="radio"
+              name="method"
+              [value]="provider"
+              [(ngModel)]="method"
+              [disabled]="locked()"
+            /><strong>{{ provider }}</strong></label
+          >
+        }
+      </div>
+      <p class="availability-note">
+        Payment is completed separately after placing your order. No payment
+        will be taken here.
+      </p>
+      <div class="dialog-actions">
+        <button type="button" (click)="step = 1">← Shipping</button
+        ><button class="primary" type="button" (click)="next()">
+          Review Order →
+        </button>
+      </div>
+    }
+    @if (step === 3) {
+      <h2>Review Your Order</h2>
+      <div class="review-section">
+        <div class="section-heading">
+          <h3>Shipping Address</h3>
+          <button
+            class="text-button"
+            type="button"
+            (click)="step = 1"
+            [disabled]="locked()"
+          >
+            Edit
+          </button>
+        </div>
+        @if (selectedAddress(); as a) {
+          <p>
+            {{ a.address_line1 }}<br />{{ a.city }}, {{ a.country }}
+            {{ a.zip_code }}
+          </p>
+        } @else {
+          <p>Saved address #{{ addressId }}</p>
+        }
+      </div>
+      <div class="review-section">
+        <div class="section-heading">
+          <h3>Payment Method</h3>
+          <button
+            class="text-button"
+            type="button"
+            (click)="step = 2"
+            [disabled]="locked()"
+          >
+            Edit
+          </button>
+        </div>
+        <p>{{ method }} · {{ currency }}</p>
+      </div>
+      <div class="review-section">
+        <div class="section-heading">
+          <h3>Order Items</h3>
+          <a routerLink="/cart">Edit Cart</a>
+        </div>
+        @for (item of cart()?.items || []; track item.id) {
+          <div class="line-item">
+            <span class="grow"
+              >Product SKU #{{ item.product_sku_id
+              }}<small>Quantity: {{ item.quantity }}</small></span
+            ><strong>{{ item.total_price | currency: "USD" }}</strong>
+          </div>
+        }
+      </div>
+      @if (cart(); as c) {
+        <div class="total">
+          <span>Cart Total</span
+          ><strong>{{ c.total_price | currency: "USD" }}</strong>
+        </div>
+      }
+      <button
+        class="primary full"
+        [disabled]="
+          busy() || !addressId || (!locked() && !cart()?.items?.length)
+        "
+      >
+        {{
+          busy() ? "Confirming…" : locked() ? "Retry Checkout" : "Place Order →"
+        }}
+      </button>
+      @if (!locked()) {
+        <button class="text-button" type="button" (click)="step = 2">
+          ← Back to Payment Method
+        </button>
+      }
+    }
+  </form>
+  <aside class="panel checkout-summary">
+    <div class="section-heading">
+      <h2>Order Summary</h2>
+      <a routerLink="/cart">Edit Cart</a>
+    </div>
+    @if (cart(); as c) {
+      <div class="summary-row">
+        <span>Items</span><strong>{{ c.total_items }}</strong>
+      </div>
+      <div class="total">
+        <span>Cart Total</span
+        ><strong>{{ c.total_price | currency: "USD" }}</strong>
+      </div>
+    }
+    <div class="checkout-reassurance">
+      <h3>Review with confidence</h3>
+      <p>Current prices and stock are confirmed when you place your order.</p>
+    </div>
+    <p class="small muted">Placing an order does not charge your account.</p>
+  </aside>
+</div>

@@ -1,0 +1,109 @@
+<section class="welcome-hero reference-welcome">
+  <div class="welcome-copy">
+    <a class="welcome-logo brand" routerLink="/"
+      ><span class="brand-bag"><app-icon name="check" /></span
+      ><span>E-Shop</span></a
+    >
+    <span class="eyebrow">WELCOME TO E-SHOP</span>
+    <h1>Shop Smarter<br /><span>Live Better</span></h1>
+    <p>
+      Discover products for every part of your life. Find your favorites and
+      make everyday shopping easier.
+    </p>
+  </div>
+  <img
+    class="welcome-art"
+    src="/images/eshop-welcome-photo.png"
+    fetchpriority="high"
+    width="1254"
+    height="1254"
+    alt="Shopping cart with parcels, ivory headphones, a smartphone and a green and white sneaker"
+  />
+  <div class="hero-actions">
+    <a
+      class="button primary"
+      [routerLink]="auth.session() ? '/account' : '/auth'"
+      >Get Started <app-icon name="arrow" /></a
+    ><a class="button outline" routerLink="/shop">Shop Now</a>
+  </div>
+  <div class="customer-perks">
+    <a routerLink="/account/orders"
+      ><app-icon name="truck" /><span
+        ><strong>Delivery Updates</strong><small>Follow your order</small></span
+      ></a
+    >
+    <a routerLink="/account/payments"
+      ><app-icon name="shield" /><span
+        ><strong>Payment Options</strong><small>ABA, Bakong & more</small></span
+      ></a
+    >
+    <a routerLink="/account/support"
+      ><app-icon name="box" /><span
+        ><strong>Order Support</strong
+        ><small>Help with your purchase</small></span
+      ></a
+    >
+    <a routerLink="/assistant"
+      ><app-icon name="headphones" /><span
+        ><strong>Shopping Assistant</strong
+        ><small>Find your next favorite</small></span
+      ></a
+    >
+  </div>
+</section>
+<nav class="category-tiles welcome-categories" aria-label="Shop by category">
+  @for (c of categories.slice(0, 8); track c.name; let i = $index) {
+    <a routerLink="/shop" [queryParams]="{ category: c.name }"
+      ><span
+        class="category-photo"
+        aria-hidden="true"
+        [style.background-position]="
+          ((i % 4) * 100) / 3 + '% ' + (i < 4 ? 0 : 100) + '%'
+        "
+      ></span
+      ><strong>{{ c.name }}</strong></a
+    >
+  }
+</nav>
+<div class="section-heading welcome-products-heading">
+  <div>
+    <span class="eyebrow">POPULAR PRODUCTS</span>
+    <h2>Trending Today</h2>
+  </div>
+  <a routerLink="/shop">View All <app-icon name="arrow" /></a>
+</div>
+<app-status [busy]="busy()" [error]="error()" />
+@if (auth.session()) {
+  <div class="product-grid welcome-products">
+    @for (p of products(); track p.id) {
+      <app-product-card [product]="p" />
+    } @empty {
+      @if (!busy() && !error()) {
+        <div class="empty">New products are on their way. Check back soon.</div>
+      }
+    }
+  </div>
+} @else {
+  <app-sign-in-card
+    action="browse live products, prices, and available stock"
+    path="/shop"
+  />
+}
+<section class="collection-section">
+  <div class="section-heading"><h2>A Little More Everyday</h2></div>
+  <div class="collection-cards">
+    @for (c of categories.slice(0, 3); track c.name) {
+      <a
+        class="collection mint"
+        routerLink="/shop"
+        [queryParams]="{ category: c.name }"
+        ><app-icon [name]="c.icon" />
+        <div>
+          <span>EXPLORE THE COLLECTION</span>
+          <h2>{{ c.name }}</h2>
+          <p>Discover more <span aria-hidden="true">→</span></p>
+        </div></a
+      >
+    }
+  </div>
+</section>

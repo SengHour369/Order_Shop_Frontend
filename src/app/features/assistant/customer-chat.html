@@ -1,0 +1,230 @@
+<button
+  class="ai-launcher"
+  type="button"
+  (click)="open()"
+  aria-label="Open E-Shop AI assistant"
+  aria-haspopup="dialog"
+  [attr.aria-expanded]="opened()"
+  aria-controls="customer-ai-chat"
+>
+  <span class="bot-avatar"><app-icon name="robot" /></span
+  ><span class="launcher-label">Ask AI</span
+  ><span class="launcher-spark" aria-hidden="true">✦</span>
+</button>
+<dialog
+  #chatDialog
+  id="customer-ai-chat"
+  class="ai-chat"
+  aria-labelledby="ai-chat-title"
+  (close)="opened.set(false)"
+>
+  <header class="chat-header">
+    <span class="bot-avatar"><app-icon name="robot" /></span>
+    <div>
+      <h2 id="ai-chat-title">E-Shop AI Assistant</h2>
+      <p>Your shopping assistant · Ready to help</p>
+    </div>
+    <button
+      class="chat-icon"
+      type="button"
+      (click)="close()"
+      aria-label="Close AI assistant"
+    >
+      <app-icon name="close" />
+    </button>
+  </header>
+  <div class="chat-toolbar">
+    <button type="button" (click)="newChat()" [disabled]="busy()">
+      <app-icon name="plus" />New chat</button
+    ><select
+      aria-label="Assistant language"
+      [(ngModel)]="language"
+      [disabled]="busy()"
+    >
+      <option value="en">English</option>
+      <option value="km">ខ្មែរ</option>
+    </select>
+  </div>
+  <div
+    #chatLog
+    class="chat-log"
+    role="log"
+    aria-label="AI conversation"
+    aria-live="polite"
+    aria-relevant="additions text"
+    [attr.aria-busy]="busy()"
+  >
+    <article class="chat-message assistant">
+      <span class="bot-avatar small"><app-icon name="robot" /></span>
+      <div class="message-bubble">
+        Hi! 👋 I’m your E-Shop AI assistant. How can I help you today?
+      </div>
+    </article>
+    <div class="chat-shortcuts" aria-label="Suggested questions">
+      @for (shortcut of shortcuts; track shortcut.label) {
+        <button
+          type="button"
+          [class]="'shortcut ' + shortcut.tone"
+          (click)="choose(shortcut.prompt)"
+          [disabled]="busy()"
+        >
+          <app-icon [name]="shortcut.icon" /><span>{{ shortcut.label }}</span>
+        </button>
+      }
+    </div>
+    @for (message of messages(); track $index) {
+      <article [class]="'chat-message ' + message.role">
+        @if (message.role === "assistant") {
+          <span class="bot-avatar small"><app-icon name="robot" /></span>
+        }
+        <div class="message-content">
+          <div class="message-bubble">{{ message.text }}</div>
+          @for (product of message.products || []; track product.id) {
+            <div class="chat-product">
+              <a [routerLink]="['/shop', product.id]" (click)="close()"
+                ><img
+                  appProductImage
+                  [src]="product.image"
+                  [alt]="product.name"
+                  loading="lazy"
+              /></a>
+              <div>
+                <a [routerLink]="['/shop', product.id]" (click)="close()"
+                  ><strong>{{ product.name }}</strong></a
+                >
+                <p class="chat-price">
+                  @if (product.price !== undefined) {
+                    <b>{{ product.price | currency: "USD" }}</b>
+                  }
+                  @if (
+                    product.originalPrice !== undefined &&
+                    product.price !== undefined &&
+                    product.originalPrice > product.price
+                  ) {
+                    <del>{{ product.originalPrice | currency: "USD" }}</del>
+                  }
+                </p>
+                @if (product.available !== undefined) {
+                  <small>{{
+                    product.available > 0 ? "In stock" : "Out of stock"
+                  }}</small>
+                }
+              </div>
+              @if (
+                product.skuId &&
+                product.available !== undefined &&
+                product.available > 0
+              ) {
+                <button
+                  class="chat-add"
+                  type="button"
+                  (click)="add(product)"
+                  [disabled]="cartBusy() !== null"
+                >
+                  {{ cartBusy() === product.skuId ? "Adding…" : "Add to Cart" }}
+                </button>
+              } @else {
+                <a
+                  class="chat-add"
+                  [routerLink]="['/shop', product.id]"
+                  (click)="close()"
+                  >View</a
+                >
+              }
+            </div>
+          }
+          @if (message.products?.length) {
+            <a class="chat-more" routerLink="/shop" (click)="close()"
+              >View more products <app-icon name="arrow"
+            /></a>
+          }
+          @if (message.products?.length || message.cardType === "CheckoutGuide") {
+            <a class="chat-more" routerLink="/cart" (click)="close()">Review Cart <app-icon name="cart" /></a>
+            <a class="chat-more" routerLink="/checkout" (click)="close()">Continue to Checkout <app-icon name="arrow" /></a>
+          }
+          @if (message.cardType === "CheckoutGuide" || message.cardType === "PaymentStatusCard") {
+            <a class="chat-more" routerLink="/account/payments" (click)="close()">Payment Information <app-icon name="arrow" /></a>
+          }
+          @for (row of message.rows || []; track $index) {
+            <div class="chat-record">
+              <strong>{{ row.title }}</strong
+              ><span>{{ row.detail }}</span>
+            </div>
+          }
+          @if (
+            message.cardType === "OrderCard" ||
+            message.cardType === "OrderList" ||
+            message.cardType === "ConfirmationCard"
+          ) {
+            <a class="chat-more" routerLink="/account/orders" (click)="close()"
+              >{{
+                message.cardType === "ConfirmationCard"
+                  ? "Review action in My Orders"
+                  : "View My Orders"
+              }}
+              <app-icon name="arrow"
+            /></a>
+          }
+          @for (suggestion of message.suggestions || []; track suggestion) {
+            <button
+              class="chat-suggestion"
+              type="button"
+              (click)="choose(suggestion)"
+              [disabled]="busy()"
+            >
+              {{ suggestion }}
+            </button>
+          }
+        </div>
+      </article>
+    }
+    @if (busy()) {
+      <div class="chat-thinking" role="status">
+        <span></span><span></span><span></span> Thinking…
+      </div>
+    }
+    @if (error()) {
+      <div class="chat-error" role="alert">
+        <p>{{ error() }}</p>
+        @if (needsSignIn()) {
+          <a
+            routerLink="/auth"
+            [queryParams]="{ returnUrl: router.url }"
+            (click)="close()"
+            >Sign in</a
+          >
+        } @else {
+          <button type="button" (click)="retry()" [disabled]="busy()">
+            Try again
+          </button>
+        }
+      </div>
+    }
+    @if (cartFeedback()) {
+      <p class="chat-feedback" role="status">{{ cartFeedback() }}</p>
+    }
+  </div>
+  <form class="chat-composer" (ngSubmit)="send()">
+    <textarea
+      #messageInput
+      name="chatPrompt"
+      [(ngModel)]="prompt"
+      (keydown)="onKey($event)"
+      aria-label="Message AI assistant"
+      placeholder="Type your message…"
+      rows="1"
+      maxlength="4000"
+      [disabled]="busy()"
+    ></textarea
+    ><button
+      type="submit"
+      aria-label="Send message"
+      [disabled]="busy() || !prompt.trim()"
+    >
+      <app-icon name="send" />
+    </button>
+  </form>
+  <p class="chat-footnote">
+    AI can make mistakes. Check product and order details.
+  </p>
+</dialog>

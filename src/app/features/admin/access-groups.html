@@ -1,0 +1,261 @@
+<section class="reference-page">
+  <header class="adm-page-head">
+    <div>
+      <h2>{{ creating ? "Create Group" : "Groups" }}</h2>
+      <div class="adm-crumbs">
+        <a routerLink="/admin">Dashboard</a><span>›</span
+        ><a routerLink="/admin/groups">Groups</a>
+        @if (creating) {
+          <span>›</span>Create Group
+        }
+      </div>
+    </div>
+    @if (!creating) {
+      <a class="adm-btn adm-primary" routerLink="/admin/groups/add"
+        >＋ Add Group</a
+      >
+    }
+  </header>
+  <app-status [busy]="busy()" [error]="error()" [message]="message()" />
+  @if (!creating) {
+    <div class="reference-stats">
+      <article class="adm-panel">
+        <div>
+          Total Groups<strong>{{ rows().length }}</strong>
+        </div>
+      </article>
+      <article class="adm-panel">
+        <div>
+          Active Groups<strong>{{ activeCount() }}</strong>
+        </div>
+      </article>
+      <article class="adm-panel">
+        <div>
+          Inactive Groups<strong>{{ rows().length - activeCount() }}</strong>
+        </div>
+      </article>
+      <article class="adm-panel">
+        <div>
+          Total Members<strong>—</strong
+          ><small>Membership data unavailable</small>
+        </div>
+      </article>
+    </div>
+    <div class="ops-work">
+      <section class="adm-panel reference-table">
+        <div class="reference-filters">
+          <input
+            [(ngModel)]="query"
+            placeholder="Search by group name or code..."
+            aria-label="Search groups"
+          /><button class="adm-btn" (click)="query = ''">Reset</button>
+        </div>
+        <div class="adm-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Group Name</th>
+                <th>Group Code</th>
+                <th>Display</th>
+                <th>Status</th>
+                <th>Created Date</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of visible(); track row["group_id"]; let i = $index) {
+                <tr>
+                  <td>{{ i + 1 }}</td>
+                  <td>
+                    <strong>{{ row["group_name"] }}</strong>
+                  </td>
+                  <td>{{ row["group_code"] }}</td>
+                  <td>{{ row["display"] || "—" }}</td>
+                  <td>
+                    <span
+                      class="adm-badge"
+                      [class.on]="row['is_active']"
+                      [class.off]="!row['is_active']"
+                      >{{ row["is_active"] ? "Active" : "Inactive" }}</span
+                    >
+                  </td>
+                  <td>{{ when(row["created_at"]) }}</td>
+                  <td>
+                    <button
+                      class="adm-btn"
+                      (click)="inspect(row)"
+                      [disabled]="busy()"
+                    >
+                      View
+                    </button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="7">No groups found.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="adm-pager">Showing {{ visible().length }} groups</div>
+      </section>
+      <aside class="adm-panel">
+        <h3>Group Details</h3>
+        @if (selected(); as row) {
+          <h3>{{ row["group_name"] }}</h3>
+          <p>{{ row["group_code"] }}</p>
+          <nav class="reference-tabs">
+            <button class="active">Overview</button>
+          </nav>
+          <h3>Basic Information</h3>
+          <dl>
+            <dt>Display</dt>
+            <dd>{{ row["display"] || "—" }}</dd>
+            <dt>Created Date</dt>
+            <dd>{{ when(row["created_at"]) }}</dd>
+          </dl>
+          <h3>Group Permissions</h3>
+          @for (
+            permission of permissions();
+            track permission["group_permission_id"]
+          ) {
+            <p>{{ functionName(permission["func_id"]) }}</p>
+          } @empty {
+            <p>No active permissions.</p>
+          }
+          <a class="adm-btn" routerLink="/admin/users">Manage Access Records</a>
+        } @else {
+          <p>Select a group to inspect its permissions.</p>
+        }
+      </aside>
+    </div>
+  } @else {
+    <form (ngSubmit)="save()">
+      <div class="ops-subgrid">
+        <div>
+          <section class="adm-panel">
+            <h3>Basic Information</h3>
+            <p>Enter group details and display text.</p>
+            <div class="ops-form-grid">
+              <label
+                >Group Name *<input
+                  name="name"
+                  [(ngModel)]="name"
+                  required
+                  [disabled]="createdId !== null"
+                  placeholder="e.g. Sales Team" /></label
+              ><label
+                >Group Code *<input
+                  name="code"
+                  [(ngModel)]="code"
+                  required
+                  [disabled]="createdId !== null"
+                  placeholder="e.g. GRP-009"
+              /></label>
+            </div>
+            <label
+              >Display<textarea
+                name="display"
+                [(ngModel)]="display"
+                [disabled]="createdId !== null"
+                placeholder="Group display text"
+              ></textarea>
+            </label>
+          </section>
+          <section class="adm-panel">
+            <h3>Group Members <small>(Optional)</small></h3>
+            <p>
+              Membership lookup and assignment are not available from the
+              connected group service.
+            </p>
+            <input
+              disabled
+              placeholder="Search users by name or email..."
+            /><button type="button" class="adm-btn" disabled>
+              Add Members
+            </button>
+          </section>
+        </div>
+        <section class="adm-panel">
+          <h3>Permissions</h3>
+          <p>Select permissions for this group.</p>
+          <input
+            name="permissionQuery"
+            [(ngModel)]="permissionQuery"
+            placeholder="Search permissions by name..."
+          />
+          <div class="ops-permissions">
+            <div>
+              <h4>Modules / Functions</h4>
+              @for (module of modules(); track module) {
+                @if (moduleFunctions(module).length) {
+                  <details open>
+                    <summary>
+                      <strong>{{ module }}</strong>
+                    </summary>
+                    @for (
+                      permission of moduleFunctions(module);
+                      track permission["func_id"]
+                    ) {
+                      <label
+                        ><input
+                          type="checkbox"
+                          [checked]="chosen.has(+permission['func_id']!)"
+                          (change)="toggle(permission['func_id'])"
+                          [disabled]="
+                            busy() ||
+                            savedPermissions.has(+permission['func_id']!)
+                          "
+                        />{{ permission["func_name"]
+                        }}<small>{{ permission["func_code"] }}</small></label
+                      >
+                    }
+                  </details>
+                }
+              }
+            </div>
+            <div>
+              <h4>Selected Permissions ({{ chosen.size }})</h4>
+              <button
+                type="button"
+                class="adm-btn"
+                (click)="clear()"
+                [disabled]="busy()"
+              >
+                Clear All
+              </button>
+              @for (id of chosen; track id) {
+                <p>
+                  {{ functionName(id) }}
+                  <button
+                    type="button"
+                    class="adm-btn"
+                    (click)="toggle(id)"
+                    [disabled]="busy() || savedPermissions.has(id)"
+                    aria-label="Remove permission"
+                  >
+                    ×
+                  </button>
+                </p>
+              }
+            </div>
+          </div>
+        </section>
+      </div>
+      @if (createdId) {
+        <p>
+          The group was created. Retry saves only permissions that have not
+          succeeded yet.
+        </p>
+      }
+      <footer class="ops-footer">
+        <a class="adm-btn" routerLink="/admin/groups">← Cancel</a
+        ><button class="adm-btn adm-primary" [disabled]="busy()">
+          {{ createdId ? "Retry Remaining Permissions" : "Create Group" }}
+        </button>
+      </footer>
+    </form>
+  }
+</section>

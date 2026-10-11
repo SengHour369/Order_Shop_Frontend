@@ -1,0 +1,99 @@
+{
+  "checkedAt": "2026-10-05T14:26:14.548Z",
+  "base": "http://localhost:4200",
+  "checks": [
+    {
+      "method": "POST",
+      "route": "/api/v1/public/email/username/login",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "route": "/api/v1/groups/get/all?page=0&size=100&sort=id,asc",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "route": "/api/v1/user/create",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "route": "/api/v1/public/email/username/login",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "route": "/api/v1/products/get/all",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "route": "/api/v1/addresses/user/10005",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "route": "/api/v1/cart/user/id/get-or-create?userId=10005",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "route": "/api/v1/cart/user/id/items?userId=10005",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "route": "/api/v1/orders/user/from-cart?userId=10005",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "route": "/api/v1/orders/user/from-cart?userId=10005",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "route": "/api/v1/payment-transactions",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "route": "/api/v1/payment-transactions/order/10004",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "route": "/api/v1/public/logout",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "route": "/api/v1/public/logout",
+      "status": 200
+    }
+  ],
+  "customer": {
+    "id": 10005,
+    "username": "api_test_1791210375048"
+  },
+  "addressId": 10003,
+  "cart": {
+    "id": 10002,
+    "skuId": 9999,
+    "itemCount": 1
+  },
+  "order": {
+    "id": 10004,
+    "status": "PENDING",
+    "total": 119
+  },
+  "sameOrderOnRetry": true,
+  "payment": {
+    "id": 10002,
+    "status": "PENDING",
+    "orderId": 10004
+  },
+  "paymentVisibleInHistory": true,
+  "success": true
+}

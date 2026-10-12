@@ -1,18 +1,20 @@
-import { conversationId } from "../../shared/conversation-id";
+import { LanguageSelect } from "../../core/i18n/language-select";
+import { TranslatePipe } from "../../core/i18n/translate.pipe";
+import { conversationId } from "../../shared/utils/conversation-id";
 import { Component, DestroyRef, ElementRef, inject, OnInit, signal, viewChild } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { catchError, forkJoin, of } from "rxjs";
 import { FormsModule } from "@angular/forms";
 import { DatePipe, JsonPipe } from "@angular/common";
 import { Router, RouterLink } from "@angular/router";
-import { AdminApi, InventorySummary, OrderSummary } from "../admin/admin.api";
-import { MonthlyReport } from "../admin/report.models";
+import { AdminApi, InventorySummary, OrderSummary } from "../admin/api/admin.api";
+import { MonthlyReport } from "../admin/reports/report.models";
 import { AssistantApi, AiResult, AdminChatSummary, AdminTranscript, AssistantInfo } from "./assistant.api";
 import { AssistantProduct } from './assistant-product';
 import { AuthService } from "../../core/auth/auth.service";
-import { PageState } from "../../shared/page-state";
-import { Status } from "../../shared/status";
-import { Icon } from "../../shared/icon";
+import { PageState } from "../../shared/utils/page-state";
+import { Status } from "../../shared/components/status";
+import { Icon } from "../../shared/components/icon";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -31,7 +33,7 @@ interface Conversation {
 }
 
 @Component({
-  imports: [FormsModule, JsonPipe, DatePipe, RouterLink, Status, Icon],
+  imports: [LanguageSelect, TranslatePipe, FormsModule, JsonPipe, DatePipe, RouterLink, Status, Icon],
   templateUrl: "./assistant.html",
   styleUrl: "./assistant.css",
 })

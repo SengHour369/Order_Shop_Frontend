@@ -1,16 +1,17 @@
+import { TranslatePipe } from "../../core/i18n/translate.pipe";
 import { Component, inject } from "@angular/core";
 import { RouterLink } from "@angular/router";
 import { AuthService } from "../../core/auth/auth.service";
 import { ApiClient } from "../../core/api/api-client";
-import { Icon } from "../../shared/icon";
-import { SignInCard } from "../../shared/sign-in-card";
-import { PageState } from "../../shared/page-state";
-import { Status } from "../../shared/status";
+import { Icon } from "../../shared/components/icon";
+import { SignInCard } from "../../shared/components/sign-in-card";
+import { PageState } from "../../shared/utils/page-state";
+import { Status } from "../../shared/components/status";
 @Component({
-  imports: [RouterLink, Icon, SignInCard, Status],
+  imports: [TranslatePipe, RouterLink, Icon, SignInCard, Status],
   template: `<div class="page-heading">
       <div>
-        <h1>Security</h1>
+        <h1>{{ "Security" | translate }}</h1>
         <p>Keep your account safe and manage your password.</p>
       </div>
     </div>
@@ -26,13 +27,13 @@ import { Status } from "../../shared/status";
         <div class="section-title">
           <span class="icon-circle"><app-icon name="lock" /></span>
           <div>
-            <h2>Change Password</h2>
+            <h2>{{ "Change Password" | translate }}</h2>
             <p>Use a strong, unique password.</p>
           </div>
         </div>
         <p>We’ll send password reset instructions to your account email.</p>
         <label
-          >Email Address<input
+          >{{ "Email Address" | translate }}<input
             [value]="auth.session()?.email || ''"
             readonly
             placeholder="Sign in to view your email"

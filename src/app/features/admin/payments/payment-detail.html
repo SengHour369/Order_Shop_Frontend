@@ -1,0 +1,112 @@
+<section class="detail-page detail-payment">
+  <header class="detail-head">
+<div>
+<h2>{{ "Payment Details" | translate }}</h2>
+<nav class="detail-crumbs" aria-label="Breadcrumb">
+<a routerLink="/admin">{{ "Dashboard" | translate }}</a>
+<span>›</span>
+<a routerLink="/admin/payments">{{ "Payments" | translate }}</a>
+<span>›</span>{{ row() ? text(field(row()!, 'code', 'id')) : id }}</nav>
+</div>
+<a class="detail-button" routerLink="/admin/payments">
+<app-icon name="arrow-left" /> Back to Payments</a>
+</header>
+  <app-status [busy]="busy()" [error]="error()" />
+  @if (row(); as current) {
+    <div class="detail-grid">
+<div class="detail-stack">
+      <article class="detail-card">
+<div class="detail-row">
+<span>{{ text(field(current, 'code', 'id')) }}</span>
+<span class="detail-badge dot" [class.on]="paymentTone(current) === 'on'" [class.off]="paymentTone(current) === 'off'" [class.wait]="paymentTone(current) === 'wait'">{{ text(current['status']) }}</span>
+</div>
+<div class="detail-amount">{{ amount(current) }} <small>{{ text(current['currency']) }}</small>
+</div>
+<p class="detail-muted">{{ paymentTone(current) === 'on' ? 'Payment Service records this payment as successful.' : paymentTone(current) === 'off' ? 'This payment did not complete successfully.' : paymentTone(current) === 'wait' ? 'Awaiting payment confirmation.' : 'Current status reported by Payment Service.' }}</p>
+<span class="detail-badge">{{ text(field(current, 'payment_method', 'method')) }}</span>
+</article>
+      <article class="detail-card">
+<h3>{{ "Transaction Info" | translate }}</h3>
+<div class="detail-rows">
+<div class="detail-row">
+<span>{{ "Payment ID" | translate }}</span>
+<b class="detail-mono">{{ text(current['id']) }}</b>
+</div>
+<div class="detail-row">
+<span>{{ "Transaction ID" | translate }}</span>
+<span class="detail-mono">{{ text(field(current, 'transaction_id', 'transactionId', 'transaction_hash')) }}</span>
+</div>
+<div class="detail-row">
+<span>Payment Date</span>
+<span>{{ when(field(current, 'payment_date', 'paymentDate', 'datetime')) }}</span>
+</div>
+<div class="detail-row">
+<span>{{ "Status" | translate }}</span>
+<span class="detail-badge" [class.on]="paymentTone(current) === 'on'" [class.off]="paymentTone(current) === 'off'" [class.wait]="paymentTone(current) === 'wait'">{{ text(current['status']) }}</span>
+</div>
+</div>
+</article>
+      <article class="detail-card">
+<h3>Action Panel</h3>
+<div class="detail-notice" [class.on]="paymentTone(current) === 'on'" [class.off]="paymentTone(current) === 'off'">
+<h4>{{ (paymentTone(current) === 'on' ? 'Payment Successful' : paymentTone(current) === 'off' ? 'Payment Unsuccessful' : paymentTone(current) === 'wait' ? 'Payment Pending' : text(current['status'])) | translate }}</h4>
+<p>{{ paymentTone(current) === 'on' ? 'Review the associated order for fulfillment or return handling.' : 'Refresh the recorded status or inspect trusted provider verification.' }}</p>
+</div>
+<button class="detail-button detail-wide" [disabled]="busy()" (click)="load()">
+<app-icon name="refresh" /> {{ "Check Status Now" | translate }}</button>
+<a class="detail-button detail-wide" [routerLink]="['/admin/payments/bakong-callback', id]">
+<app-icon name="shield" /> Review Callback</a>
+</article>
+    </div>
+<aside class="detail-stack">
+      <article class="detail-card">
+<h3>Associated Order</h3>
+<div class="detail-rows">
+<div class="detail-row">
+<span>Order Number</span>
+<span>{{ text(field(current, 'order_number', 'orderNumber')) }}</span>
+</div>
+<div class="detail-row">
+<span>Order Code</span>
+<span>{{ text(current['codeOrder']) }}</span>
+</div>
+<div class="detail-row">
+<span>{{ "Order ID" | translate }}</span>
+<span>{{ text(field(current, 'order_id', 'orderId') || id) }}</span>
+</div>
+<a [routerLink]="['/admin/orders', field(current, 'order_id', 'orderId') || id]">View Order ↗</a>
+</div>
+</article>
+      <article class="detail-card">
+<h3>{{ "Payment Method" | translate }}</h3>
+<div class="detail-rows">
+<div class="detail-row">
+<span>Method</span>
+<span>{{ text(field(current, 'payment_method', 'method')) }}</span>
+</div>
+<div class="detail-row">
+<span>Provider</span>
+<span>{{ text(field(current, 'payment_provider', 'provider')) }}</span>
+</div>
+<div class="detail-row">
+<span>{{ "Currency" | translate }}</span>
+<span>{{ text(current['currency']) }}</span>
+</div>
+</div>
+</article>
+      <article class="detail-card">
+<h3>Payment Timeline</h3>
+<div class="detail-timeline">@if (field(current, 'updated_at', 'updatedAt', 'payment_date') !== '') { <div>
+<b>Payment {{ text(current['status']) }}</b>
+<small>{{ when(field(current, 'updated_at', 'updatedAt', 'payment_date')) }}</small>
+</div> }
+@if (field(current, 'created_at', 'createdAt') !== '') { <div>
+<b>Payment Initiated</b>
+<small>{{ when(field(current, 'created_at', 'createdAt')) }}</small>
+</div> }
+@else { <p class="detail-muted">Initiation time not provided.</p> }</div>
+</article>
+    </aside>
+</div>
+  }
+</section>

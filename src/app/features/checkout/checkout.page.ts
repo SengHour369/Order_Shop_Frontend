@@ -1,3 +1,4 @@
+import { TranslatePipe } from "../../core/i18n/translate.pipe";
 import { Component, inject, signal } from "@angular/core";
 import { CurrencyPipe } from "@angular/common";
 import { FormsModule } from "@angular/forms";
@@ -9,10 +10,10 @@ import { CartApi } from "../cart/cart.api";
 import { OrdersApi } from "../orders/orders.api";
 import { Address, Cart } from "../../core/api/models";
 import { CheckoutAttempt } from "./checkout-attempt";
-import { PageState } from "../../shared/page-state";
-import { Status } from "../../shared/status";
+import { PageState } from "../../shared/utils/page-state";
+import { Status } from "../../shared/components/status";
 @Component({
-  imports: [CurrencyPipe, FormsModule, RouterLink, Status],
+  imports: [TranslatePipe, CurrencyPipe, FormsModule, RouterLink, Status],
   templateUrl: "./checkout.html",
 })
 export class CheckoutPage extends PageState {

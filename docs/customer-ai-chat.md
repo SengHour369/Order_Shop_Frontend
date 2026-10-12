@@ -2,6 +2,8 @@
 
 The floating Ask AI button opens a green E-Shop shopping assistant on customer screens. Desktop uses a right-hand panel; mobile uses a full-screen dialog. Native dialog focus handling and Escape dismissal are preserved. The message area scrolls independently of the composer.
 
+Source is grouped into `src/app/features/assistant/customer-chat/` for conversation UI and catalog mapping, and `src/app/features/assistant/chat-checkout/` for cart review and confirmation. Each component's template, styles and tests live beside its implementation. The assistant folder's `README.md` provides a review order and API ownership guide.
+
 ## API connection
 
 - Uses the existing `POST /api/ai/chat` endpoint with `message`, `conversationId`, and `language` (`en` or `km`). It never switches to the administrator endpoint when a staff member visits the storefront.
@@ -27,9 +29,17 @@ No live cart items, orders, payments, or cancellations were changed during verif
 
 The customer assistant distinguishes a new purchase (for example, "order a laptop") from tracking existing orders. Prompt instructions route product purchase requests to catalog search and reserve personal order/payment tools for existing records. Payment success is verified using the payment-status tool, never inferred from a user saying they paid.
 
-An Order & payment shortcut asks "How do I place an order and pay?" Generic checkout and payment-method questions return a grounded CheckoutGuide with Review Cart and Continue to Checkout links. Product search cards also offer these links. The user signs in, reviews the cart, selects an address and payment provider, and explicitly places the order in the existing checkout. Chat guidance does not submit an order or initiate a payment.
+An Order & payment shortcut asks "How do I place an order and pay?" Generic checkout and payment-method questions return a grounded CheckoutGuide. The widget's Cart & checkout and Review cart & order here buttons open an embedded checkout panel. Product cards support available SKU selection and quantities, and Add to Cart sends that exact selection to the cart API. Signed-in users can edit quantities, remove items, select a saved address and payment provider, and review the backend total inside chat. Guests are directed to sign in.
+
+Only an explicit Confirm order click submits the checkout API request. Before submission, the panel rereads the cart and requires a fresh review if its items or total changed. It shares the existing persisted CheckoutAttempt key with the checkout page, prevents duplicate clicks and cart edits during unresolved checkout, and reuses the same request after uncertain failures or CHECKOUT_PENDING responses. Closing/reopening chat preserves unresolved checkout recovery. The receipt displays the returned order number and status; payment status is fetched only on explicit refresh.
 
 The guidance follows the current checkout provider list (BAKONG, ABA, ACLEDA, RAZORPAY, SINGE) and explains that payment is completed separately after order placement. The current payment UI explicitly says online payment is not available yet. The assistant explains this limitation and links to Payment Information for records and availability; placing an order does not charge the user. It never asks for card details, PINs, passwords or OTPs.
+
+Validation: 6 customer-widget tests, 5 backend purchase/conversation routing tests, and 32 inference tests passed. The final production frontend build passed. The updated AI services were rebuilt and restarted locally; a gateway request for "How do I place an order and pay?" returned SUCCESS / CheckoutGuide, explained online payment availability correctly, and had no execution ID.
+
+Live gateway verification of "I want to buy headphones" returned SUCCESS / PRODUCT_SEARCH / ProductList using the catalog tool. No purchase, cart write or payment was performed during these checks.
+
+In-chat checkout validation: all 120 frontend tests passed, including 14 customer chat/checkout tests for variant and quantity selection, explicit confirmation, cart changes, duplicate prevention, recovery and payment status. The test runner reported worker shutdown timeouts after all tests passed, then exited successfully. Live authenticated read-only checks loaded four cart items and one saved address. No live order or payment was created. Browser visual verification of this panel remains unverified because the browser tool could not initialize its kernel assets.
 
 ## Natural conversation
 

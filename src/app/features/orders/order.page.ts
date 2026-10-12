@@ -1,3 +1,4 @@
+import { TranslatePipe } from "../../core/i18n/translate.pipe";
 import {
   Component,
   inject,
@@ -5,20 +6,21 @@ import {
   viewChild,
   ElementRef,
 } from "@angular/core";
+import { PaymentQr } from "../payments/payment-qr";
 import { CurrencyPipe, DatePipe } from "@angular/common";
 import { ActivatedRoute, RouterLink } from "@angular/router";
 import { OrdersApi } from "./orders.api";
 import { AddressesApi } from "../addresses/addresses.api";
 import { Order, Address } from "../../core/api/models";
-import { Icon } from "../../shared/icon";
-import { OrderProgress } from "../../shared/order-progress";
-import { PageState } from "../../shared/page-state";
-import { Status } from "../../shared/status";
+import { Icon } from "../../shared/components/icon";
+import { OrderProgress } from "../../shared/components/order-progress";
+import { PageState } from "../../shared/utils/page-state";
+import { Status } from "../../shared/components/status";
 @Component({
-  imports: [CurrencyPipe, DatePipe, RouterLink, Icon, OrderProgress, Status],
+  imports: [TranslatePipe, PaymentQr, CurrencyPipe, DatePipe, RouterLink, Icon, OrderProgress, Status],
   template: `<div class="page-heading">
       <div>
-        <h1>Order Details</h1>
+        <h1>{{ "Order Details" | translate }}</h1>
         <p>View your order information, status, and delivery address.</p>
       </div>
       <a class="button outline" routerLink="/account/orders">← My Orders</a>
@@ -75,7 +77,7 @@ import { Status } from "../../shared/status";
             <div class="tracking-event">
               <span class="icon-circle green"><app-icon name="check" /></span>
               <div>
-                <h3>Order placed</h3>
+                <h3>{{ "Order placed" | translate }}</h3>
                 <p>{{ o.order_date | date: "medium" }}</p>
               </div>
             </div>
@@ -83,18 +85,18 @@ import { Status } from "../../shared/status";
         </div>
         <aside>
           <section class="panel">
-            <h2>Order Summary</h2>
+            <h2>{{ "Order Summary" | translate }}</h2>
             <div class="summary-row">
               <span>Items</span><strong>{{ o.items?.length || 0 }}</strong>
             </div>
             <div class="total">
-              <span>Total</span
+              <span>{{ "Total" | translate }}</span
               ><strong>{{ o.total_amount | currency: "USD" }}</strong>
             </div>
             <p class="small muted">Total confirmed by the shop.</p>
           </section>
           <section class="panel">
-            <h2>Payment Information</h2>
+            <h2>{{ "Payment Information" | translate }}</h2>@if(o.status === 'PENDING'){<app-payment-qr [orderId]="o.id" />}
             <p>Check the payment service for your confirmed payment status.</p>
             <a
               class="button outline full"
@@ -104,7 +106,7 @@ import { Status } from "../../shared/status";
             >
           </section>
           <section class="panel">
-            <h2>Shipping Information</h2>
+            <h2>{{ "Shipping Information" | translate }}</h2>
             @if (address(); as a) {
               <p>
                 <app-icon name="pin" /> {{ a.address_line1 }}, {{ a.city }},
@@ -115,7 +117,7 @@ import { Status } from "../../shared/status";
             }
           </section>
           <a class="button outline full" routerLink="/account/support"
-            ><app-icon name="headphones" />Contact Support</a
+            ><app-icon name="headphones" />{{ "Contact Support" | translate }}</a
           >
           @if (o.status === "PENDING") {
             <button
@@ -123,7 +125,7 @@ import { Status } from "../../shared/status";
               [disabled]="busy()"
               (click)="cancelDialog().nativeElement.showModal()"
             >
-              Cancel Order
+              {{ "Cancel Order" | translate }}
             </button>
           }
           @if (o.status === "CHECKOUT_PENDING") {
@@ -132,7 +134,7 @@ import { Status } from "../../shared/status";
             >
           }
           @if (o.status === "FAILED") {
-            <a class="button primary full" routerLink="/cart">Return to Cart</a>
+            <a class="button primary full" routerLink="/cart">{{ "Return to Cart" | translate }}</a>
           }
         </aside>
       </div>
@@ -142,7 +144,7 @@ import { Status } from "../../shared/status";
         aria-labelledby="cancel-title"
       >
         <div class="dialog-heading">
-          <h2 id="cancel-title">Cancel Order</h2>
+          <h2 id="cancel-title">{{ "Cancel Order" | translate }}</h2>
           <button
             class="icon-button"
             aria-label="Close cancellation"
@@ -169,9 +171,9 @@ import { Status } from "../../shared/status";
             [disabled]="busy()"
             (click)="cancelDialog().nativeElement.close()"
           >
-            Keep Order</button
+            {{ "Keep Order" | translate }}</button
           ><button class="danger" [disabled]="busy()" (click)="cancel(o.id)">
-            {{ busy() ? "Cancelling…" : "Cancel Order" }}
+            {{ (busy() ? "Cancelling…" : "Cancel Order") | translate }}
           </button>
         </div>
       </dialog>

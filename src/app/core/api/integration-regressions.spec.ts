@@ -12,7 +12,7 @@ import { CatalogApi } from "../../features/catalog/catalog.api";
 import { ProfileApi } from "../../features/account/profile.api";
 import { AddressesApi } from "../../features/addresses/addresses.api";
 import { AfterSalesApi } from "../../features/after-sales/after-sales.api";
-import { PageState } from "../../shared/page-state";
+import { PageState } from "../../shared/utils/page-state";
 
 const session = {
   id: 7,

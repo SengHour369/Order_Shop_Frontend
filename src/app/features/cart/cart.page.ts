@@ -1,17 +1,18 @@
+import { TranslatePipe } from "../../core/i18n/translate.pipe";
 import { Component, inject, signal } from "@angular/core";
 import { CurrencyPipe } from "@angular/common";
 import { RouterLink } from "@angular/router";
 import { CartApi } from "./cart.api";
 import { Cart, CartItem } from "../../core/api/models";
-import { CustomerStore } from "../../core/state/customer.store";
-import { PageState } from "../../shared/page-state";
-import { Status } from "../../shared/status";
+import { CustomerStore } from "../../core/stores/customer.store";
+import { PageState } from "../../shared/utils/page-state";
+import { Status } from "../../shared/components/status";
 @Component({
-  imports: [CurrencyPipe, RouterLink, Status],
+  imports: [TranslatePipe, CurrencyPipe, RouterLink, Status],
   template: `<div class="breadcrumbs">
-      <a routerLink="/">Home</a><span>›</span><span>Cart</span>
+      <a routerLink="/">{{ "Home" | translate }}</a><span>›</span><span>{{ "Cart" | translate }}</span>
     </div>
-    <h1>Shopping Cart</h1>
+    <h1>{{ "Shopping Cart" | translate }}</h1>
     <p class="muted">{{ cart()?.total_items || 0 }} items in your cart</p>
     <app-status [busy]="busy()" [error]="error()" />
     @if (cart(); as c) {
@@ -46,7 +47,7 @@ import { Status } from "../../shared/status";
                 [disabled]="busy()"
                 (click)="remove(item.id)"
               >
-                Remove
+                {{ "Remove" | translate }}
               </button>
             </div>
           } @empty {
@@ -57,10 +58,10 @@ import { Status } from "../../shared/status";
           }
         </div>
         <aside class="panel">
-          <h2>Order Summary</h2>
+          <h2>{{ "Order Summary" | translate }}</h2>
           <p>{{ c.total_items }} items</p>
           <div class="total">
-            <span>Total</span
+            <span>{{ "Total" | translate }}</span
             ><strong>{{ c.total_price | currency: "USD" }}</strong>
           </div>
           @if (c.items.length) {
@@ -72,7 +73,7 @@ import { Status } from "../../shared/status";
               [disabled]="busy()"
               (click)="clear()"
             >
-              Clear Cart
+              {{ "Clear Cart" | translate }}
             </button>
           }
           <p class="muted">Final prices and stock are confirmed at checkout.</p>

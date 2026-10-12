@@ -1,0 +1,262 @@
+<section class="return-detail">
+    <div class="adm-page-head">
+      <div>
+        <h2>{{ "Return Details" | translate }}</h2>
+        <p><a routerLink="/admin/returns">{{ "Returns" | translate }}</a> · {{ id }}</p>
+      </div>
+    </div>
+    <app-status [busy]="busy()" [error]="error()" [message]="message()" />
+    @if (row(); as current) {
+      <div class="return-stepper" aria-label="Return progress">
+        @for(step of steps; track step; let i = $index){<div [class.done]="stepIndex(current) > i || statusOf(current) === 'COMPLETED'" [class.current]="stepIndex(current) === i && statusOf(current) !== 'COMPLETED'"><span>{{ (stepIndex(current) > i || statusOf(current) === 'COMPLETED' ? '✓' : '') | translate }}</span><strong>{{ step }}</strong></div>}
+      </div>
+      <div
+        class="adm-stats"
+        style="grid-template-columns:repeat(3,minmax(0,1fr))"
+      >
+        <article class="adm-card">
+          <span
+            >Return ID:
+            {{ text(field(current, "return_id", "returnId")) }}</span
+          >
+          <strong style="font-size:28px">{{
+            usd(field(current, "amount"))
+          }}</strong>
+          <em
+            >{{ text(field(current, "status")) }} ·
+            {{ when(field(current, "requested_at", "requestedAt")) }}</em
+          >
+        </article>
+        <article class="adm-panel">
+          <h3>{{ "Customer Details" | translate }}</h3>
+          <div class="adm-who">
+            <span class="adm-dot">{{ initial(current) }}</span>
+            <span>
+              <b>{{ text(field(current, "customer_name", "customerName")) }}</b>
+              <small
+                >Id
+                {{ text(field(current, "customer_id", "customerId")) }}</small
+              >
+            </span>
+          </div>
+        </article>
+        <article class="adm-panel">
+          <h3>Associated Order & Product</h3>
+          <div class="adm-kv">
+            <span>{{ "Order ID" | translate }}</span
+            ><b>{{ text(field(current, "order_no", "orderNo")) }}</b>
+            <span>{{ "Product" | translate }}</span
+            ><b>{{
+              text(
+                field(
+                  current,
+                  "product_name",
+                  "productName",
+                  "product_id",
+                  "productId"
+                )
+              )
+            }}</b>
+            <span>{{ "Return type" | translate }}</span
+            ><b>{{ text(field(current, "return_type", "returnType")) }}</b>
+          </div>
+        </article>
+      </div>
+      <div class="adm-work" style="margin-top:14px">
+        <div class="adm-stack">
+          <article class="adm-panel">
+            <h3>{{ "Return Information" | translate }}</h3>
+            <div class="adm-kv">
+              <span>{{ "Return reason" | translate }}</span
+              ><b>{{ text(field(current, "reason")) }}</b>
+              <span>Current status</span
+              ><b>{{ text(field(current, "status")) }}</b>
+              <span>{{ "Return type" | translate }}</span
+              ><b>{{ text(field(current, "return_type", "returnType")) }}</b>
+              <span>Remark</span><b>{{ text(field(current, "remark")) }}</b>
+              <span>{{ "Requested" | translate }}</span
+              ><b>{{ when(field(current, "requested_at", "requestedAt")) }}</b>
+              <span>Requested by</span
+              ><b>{{ text(field(current, "requested_by", "requestedBy")) }}</b>
+            </div>
+          </article>
+          <article class="adm-panel">
+            <h3>Action Panel</h3>
+            @if (statusOf(current) === "REQUESTED") {
+              <form class="adm-form full" (ngSubmit)="$event.preventDefault()">
+                <label>
+                  Remark
+                  <span class="adm-optional">(Optional for approval)</span>
+                  <textarea
+                    name="remark"
+                    rows="4"
+                    [(ngModel)]="remark"
+                    placeholder="e.g. Return meets policy requirements..."
+                  ></textarea>
+                </label>
+                <p class="adm-help">
+                  Decide whether this return qualifies before the customer ships
+                  anything back. A rejection reason is required.
+                </p>
+                <div class="adm-actions">
+                  <button
+                    class="adm-btn ok"
+                    type="button"
+                    [disabled]="busy()"
+                    (click)="act('approve')"
+                  >
+                    Approve Return
+                  </button>
+                  <button
+                    class="adm-btn stop"
+                    type="button"
+                    [disabled]="busy()"
+                    (click)="act('reject')"
+                  >
+                    Reject Return
+                  </button>
+                </div>
+              </form>
+            } @else if (statusOf(current) === "APPROVED") {
+              <form class="adm-form full" (ngSubmit)="act('receive')">
+                <label>
+                  Remark
+                  <span class="adm-req">*</span>
+                  <textarea
+                    name="remark"
+                    rows="4"
+                    [(ngModel)]="remark"
+                    placeholder="e.g. Package received in good condition at warehouse..."
+                  ></textarea>
+                </label>
+                <p class="adm-help">
+                  Log this once the item physically arrives at the warehouse. A
+                  remark is required.
+                </p>
+                <button class="adm-btn adm-primary" [disabled]="busy()">
+                  Mark as Received
+                </button>
+              </form>
+            } @else if (statusOf(current) === "RECEIVED") {
+              <button
+                class="adm-btn adm-primary"
+                type="button"
+                [disabled]="busy()"
+                (click)="act('inspect/start')"
+              >
+                Start Inspection
+              </button>
+              <p class="adm-help">
+                Next step: mark inspection as Passed or Failed.
+              </p>
+            } @else if (statusOf(current) === "INSPECTING") {
+              <form class="adm-form full" (ngSubmit)="$event.preventDefault()">
+                <label>
+                  Remark
+                  <span class="adm-req">*</span>
+                  <textarea
+                    name="remark"
+                    rows="4"
+                    [(ngModel)]="remark"
+                    placeholder="e.g. Item is in perfect condition, no damage found..."
+                  ></textarea>
+                </label>
+                <p class="adm-help">
+                  This decision determines whether a refund is created or the
+                  return is rejected. Inspection notes are required.
+                </p>
+                <div class="adm-actions">
+                  <button
+                    class="adm-btn ok"
+                    type="button"
+                    [disabled]="busy()"
+                    (click)="act('inspect/complete', true)"
+                  >
+                    Mark Passed
+                  </button>
+                  <button
+                    class="adm-btn stop"
+                    type="button"
+                    [disabled]="busy()"
+                    (click)="act('inspect/complete', false)"
+                  >
+                    Mark Failed
+                  </button>
+                </div>
+              </form>
+            } @else if (statusOf(current) === "COMPLETED") {
+              <div class="adm-note ok">
+                <div>
+                  <strong>Inspection passed — return completed</strong>
+                  <p>
+                    Inspection is complete. Refund settlement must be checked separately in Payment Service.
+                  </p>
+                </div>
+              </div>
+            } @else if (statusOf(current) === "REJECTED") {
+              <div class="adm-note stop">
+                <div>
+                  <strong>Return Rejected</strong>
+                  <p>The return request was rejected.</p>
+                </div>
+              </div>
+            }
+          </article>
+        </div>
+        <div class="adm-stack">
+          <article class="adm-panel">
+            <h3>Items in Return</h3>
+            <div class="adm-table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Item</th>
+                    <th>{{ "Refund amount" | translate }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      {{
+                        text(
+                          field(
+                            current,
+                            "product_name",
+                            "productName",
+                            "product_id",
+                            "productId"
+                          )
+                        )
+                      }}
+                    </td>
+                    <td>{{ usd(field(current, "amount")) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+          <article class="adm-panel">
+            <h3>Return Timeline</h3>
+            @if (events(current).length) {
+              <div class="adm-kv">
+                @for (event of events(current); track event.label + event.at) {
+                  <span>{{ event.label }}</span>
+                  <b
+                    >{{ when(event.at) }}
+                    @if (event.by) {
+                      · {{ event.by }}
+                    }
+                  </b>
+                }
+              </div>
+            } @else {
+              <div class="adm-empty">
+                <strong>No history events yet.</strong>
+                <p>Status {{ text(field(current, "status")) }}</p>
+              </div>
+            }
+          </article>
+        </div>
+      </div>
+    }
+  </section>

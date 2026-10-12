@@ -1,0 +1,56 @@
+<section class="detail-page">
+  <header class="detail-head">
+    <div>
+<h2>{{ kind() }} Details</h2>
+<nav class="detail-crumbs" aria-label="Breadcrumb">
+<a routerLink="/admin">{{ "Dashboard" | translate }}</a>
+<span>›</span>
+<a [routerLink]="base()">{{ plural() }}</a>
+<span>›</span>{{ text(row()['name']) }}</nav>
+</div>
+    <div class="detail-actions">
+      <a class="detail-button" [routerLink]="base()">
+<app-icon name="arrow-left" /> Back to {{ plural() }}</a>
+      <a class="detail-button primary" [class.blue]="kind() === 'Category'" [routerLink]="[base(), 'edit', row()['id']]">
+<app-icon name="edit" /> Edit {{ kind() }}</a>
+    </div>
+  </header>
+  <div class="detail-grid">
+    <article class="detail-card">
+<h3>{{ kind() }} Information</h3>
+<div class="detail-fields">
+      <div>
+<span class="detail-label">{{ kind() }} Name</span>
+<p class="detail-value">{{ text(row()['name']) }}</p>
+</div>
+      <div>@if (kind() === 'Brand') { <span class="detail-label">{{ "Category" | translate }}</span>
+<span class="detail-badge">{{ text(field(row(), 'category_name', 'categoryName')) }}</span> }
+@else { <span class="detail-label">ID</span>
+<p class="detail-value detail-mono">{{ text(row()['id']) }}</p> }</div>
+      <div>
+<span class="detail-label">{{ "Status" | translate }}</span>
+<span class="detail-badge" [class.on]="status() === 'Active'" [class.wait]="status() === 'Inactive'">{{ status() }}</span>
+</div>
+      <div>
+<span class="detail-label">{{ "Created At" | translate }}</span>
+<p>{{ when(field(row(), 'created_at', 'createdAt')) }}</p>
+</div>
+      @if (kind() === 'Category') { <div>
+<span class="detail-label">{{ "Updated At" | translate }}</span>
+<p>{{ when(field(row(), 'updated_at', 'updatedAt')) }}</p>
+</div> }
+      <div class="detail-span">
+<span class="detail-label">{{ "Description" | translate }}</span>
+<p class="detail-description">{{ text(row()['description']) }}</p>
+</div>
+    </div>
+</article>
+    <aside class="detail-card">
+<h3>{{ (kind() === 'Brand' ? 'Brand Logo' : 'Category Icon') | translate }}</h3>
+<div class="detail-asset">
+      @if (image()) { <img appProductImage [src]="image()" [alt]="text(row()['name'])" /> }
+@else { <span>{{ (kind() === 'Brand' ? 'No Logo Available' : 'No Icon Available') | translate }}</span> }
+    </div>
+</aside>
+  </div>
+</section>

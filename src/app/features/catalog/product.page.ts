@@ -1,3 +1,4 @@
+import { TranslatePipe } from "../../core/i18n/translate.pipe";
 import { Component, inject, signal, computed } from "@angular/core";
 import { CurrencyPipe } from "@angular/common";
 import { FormsModule } from "@angular/forms";
@@ -6,16 +7,16 @@ import { CatalogApi } from "./catalog.api";
 import { CartApi } from "../cart/cart.api";
 import { Product } from "../../core/api/models";
 import { AuthService } from "../../core/auth/auth.service";
-import { CustomerStore } from "../../core/state/customer.store";
-import { Icon } from "../../shared/icon";
-import { PageState } from "../../shared/page-state";
-import { ProductImage } from "../../shared/product-image";
-import { Status } from "../../shared/status";
+import { CustomerStore } from "../../core/stores/customer.store";
+import { Icon } from "../../shared/components/icon";
+import { PageState } from "../../shared/utils/page-state";
+import { ProductImage } from "../../shared/components/product-image";
+import { Status } from "../../shared/components/status";
 @Component({
-  imports: [CurrencyPipe, FormsModule, RouterLink, Icon, Status, ProductImage],
+  imports: [TranslatePipe, CurrencyPipe, FormsModule, RouterLink, Icon, Status, ProductImage],
   template: `<div class="breadcrumbs">
-      <a routerLink="/">Home</a><app-icon name="chevron" /><a routerLink="/shop"
-        >Products</a
+      <a routerLink="/">{{ "Home" | translate }}</a><app-icon name="chevron" /><a routerLink="/shop"
+        >{{ "Products" | translate }}</a
       ><app-icon name="chevron" /><span>{{
         product()?.name || "Product details"
       }}</span>
@@ -86,9 +87,7 @@ import { Status } from "../../shared/status";
         <aside class="purchase-card panel">
           @if (selected(); as s) {
             <p class="stock">
-              <app-icon name="check" />{{
-                s.quantity > 0 ? "In Stock" : "Out of Stock"
-              }}
+              <app-icon name="check" />{{ (s.quantity > 0 ? "In Stock" : "Out of Stock") | translate }}
             </p>
             <span class="small muted">SKU: {{ s.sku }}</span>
             <div class="buy-row">
@@ -100,7 +99,7 @@ import { Status } from "../../shared/status";
                 >
                   −</button
                 ><input
-                  aria-label="Quantity"
+                  [attr.aria-label]='"Quantity" | translate'
                   type="number"
                   [(ngModel)]="quantity"
                   min="1"
@@ -125,7 +124,7 @@ import { Status } from "../../shared/status";
                 "
                 (click)="add(false)"
               >
-                <app-icon name="cart" /> Add to Cart
+                <app-icon name="cart" /> {{ "Add to Cart" | translate }}
               </button>
             </div>
             <button
@@ -140,7 +139,7 @@ import { Status } from "../../shared/status";
               "
               (click)="add(true)"
             >
-              Buy Now
+              {{ "Buy Now" | translate }}
             </button>
           }
           <button class="outline full" (click)="save(p)">
@@ -151,14 +150,14 @@ import { Status } from "../../shared/status";
           <div class="purchase-perk">
             <span class="icon-circle blue"><app-icon name="truck" /></span>
             <div>
-              <h3>Delivery Updates</h3>
+              <h3>{{ "Delivery Updates" | translate }}</h3>
               <p>Track your order status</p>
             </div>
           </div>
           <div class="purchase-perk">
             <span class="icon-circle orange"><app-icon name="box" /></span>
             <div>
-              <h3>Order Support</h3>
+              <h3>{{ "Order Support" | translate }}</h3>
               <p>Help through your account</p>
             </div>
           </div>
@@ -166,13 +165,13 @@ import { Status } from "../../shared/status";
             <span class="icon-circle green"><app-icon name="shield" /></span>
             <div>
               <h3>Payment Confirmation</h3>
-              <p>Verified by the payment service</p>
+              <p>{{ "Verified by the payment service" | translate }}</p>
             </div>
           </div>
         </aside>
       </section>
       <div class="product-tabs">
-        <button class="active">Overview</button
+        <button class="active">{{ "Overview" | translate }}</button
         ><a routerLink="/account/support">Shipping & Returns</a>
       </div>
       <div class="overview-columns">

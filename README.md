@@ -20,14 +20,19 @@ Open http://127.0.0.1:4200. Start the backend separately. The development proxy 
 ```text
 src/app/core/api/        Gateway client, DTOs, response normalization and tests
 src/app/core/auth/       In-memory login, guards and shared token refresh
+src/app/core/stores/     Shared application state
 src/app/features/       Lazy customer and staff pages with feature API adapters
-src/app/shared/         Reusable UI and request state
+src/app/features/admin/ Admin screens grouped by business function
+src/app/shared/components/ Reusable UI components
+src/app/shared/utils/   Shared utilities and request state
 src/app/app.routes.ts   Feature routes and access guards
 src/environments/       Gateway configuration
 scripts/                Source endpoint audit and read-only live availability checks
 docs/                   Endpoint inventory, verification results and screenshots
 deploy/nginx.conf       Production SPA routing and gateway proxy
 ```
+
+See the [Angular project map](src/app/README.md) for the folder layout and suggested review order.
 
 Customer pages cover storefront, catalog, SKU selection, cart, checkout, orders, addresses, payments, notifications, account settings, security, wishlist, AI assistant and product finder. Staff pages cover catalog editing, inventory, orders, returns, cancellations, refunds, payments, transactions, customers, groups, permissions, reports, settings, promotions and service activity. Backend role checks remain authoritative.
 

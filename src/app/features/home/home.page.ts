@@ -1,15 +1,16 @@
+import { TranslatePipe } from "../../core/i18n/translate.pipe";
 import { Component, inject, signal } from "@angular/core";
 import { RouterLink } from "@angular/router";
 import { AuthService } from "../../core/auth/auth.service";
 import { Product } from "../../core/api/models";
 import { CatalogApi } from "../catalog/catalog.api";
-import { ProductCard } from "../../shared/product-card";
-import { SignInCard } from "../../shared/sign-in-card";
-import { Icon } from "../../shared/icon";
-import { PageState } from "../../shared/page-state";
-import { Status } from "../../shared/status";
+import { ProductCard } from "../../shared/components/product-card";
+import { SignInCard } from "../../shared/components/sign-in-card";
+import { Icon } from "../../shared/components/icon";
+import { PageState } from "../../shared/utils/page-state";
+import { Status } from "../../shared/components/status";
 @Component({
-  imports: [RouterLink, ProductCard, SignInCard, Icon, Status],
+  imports: [TranslatePipe, RouterLink, ProductCard, SignInCard, Icon, Status],
   templateUrl: "./home.html",
 })
 export class HomePage extends PageState {

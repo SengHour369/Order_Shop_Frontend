@@ -1,11 +1,12 @@
+import { TranslatePipe } from "../../core/i18n/translate.pipe";
 import { Component, inject, computed } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { RouterLink } from "@angular/router";
-import { CustomerStore } from "../../core/state/customer.store";
-import { ProductCard } from "../../shared/product-card";
-import { Icon } from "../../shared/icon";
+import { CustomerStore } from "../../core/stores/customer.store";
+import { ProductCard } from "../../shared/components/product-card";
+import { Icon } from "../../shared/components/icon";
 @Component({
-  imports: [FormsModule, RouterLink, ProductCard, Icon],
+  imports: [TranslatePipe, FormsModule, RouterLink, ProductCard, Icon],
   template: `<section class="account-banner">
       <div>
         <h1>My Wishlist</h1>
@@ -23,7 +24,7 @@ import { Icon } from "../../shared/icon";
         <label for="wishlist-sort">Sort by:</label
         ><select id="wishlist-sort" [(ngModel)]="sort">
           <option value="recent">Most Recent</option>
-          <option value="name">Name</option>
+          <option value="name">{{ "Name" | translate }}</option>
           <option value="price">Price: Low to High</option>
         </select>
       </div>

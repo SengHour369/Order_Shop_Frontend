@@ -174,7 +174,7 @@ for (const route of unique) {
   if (route.path === "/api/admin/audit-logs") {
     route.status =
       "Adapter present through gateway service-specific audit paths";
-    route.clients = ["src/app/features/admin/admin.api.ts"];
+    route.clients = ["src/app/features/admin/api/admin.api.ts"];
   }
 }
 fs.mkdirSync("docs", { recursive: true });

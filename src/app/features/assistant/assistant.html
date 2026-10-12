@@ -2,11 +2,12 @@
   
   <div class="assistant-main">
     <header class="admin-topbar">
+      <app-language-select />
       
       <form class="global-search" (ngSubmit)="search()"><app-icon name="search" /><input name="search" [(ngModel)]="searchQuery" aria-label="Search orders, products, customers" placeholder="Search orders, products, customers…" /></form>
       <span class="model"><span class="model-dot"></span>Ollama assistant</span>
       <button class="icon-button settings-button" aria-label="Assistant information" (click)="showTools = !showTools"><app-icon name="settings" /></button>
-      <a class="icon-button" routerLink="/account/notifications" aria-label="Notifications"><app-icon name="bell" /></a>
+      <a class="icon-button" routerLink="/account/notifications" [attr.aria-label]='"Notifications" | translate'><app-icon name="bell" /></a>
       <a class="profile" [routerLink]="administrator ? '/admin/settings' : '/account'">
         <span>{{ (auth.session()?.username || 'A').slice(0, 1).toUpperCase() }}</span>
         <div><strong>{{ auth.session()?.username || 'Account' }}</strong><small>{{ auth.session()?.email || (administrator ? 'Administrator' : 'Shop account') }}</small></div>
@@ -14,17 +15,17 @@
       </a>
     </header>
     <section class="assistant-shell">
-      <header class="assistant-header"><div class="identity"><span class="bot-logo"><app-icon name="robot" /></span><div><h1>AI Assistant</h1><p>{{ administrator ? 'Your smart assistant for E-Shop management. Ask questions, get insights, and perform actions.' : 'Your E-Shop shopping assistant. Find products and get help with your orders.' }}</p></div></div></header>
+      <header class="assistant-header"><div class="identity"><span class="bot-logo"><app-icon name="robot" /></span><div><h1>{{ "AI Assistant" | translate }}</h1><p>{{ administrator ? 'Your smart assistant for E-Shop management. Ask questions, get insights, and perform actions.' : 'Your E-Shop shopping assistant. Find products and get help with your orders.' }}</p></div></div></header>
       
       @if (showTools || showSources) {
         <section class="information-panel">
-          <div class="panel-heading"><h2>{{ showTools ? 'Assistant tools' : 'Knowledge base' }}</h2><button (click)="showTools = false; showSources = false">Close</button></div>
+          <div class="panel-heading"><h2>{{ showTools ? 'Assistant tools' : 'Knowledge base' }}</h2><button (click)="showTools = false; showSources = false">{{ "Close" | translate }}</button></div>
           <p>{{ showTools ? 'Find products, check stock, review orders, and explore reports. Available actions depend on your permissions. Changes require review and confirmation.' : 'The assistant uses approved E-Shop documents when they are available. Ask about a policy or contact support for verified store guidance.' }}</p>
         </section>
       }
       <div class="workspace">
     <section class="chat-panel" aria-label="Assistant conversation">
-      <div class="chat-toolbar"><span>Conversation</span><button (click)="newConversation()" [disabled]="busy()"><app-icon name="trash" />Clear Chat</button></div>
+      <div class="chat-toolbar"><span>{{ "Conversation" | translate }}</span><button (click)="newConversation()" [disabled]="busy()"><app-icon name="trash" />{{ "Clear Chat" | translate }}</button></div>
       <div #chatScroll
         class="chat-scroll"
         aria-live="polite"
@@ -45,7 +46,7 @@
               <li>Customers and analytics</li>
               <li>E-Shop policies and documentation</li>
             </ul>
-            <p>How can I help you today?</p>
+            <p>{{ "How can I help you today?" | translate }}</p>
           </div>
         </article>
         @for (message of current()?.messages || []; track $index) {
@@ -138,7 +139,7 @@
         }
         @if (busy()) {
           <div class="thinking">
-            <span></span><span></span><span></span> Working on your request…
+            <span></span><span></span><span></span> {{ "Working on your request…" | translate }}
           </div>
         }
         <app-status [error]="error()" />
@@ -173,8 +174,8 @@
               "
             >
               <option>Product Search</option>
-              <option>Orders</option>
-              <option>Inventory</option>
+              <option>{{ "Orders" | translate }}</option>
+              <option>{{ "Inventory" | translate }}</option>
               <option>Policies</option>
             </select>
           </div>
@@ -189,14 +190,14 @@
       </form>
     </section>
         <aside class="support-column">
-          <section class="panel-card"><div class="panel-heading"><h2>Quick Actions</h2><button (click)="showAllActions = !showAllActions">{{ showAllActions ? 'Show Less' : 'View All' }}</button></div>
+          <section class="panel-card"><div class="panel-heading"><h2>Quick Actions</h2><button (click)="showAllActions = !showAllActions">{{ (showAllActions ? 'Show Less' : 'View All') | translate }}</button></div>
             <div class="quick-grid">
               @for (item of (showAllActions ? actions.concat(extraActions) : actions); track item[0]) {
                 <button [class]="'quick-action ' + item[3]" (click)="choose(item[2])" [disabled]="busy()"><app-icon [name]="item[1]" /><span>{{ item[0] }}</span></button>
               }
             </div>
           </section>
-          <section #recentPanel class="panel-card recent-panel"><div class="panel-heading"><h2>Recent Conversations</h2><button (click)="showAllConversations = !showAllConversations">{{ showAllConversations ? 'Show Less' : 'View All' }}</button></div>
+          <section #recentPanel class="panel-card recent-panel"><div class="panel-heading"><h2>Recent Conversations</h2><button (click)="showAllConversations = !showAllConversations">{{ (showAllConversations ? 'Show Less' : 'View All') | translate }}</button></div>
             @for (conversation of conversations().slice(0, showAllConversations ? conversations().length : 8); track conversation.localId) {
               <button class="recent-row" [class.selected]="current()?.localId === conversation.localId" (click)="open(conversation)" [disabled]="busy()"><app-icon name="mail" /><span>{{ conversation.title }}</span><time>{{ conversation.time | date: 'h:mm a' }}</time></button>
             } @empty {

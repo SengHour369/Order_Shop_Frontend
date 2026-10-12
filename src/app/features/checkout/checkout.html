@@ -1,9 +1,9 @@
 <div class="breadcrumbs">
-  <a routerLink="/">Home</a><span>›</span><a routerLink="/cart">Cart</a
-  ><span>›</span><span>Checkout</span>
+  <a routerLink="/">{{ "Home" | translate }}</a><span>›</span><a routerLink="/cart">{{ "Cart" | translate }}</a
+  ><span>›</span><span>{{ "Checkout" | translate }}</span>
 </div>
 <div class="page-heading">
-  <h1>Checkout</h1>
+  <h1>{{ "Checkout" | translate }}</h1>
   <ol class="checkout-steps" aria-label="Checkout progress">
     @for (
       label of ["Shipping Address", "Payment Method", "Review Order"];
@@ -36,7 +36,7 @@
     @if (step === 1) {
       <div class="section-heading">
         <div>
-          <h2>Shipping Address</h2>
+          <h2>{{ "Shipping Address" | translate }}</h2>
           <p>Choose where you want to receive your order.</p>
         </div>
         <a class="button primary small" routerLink="/account/addresses"
@@ -56,7 +56,7 @@
               ><strong
                 >{{ auth.session()?.username }}
                 @if (a.is_default) {
-                  <span class="badge">Default</span>
+                  <span class="badge">{{ "Default" | translate }}</span>
                 }</strong
               ><span>{{ a.address_line1 }}</span
               ><span>{{ a.city }}, {{ a.country }} {{ a.zip_code }}</span></span
@@ -78,15 +78,15 @@
         (click)="next()"
         [disabled]="!addressId || busy()"
       >
-        Continue to Payment →
+        {{ "Continue to Payment →" | translate }}
       </button>
     }
     @if (step === 2) {
-      <h2>Payment Method</h2>
+      <h2>{{ "Payment Method" | translate }}</h2>
       <p>Choose a payment provider for your order.</p>
       <div class="payment-choices">
         @for (
-          provider of ["BAKONG", "ABA", "ACLEDA", "RAZORPAY", "SINGE"];
+          provider of ["BAKONG", "ABA", "CASH_ON_DELIVERY"];
           track provider
         ) {
           <label class="payment-choice" [class.selected]="method === provider"
@@ -107,22 +107,22 @@
       <div class="dialog-actions">
         <button type="button" (click)="step = 1">← Shipping</button
         ><button class="primary" type="button" (click)="next()">
-          Review Order →
+          {{ "Review Order →" | translate }}
         </button>
       </div>
     }
     @if (step === 3) {
-      <h2>Review Your Order</h2>
+      <h2>{{ "Review Your Order" | translate }}</h2>
       <div class="review-section">
         <div class="section-heading">
-          <h3>Shipping Address</h3>
+          <h3>{{ "Shipping Address" | translate }}</h3>
           <button
             class="text-button"
             type="button"
             (click)="step = 1"
             [disabled]="locked()"
           >
-            Edit
+            {{ "Edit" | translate }}
           </button>
         </div>
         @if (selectedAddress(); as a) {
@@ -136,22 +136,22 @@
       </div>
       <div class="review-section">
         <div class="section-heading">
-          <h3>Payment Method</h3>
+          <h3>{{ "Payment Method" | translate }}</h3>
           <button
             class="text-button"
             type="button"
             (click)="step = 2"
             [disabled]="locked()"
           >
-            Edit
+            {{ "Edit" | translate }}
           </button>
         </div>
         <p>{{ method }} · {{ currency }}</p>
       </div>
       <div class="review-section">
         <div class="section-heading">
-          <h3>Order Items</h3>
-          <a routerLink="/cart">Edit Cart</a>
+          <h3>{{ "Order Items" | translate }}</h3>
+          <a routerLink="/cart">{{ "Edit Cart" | translate }}</a>
         </div>
         @for (item of cart()?.items || []; track item.id) {
           <div class="line-item">
@@ -180,15 +180,15 @@
       </button>
       @if (!locked()) {
         <button class="text-button" type="button" (click)="step = 2">
-          ← Back to Payment Method
+          {{ "← Back to Payment Method" | translate }}
         </button>
       }
     }
   </form>
   <aside class="panel checkout-summary">
     <div class="section-heading">
-      <h2>Order Summary</h2>
-      <a routerLink="/cart">Edit Cart</a>
+      <h2>{{ "Order Summary" | translate }}</h2>
+      <a routerLink="/cart">{{ "Edit Cart" | translate }}</a>
     </div>
     @if (cart(); as c) {
       <div class="summary-row">

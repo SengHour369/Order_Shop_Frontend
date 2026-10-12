@@ -1,18 +1,27 @@
+import { LanguageSelect } from "../../core/i18n/language-select";
+import { TranslatePipe } from "../../core/i18n/translate.pipe";
 import { Component, inject } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { AuthService } from "../../core/auth/auth.service";
+import { KeycloakService } from "../../core/auth/keycloak.service";
 import { ApiClient } from "../../core/api/api-client";
-import { PageState } from "../../shared/page-state";
-import { Icon } from "../../shared/icon";
-import { Status } from "../../shared/status";
+import { PageState } from "../../shared/utils/page-state";
+import { Icon } from "../../shared/components/icon";
+import { Status } from "../../shared/components/status";
 @Component({
   standalone: true,
-  imports: [FormsModule, Status, Icon, RouterLink],
+  imports: [LanguageSelect, TranslatePipe, FormsModule, Status, Icon, RouterLink],
   templateUrl: "./account.html",
 })
 export class AccountPage extends PageState {
   auth = inject(AuthService);
+  sso = inject(KeycloakService);
+  async signInWithKeycloak() {
+    this.busy.set(true);
+    try { await this.sso.login(this.route.snapshot.queryParamMap.get("returnUrl")); }
+    catch { this.error.set("Keycloak is unavailable. Please try again."); this.busy.set(false); }
+  }
   api = inject(ApiClient);
   router = inject(Router);
   route = inject(ActivatedRoute);

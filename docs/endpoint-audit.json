@@ -4,7 +4,7 @@
     "path": "/api/v1/admin/monitor",
     "source": "admin-service/src/main/java/com/example/eshop/admin/controller/AdminMonitorController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -13,7 +13,7 @@
     "path": "/api/v1/admin/session",
     "source": "admin-service/src/main/java/com/example/eshop/admin/controller/StaffSessionController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -22,7 +22,7 @@
     "path": "/api/v1/admin/settings",
     "source": "admin-service/src/main/java/com/example/eshop/admin/controller/StoreSettingsController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -31,7 +31,7 @@
     "path": "/api/v1/admin/settings",
     "source": "admin-service/src/main/java/com/example/eshop/admin/controller/StoreSettingsController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -147,7 +147,7 @@
     "path": "/api/v1/functions/get/all",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/FunctionPermissionController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -156,7 +156,7 @@
     "path": "/api/v1/functions/get/id",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/FunctionPermissionController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -165,7 +165,7 @@
     "path": "/api/v1/functions/create",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/FunctionPermissionController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -174,7 +174,7 @@
     "path": "/api/v1/functions/update",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/FunctionPermissionController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -183,7 +183,7 @@
     "path": "/api/v1/functions/delete",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/FunctionPermissionController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -192,7 +192,7 @@
     "path": "/api/v1/groups/create",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/GroupController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -201,7 +201,7 @@
     "path": "/api/v1/groups/get/all",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/GroupController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -210,7 +210,7 @@
     "path": "/api/v1/groups/get/{id}",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/GroupController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -219,7 +219,7 @@
     "path": "/api/v1/groups/update/{id}",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/GroupController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -228,7 +228,7 @@
     "path": "/api/v1/groups/delete/{id}",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/GroupController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -237,7 +237,7 @@
     "path": "/api/v1/groups/activate/{id}",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/GroupController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -246,7 +246,7 @@
     "path": "/api/v1/group-permissions/get/all",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/GroupPermissionController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -255,7 +255,7 @@
     "path": "/api/v1/group-permissions/get/id",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/GroupPermissionController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -264,7 +264,7 @@
     "path": "/api/v1/group-permissions/create",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/GroupPermissionController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -273,7 +273,7 @@
     "path": "/api/v1/group-permissions/update",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/GroupPermissionController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -282,7 +282,7 @@
     "path": "/api/v1/group-permissions/delete",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/GroupPermissionController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -424,7 +424,7 @@
     "path": "/api/v1/user/create",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -433,7 +433,7 @@
     "path": "/api/v1/user/id",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -452,7 +452,7 @@
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserController.java",
     "clients": [
       "src/app/features/account/profile.api.ts",
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -461,7 +461,7 @@
     "path": "/api/v1/user/All",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -477,7 +477,7 @@
     "path": "/api/v1/user/id/delete",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -486,7 +486,7 @@
     "path": "/api/v1/user/count",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -495,7 +495,7 @@
     "path": "/api/v1/user-groups/get/all",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserGroupController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -504,7 +504,7 @@
     "path": "/api/v1/user-groups/get/id",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserGroupController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -513,7 +513,7 @@
     "path": "/api/v1/user-groups/create",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserGroupController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -522,7 +522,7 @@
     "path": "/api/v1/user-groups/update",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserGroupController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -531,7 +531,7 @@
     "path": "/api/v1/user-groups/delete",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserGroupController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -540,7 +540,7 @@
     "path": "/api/v1/user-permissions/get/all",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserPermissionController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -549,7 +549,7 @@
     "path": "/api/v1/user-permissions/get/id",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserPermissionController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -558,7 +558,7 @@
     "path": "/api/v1/user-permissions/create",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserPermissionController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -567,7 +567,7 @@
     "path": "/api/v1/user-permissions/update",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserPermissionController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -576,7 +576,7 @@
     "path": "/api/v1/user-permissions/delete",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserPermissionController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -606,7 +606,7 @@
     "path": "/api/v1/brand-logos/get/all",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/BrandLogoController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -615,7 +615,7 @@
     "path": "/api/v1/brand-logos/id",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/BrandLogoController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -624,7 +624,7 @@
     "path": "/api/v1/brand-logos/upload",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/BrandLogoController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -661,7 +661,7 @@
     "path": "/api/v1/categories/get/all",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/CategoryController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -670,7 +670,7 @@
     "path": "/api/v1/categories/id/get",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/CategoryController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -679,7 +679,7 @@
     "path": "/api/v1/categories/name",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/CategoryController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts",
+      "src/app/features/admin/api/admin.api.ts",
       "src/app/features/catalog/catalog.api.ts"
     ],
     "status": "Adapter present; live verification required"
@@ -689,7 +689,7 @@
     "path": "/api/v1/categories/with-subcategories",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/CategoryController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -698,7 +698,7 @@
     "path": "/api/v1/categories/create",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/CategoryController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -707,7 +707,7 @@
     "path": "/api/v1/categories/id/update",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/CategoryController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -716,7 +716,7 @@
     "path": "/api/v1/categories/id/icon",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/CategoryController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -725,7 +725,7 @@
     "path": "/api/v1/categories/delete",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/CategoryController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -734,7 +734,7 @@
     "path": "/api/v1/category-icons/get/all",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/CategoryIconController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -743,7 +743,7 @@
     "path": "/api/v1/category-icons/id",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/CategoryIconController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -752,7 +752,7 @@
     "path": "/api/v1/category-icons/upload",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/CategoryIconController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -761,7 +761,7 @@
     "path": "/api/v1/inventory",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/InventoryController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -770,7 +770,7 @@
     "path": "/api/v1/inventory/all",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/InventoryController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -779,7 +779,7 @@
     "path": "/api/v1/inventory/id",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/InventoryController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -788,7 +788,7 @@
     "path": "/api/v1/inventory/sku",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/InventoryController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -797,7 +797,7 @@
     "path": "/api/v1/inventory/product",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/InventoryController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -806,7 +806,7 @@
     "path": "/api/v1/inventory/low-stock",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/InventoryController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -815,7 +815,7 @@
     "path": "/api/v1/inventory/restock",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/InventoryController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -824,7 +824,7 @@
     "path": "/api/v1/inventory/exact",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/InventoryController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -833,7 +833,7 @@
     "path": "/api/v1/inventory/delete",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/InventoryController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -842,7 +842,7 @@
     "path": "/api/v1/inventory/summary",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/InventoryController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -851,7 +851,7 @@
     "path": "/api/v1/inventory/search",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/InventoryController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -860,7 +860,7 @@
     "path": "/api/v1/inventory/history/{inventoryId}",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/InventoryController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -869,7 +869,7 @@
     "path": "/api/v1/attributes/{id}",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductAttributeController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts",
+      "src/app/features/admin/api/admin.api.ts",
       "src/app/features/catalog/catalog.api.ts"
     ],
     "status": "Adapter present; live verification required"
@@ -879,7 +879,7 @@
     "path": "/api/v1/attributes/name/{name}",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductAttributeController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts",
+      "src/app/features/admin/api/admin.api.ts",
       "src/app/features/catalog/catalog.api.ts"
     ],
     "status": "Adapter present; live verification required"
@@ -889,7 +889,7 @@
     "path": "/api/v1/attributes",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductAttributeController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts",
+      "src/app/features/admin/api/admin.api.ts",
       "src/app/features/catalog/catalog.api.ts"
     ],
     "status": "Adapter present; live verification required"
@@ -899,7 +899,7 @@
     "path": "/api/v1/attributes/{id}",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductAttributeController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -908,7 +908,7 @@
     "path": "/api/v1/attribute-values/{id}",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductAttributeValueController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -917,7 +917,7 @@
     "path": "/api/v1/attribute-values/attribute/{attributeId}",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductAttributeValueController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts",
+      "src/app/features/admin/api/admin.api.ts",
       "src/app/features/catalog/catalog.api.ts"
     ],
     "status": "Adapter present; live verification required"
@@ -927,7 +927,7 @@
     "path": "/api/v1/attribute-values/{id}",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductAttributeValueController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -936,7 +936,7 @@
     "path": "/api/v1/attribute-values/{id}",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductAttributeValueController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -945,7 +945,7 @@
     "path": "/api/v1/attribute-values",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductAttributeValueController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts",
+      "src/app/features/admin/api/admin.api.ts",
       "src/app/features/catalog/catalog.api.ts"
     ],
     "status": "Adapter present; live verification required"
@@ -955,7 +955,7 @@
     "path": "/api/v1/products/get/all",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts",
+      "src/app/features/admin/api/admin.api.ts",
       "src/app/features/catalog/catalog.api.ts"
     ],
     "status": "Adapter present; live verification required"
@@ -965,7 +965,7 @@
     "path": "/api/v1/products/create",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -974,7 +974,7 @@
     "path": "/api/v1/products/update",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -983,7 +983,7 @@
     "path": "/api/v1/products/update/status",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -992,7 +992,7 @@
     "path": "/api/v1/products/delete",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1019,7 +1019,7 @@
     "path": "/api/v1/admin/promotions",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/PromotionAdminController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1028,7 +1028,7 @@
     "path": "/api/v1/admin/promotions/{id}",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/PromotionAdminController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1037,7 +1037,7 @@
     "path": "/api/v1/admin/promotions/{id}",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/PromotionAdminController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1046,7 +1046,7 @@
     "path": "/api/v1/admin/promotions",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/PromotionAdminController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1055,7 +1055,7 @@
     "path": "/api/v1/admin/promotions/{id}",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/PromotionAdminController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1064,7 +1064,7 @@
     "path": "/api/v1/admin/promotions/{id}/skus",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/PromotionAdminController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1073,7 +1073,7 @@
     "path": "/api/v1/admin/promotions/{id}/skus",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/PromotionAdminController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1082,7 +1082,7 @@
     "path": "/api/v1/admin/promotions/{id}/skus/{skuId}",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/PromotionAdminController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1091,7 +1091,7 @@
     "path": "/api/v1/admin/promotions/{id}/schedule",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/PromotionAdminController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1100,7 +1100,7 @@
     "path": "/api/v1/admin/promotions/{id}/activate",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/PromotionAdminController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1109,7 +1109,7 @@
     "path": "/api/v1/admin/promotions/{id}/disable",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/PromotionAdminController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1136,7 +1136,7 @@
     "path": "/api/v1/subcategories/get/all",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/SubCategoryController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1145,7 +1145,7 @@
     "path": "/api/v1/subcategories/create",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/SubCategoryController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1154,7 +1154,7 @@
     "path": "/api/v1/subcategories/update",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/SubCategoryController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1163,7 +1163,7 @@
     "path": "/api/v1/subcategories/delete",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/SubCategoryController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1172,7 +1172,7 @@
     "path": "/api/admin/audit-logs",
     "source": "common-lib/src/main/java/com/example/eshop/common/audit/AuditLogController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present through gateway service-specific audit paths"
   },
@@ -1251,7 +1251,7 @@
     "path": "/api/v1/cancelations/summary",
     "source": "order-service/src/main/java/com/example/eshop/order/controller/CancelationController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1260,7 +1260,7 @@
     "path": "/api/v1/cancelations/list",
     "source": "order-service/src/main/java/com/example/eshop/order/controller/CancelationController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1269,7 +1269,7 @@
     "path": "/api/v1/cancelations/{orderNo}",
     "source": "order-service/src/main/java/com/example/eshop/order/controller/CancelationController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1332,7 +1332,7 @@
     "path": "/api/v1/orders",
     "source": "order-service/src/main/java/com/example/eshop/order/controller/OrderController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1341,7 +1341,7 @@
     "path": "/api/v1/orders/get/all",
     "source": "order-service/src/main/java/com/example/eshop/order/controller/OrderController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1359,7 +1359,7 @@
     "path": "/api/v1/orders/id",
     "source": "order-service/src/main/java/com/example/eshop/order/controller/OrderController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1368,7 +1368,7 @@
     "path": "/api/v1/orders/number",
     "source": "order-service/src/main/java/com/example/eshop/order/controller/OrderController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1395,7 +1395,7 @@
     "path": "/api/v1/orders/status",
     "source": "order-service/src/main/java/com/example/eshop/order/controller/OrderController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1413,7 +1413,7 @@
     "path": "/api/v1/orders/summary",
     "source": "order-service/src/main/java/com/example/eshop/order/controller/OrderController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1422,7 +1422,7 @@
     "path": "/api/v1/orders/items",
     "source": "order-service/src/main/java/com/example/eshop/order/controller/OrderController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1440,7 +1440,7 @@
     "path": "/api/v1/orders/reports/weekly",
     "source": "order-service/src/main/java/com/example/eshop/order/controller/OrderReportController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1449,7 +1449,7 @@
     "path": "/api/v1/orders/reports/monthly",
     "source": "order-service/src/main/java/com/example/eshop/order/controller/OrderReportController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1458,7 +1458,7 @@
     "path": "/api/v1/refunds/summary",
     "source": "order-service/src/main/java/com/example/eshop/order/controller/RefundController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts",
+      "src/app/features/admin/api/admin.api.ts",
       "src/app/features/after-sales/after-sales.api.ts"
     ],
     "status": "Adapter present; live verification required"
@@ -1468,7 +1468,7 @@
     "path": "/api/v1/refunds/list",
     "source": "order-service/src/main/java/com/example/eshop/order/controller/RefundController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1477,7 +1477,7 @@
     "path": "/api/v1/refunds/{refundId}",
     "source": "order-service/src/main/java/com/example/eshop/order/controller/RefundController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts",
+      "src/app/features/admin/api/admin.api.ts",
       "src/app/features/after-sales/after-sales.api.ts"
     ],
     "status": "Adapter present; live verification required"
@@ -1487,7 +1487,7 @@
     "path": "/api/v1/refunds/{refundId}/process",
     "source": "order-service/src/main/java/com/example/eshop/order/controller/RefundController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1496,7 +1496,7 @@
     "path": "/api/v1/refunds/{refundId}/cancel",
     "source": "order-service/src/main/java/com/example/eshop/order/controller/RefundController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1505,7 +1505,7 @@
     "path": "/api/v1/refunds/{refundId}/history",
     "source": "order-service/src/main/java/com/example/eshop/order/controller/RefundController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts",
+      "src/app/features/admin/api/admin.api.ts",
       "src/app/features/after-sales/after-sales.api.ts"
     ],
     "status": "Adapter present; live verification required"
@@ -1515,7 +1515,7 @@
     "path": "/api/v1/refunds/{refundId}/similar-products",
     "source": "order-service/src/main/java/com/example/eshop/order/controller/RefundController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1524,7 +1524,7 @@
     "path": "/api/v1/returns/user",
     "source": "order-service/src/main/java/com/example/eshop/order/controller/ReturnController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts",
+      "src/app/features/admin/api/admin.api.ts",
       "src/app/features/after-sales/after-sales.api.ts"
     ],
     "status": "Adapter present; live verification required"
@@ -1534,7 +1534,7 @@
     "path": "/api/v1/returns/summary",
     "source": "order-service/src/main/java/com/example/eshop/order/controller/ReturnController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts",
+      "src/app/features/admin/api/admin.api.ts",
       "src/app/features/after-sales/after-sales.api.ts"
     ],
     "status": "Adapter present; live verification required"
@@ -1544,7 +1544,7 @@
     "path": "/api/v1/returns/returns",
     "source": "order-service/src/main/java/com/example/eshop/order/controller/ReturnController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1553,7 +1553,7 @@
     "path": "/api/v1/returns/{returnId}",
     "source": "order-service/src/main/java/com/example/eshop/order/controller/ReturnController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts",
+      "src/app/features/admin/api/admin.api.ts",
       "src/app/features/after-sales/after-sales.api.ts"
     ],
     "status": "Adapter present; live verification required"
@@ -1563,7 +1563,7 @@
     "path": "/api/v1/returns/{returnId}/history",
     "source": "order-service/src/main/java/com/example/eshop/order/controller/ReturnController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts",
+      "src/app/features/admin/api/admin.api.ts",
       "src/app/features/after-sales/after-sales.api.ts"
     ],
     "status": "Adapter present; live verification required"
@@ -1573,7 +1573,7 @@
     "path": "/api/v1/returns/{returnId}/approve",
     "source": "order-service/src/main/java/com/example/eshop/order/controller/ReturnController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1582,7 +1582,7 @@
     "path": "/api/v1/returns/{returnId}/reject",
     "source": "order-service/src/main/java/com/example/eshop/order/controller/ReturnController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1591,7 +1591,7 @@
     "path": "/api/v1/returns/{returnId}/receive",
     "source": "order-service/src/main/java/com/example/eshop/order/controller/ReturnController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1600,7 +1600,7 @@
     "path": "/api/v1/returns/{returnId}/inspect/start",
     "source": "order-service/src/main/java/com/example/eshop/order/controller/ReturnController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1609,7 +1609,7 @@
     "path": "/api/v1/returns/{returnId}/inspect/complete",
     "source": "order-service/src/main/java/com/example/eshop/order/controller/ReturnController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1618,7 +1618,7 @@
     "path": "/api/v1/bakong/get-qr-image",
     "source": "payment-service/src/main/java/com/example/eshop/payment/bakong/controller/BakongController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts",
+      "src/app/features/admin/api/admin.api.ts",
       "src/app/features/payments/payments.api.ts"
     ],
     "status": "Adapter present; live verification required"
@@ -1628,7 +1628,7 @@
     "path": "/api/v1/bakong/check-transaction",
     "source": "payment-service/src/main/java/com/example/eshop/payment/bakong/controller/BakongController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts",
+      "src/app/features/admin/api/admin.api.ts",
       "src/app/features/payments/payments.api.ts"
     ],
     "status": "Adapter present; live verification required"
@@ -1638,7 +1638,7 @@
     "path": "/api/v1/payments/user/id",
     "source": "payment-service/src/main/java/com/example/eshop/payment/controller/PaymentController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts",
+      "src/app/features/admin/api/admin.api.ts",
       "src/app/features/payments/payments.api.ts"
     ],
     "status": "Adapter present; live verification required"
@@ -1648,7 +1648,7 @@
     "path": "/api/v1/payments/user/detail",
     "source": "payment-service/src/main/java/com/example/eshop/payment/controller/PaymentController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts",
+      "src/app/features/admin/api/admin.api.ts",
       "src/app/features/payments/payments.api.ts"
     ],
     "status": "Adapter present; live verification required"
@@ -1658,7 +1658,7 @@
     "path": "/api/v1/payments/get/all",
     "source": "payment-service/src/main/java/com/example/eshop/payment/controller/PaymentController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1667,7 +1667,7 @@
     "path": "/api/v1/payments/order",
     "source": "payment-service/src/main/java/com/example/eshop/payment/controller/PaymentController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1676,7 +1676,7 @@
     "path": "/api/v1/payments/transaction",
     "source": "payment-service/src/main/java/com/example/eshop/payment/controller/PaymentController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1685,7 +1685,7 @@
     "path": "/api/v1/payments/user/history",
     "source": "payment-service/src/main/java/com/example/eshop/payment/controller/PaymentController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts",
+      "src/app/features/admin/api/admin.api.ts",
       "src/app/features/payments/payments.api.ts"
     ],
     "status": "Adapter present; live verification required"
@@ -1695,7 +1695,7 @@
     "path": "/api/v1/payments/reports/monthly",
     "source": "payment-service/src/main/java/com/example/eshop/payment/controller/PaymentReportController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1704,7 +1704,7 @@
     "path": "/api/v1/payment-transactions/get/all",
     "source": "payment-service/src/main/java/com/example/eshop/payment/controller/PaymentTransactionController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1713,7 +1713,7 @@
     "path": "/api/v1/payment-transactions/{id}",
     "source": "payment-service/src/main/java/com/example/eshop/payment/controller/PaymentTransactionController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1722,7 +1722,7 @@
     "path": "/api/v1/payment-transactions/no/{transactionNo}",
     "source": "payment-service/src/main/java/com/example/eshop/payment/controller/PaymentTransactionController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts",
+      "src/app/features/admin/api/admin.api.ts",
       "src/app/features/payments/payments.api.ts"
     ],
     "status": "Adapter present; live verification required"
@@ -1750,7 +1750,7 @@
     "path": "/api/v1/payment-transactions/{id}/status-history",
     "source": "payment-service/src/main/java/com/example/eshop/payment/controller/PaymentTransactionController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts",
+      "src/app/features/admin/api/admin.api.ts",
       "src/app/features/payments/payments.api.ts"
     ],
     "status": "Adapter present; live verification required"
@@ -1769,7 +1769,7 @@
     "path": "/api/v1/payment-transactions/{id}/status",
     "source": "payment-service/src/main/java/com/example/eshop/payment/controller/PaymentTransactionController.java",
     "clients": [
-      "src/app/features/admin/admin.api.ts"
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   }

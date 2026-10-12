@@ -1,9 +1,15 @@
+import { permissionGuard } from "./core/auth/permission.service";
 import { customerAssistantGuard } from "./core/auth/customer-assistant.guard";
 import { adminGuard } from "./core/auth/admin.guard";
 import { Routes } from "@angular/router";
 import { authGuard } from "./core/auth/auth.guard";
 import { staffGuard } from "./core/auth/staff.guard";
 export const routes: Routes = [
+  {
+    path: "auth/keycloak/callback",
+    title: "Keycloak Sign In · E-Shop",
+    loadComponent: () => import("./features/account/keycloak-callback.page").then(m => m.KeycloakCallbackPage),
+  },
   {
     path: "",
     title: "E-Shop · Shop More, Live Better",
@@ -166,20 +172,25 @@ export const routes: Routes = [
   {
     path: "admin",
     canActivate: [authGuard, staffGuard],
+    canActivateChild: [permissionGuard],
     loadComponent: () =>
-      import("./features/admin/admin-layout").then((m) => m.AdminLayout),
+      import("./features/admin/layout/admin-layout").then((m) => m.AdminLayout),
     children: [
+      {path: "access-denied", loadComponent: () => import("./features/admin/settings/access-denied.page").then(m => m.AccessDeniedPage)},
+      {
+        path: "automation", canActivate: [adminGuard], title: "Payment Automation · E-Shop", loadComponent: () => import("./features/admin/automation/automation.page").then(m => m.AutomationPage),
+      },
       {
         path: "assistant",
         canActivate: [adminGuard],
         title: "AI Assistant · ShopAdmin",
-        loadComponent: () => import("./features/admin/admin-assistant.page").then(m => m.AdminAssistantPage),
+        loadComponent: () => import("./features/admin/assistant/admin-assistant.page").then(m => m.AdminAssistantPage),
       },
       {
         path: "",
         title: "Dashboard · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/dashboard.page").then(
+          import("./features/admin/dashboard/dashboard.page").then(
             (m) => m.AdminDashboardPage,
           ),
       },
@@ -187,19 +198,19 @@ export const routes: Routes = [
         path: "orders",
         title: "Orders · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/orders.page").then((m) => m.OrdersPage),
+          import("./features/admin/orders/orders.page").then((m) => m.OrdersPage),
       },
       {
         path: "orders/:id",
         title: "Order · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/orders.page").then((m) => m.OrderDetailPage),
+          import("./features/admin/orders/orders.page").then((m) => m.OrderDetailPage),
       },
       {
         path: "cancellations",
         title: "Cancellations · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/cancellations.page").then(
+          import("./features/admin/orders/cancellations.page").then(
             (m) => m.CancellationsPage,
           ),
       },
@@ -207,13 +218,13 @@ export const routes: Routes = [
         path: "returns",
         title: "Returns · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/returns.page").then((m) => m.ReturnsPage),
+          import("./features/admin/orders/returns.page").then((m) => m.ReturnsPage),
       },
       {
         path: "returns/:id",
         title: "Return · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/returns.page").then(
+          import("./features/admin/orders/returns.page").then(
             (m) => m.ReturnDetailPage,
           ),
       },
@@ -221,19 +232,19 @@ export const routes: Routes = [
         path: "payments",
         title: "Payments · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/payments.page").then((m) => m.PaymentsPage),
+          import("./features/admin/payments/payments.page").then((m) => m.PaymentsPage),
       },
       {
         path: "payments/bakong-callback/:id",
         title: "Bakong · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/bakong.page").then((m) => m.BakongPage),
+          import("./features/admin/payments/bakong.page").then((m) => m.BakongPage),
       },
       {
         path: "payments/:id",
         title: "Payment · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/payments.page").then(
+          import("./features/admin/payments/payments.page").then(
             (m) => m.PaymentDetailPage,
           ),
       },
@@ -241,13 +252,13 @@ export const routes: Routes = [
         path: "refunds",
         title: "Refunds · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/refunds.page").then((m) => m.RefundsPage),
+          import("./features/admin/payments/refunds.page").then((m) => m.RefundsPage),
       },
       {
         path: "refunds/:id",
         title: "Refund · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/refunds.page").then(
+          import("./features/admin/payments/refunds.page").then(
             (m) => m.RefundDetailPage,
           ),
       },
@@ -255,7 +266,7 @@ export const routes: Routes = [
         path: "transactions",
         title: "Transactions · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/transactions.page").then(
+          import("./features/admin/payments/transactions.page").then(
             (m) => m.TransactionsPage,
           ),
       },
@@ -263,7 +274,7 @@ export const routes: Routes = [
         path: "transactions/:id",
         title: "Transaction · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/transactions.page").then(
+          import("./features/admin/payments/transactions.page").then(
             (m) => m.TransactionDetailPage,
           ),
       },
@@ -271,13 +282,13 @@ export const routes: Routes = [
         path: "bakong",
         title: "Bakong · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/bakong.page").then((m) => m.BakongPage),
+          import("./features/admin/payments/bakong.page").then((m) => m.BakongPage),
       },
       {
         path: "customers",
         title: "Customers · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/customers.page").then(
+          import("./features/admin/customers/customers.page").then(
             (m) => m.CustomersPage,
           ),
       },
@@ -285,7 +296,7 @@ export const routes: Routes = [
         path: "customers/add",
         canActivate: [adminGuard],
         loadComponent: () =>
-          import("./features/admin/customer-form.page").then(
+          import("./features/admin/customers/customer-form.page").then(
             (m) => m.CustomerFormPage,
           ),
       },
@@ -293,7 +304,7 @@ export const routes: Routes = [
         path: "customers/:id",
         title: "Customer · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/customers.page").then(
+          import("./features/admin/customers/customers.page").then(
             (m) => m.CustomerDetailPage,
           ),
       },
@@ -301,31 +312,32 @@ export const routes: Routes = [
         path: "customer-groups",
         title: "Customer Groups · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/groups.page").then((m) => m.GroupsPage),
+          import("./features/admin/customers/groups.page").then((m) => m.GroupsPage),
       },
       {
         path: "customer-groups/add",
+        canActivate: [adminGuard],
         title: "Add Customer Group · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/groups.page").then((m) => m.GroupsPage),
+          import("./features/admin/settings/access-groups.page").then((m) => m.AccessGroupsPage),
       },
       {
         path: "customer-groups/edit/:id",
         title: "Edit Customer Group · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/groups.page").then((m) => m.GroupsPage),
+          import("./features/admin/customers/groups.page").then((m) => m.GroupsPage),
       },
       {
         path: "products",
         title: "Products · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/products.page").then((m) => m.ProductsPage),
+          import("./features/admin/products/products.page").then((m) => m.ProductsPage),
       },
       {
         path: "products/add",
         title: "Add Product · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/products.page").then(
+          import("./features/admin/products/products.page").then(
             (m) => m.ProductFormPage,
           ),
       },
@@ -333,7 +345,7 @@ export const routes: Routes = [
         path: "products/view/:id",
         title: "Product · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/products.page").then(
+          import("./features/admin/products/products.page").then(
             (m) => m.ProductDetailPage,
           ),
       },
@@ -341,7 +353,7 @@ export const routes: Routes = [
         path: "products/edit/:id",
         title: "Edit Product · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/products.page").then(
+          import("./features/admin/products/products.page").then(
             (m) => m.ProductFormPage,
           ),
       },
@@ -349,7 +361,7 @@ export const routes: Routes = [
         path: "categories",
         title: "Categories · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/categories.page").then(
+          import("./features/admin/products/categories.page").then(
             (m) => m.CategoriesPage,
           ),
       },
@@ -357,7 +369,7 @@ export const routes: Routes = [
         path: "categories/add",
         title: "Add Category · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/categories.page").then(
+          import("./features/admin/products/categories.page").then(
             (m) => m.CategoriesPage,
           ),
       },
@@ -365,7 +377,7 @@ export const routes: Routes = [
         path: "categories/edit/:id",
         title: "Edit Category · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/categories.page").then(
+          import("./features/admin/products/categories.page").then(
             (m) => m.CategoriesPage,
           ),
       },
@@ -373,7 +385,7 @@ export const routes: Routes = [
         path: "categories/view/:id",
         title: "Category · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/categories.page").then(
+          import("./features/admin/products/categories.page").then(
             (m) => m.CategoriesPage,
           ),
       },
@@ -381,45 +393,45 @@ export const routes: Routes = [
         path: "brands",
         title: "Brands · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/brands.page").then((m) => m.BrandsPage),
+          import("./features/admin/products/brands.page").then((m) => m.BrandsPage),
       },
       {
         path: "brands/add",
         title: "Add Brand · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/brands.page").then((m) => m.BrandsPage),
+          import("./features/admin/products/brands.page").then((m) => m.BrandsPage),
       },
       {
         path: "brands/edit/:id",
         title: "Edit Brand · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/brands.page").then((m) => m.BrandsPage),
+          import("./features/admin/products/brands.page").then((m) => m.BrandsPage),
       },
       {
         path: "brands/view/:id",
         title: "Brand · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/brands.page").then((m) => m.BrandsPage),
+          import("./features/admin/products/brands.page").then((m) => m.BrandsPage),
       },
       {
         path: "inventory",
         title: "Inventory · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/inventory-reference.page").then(
+          import("./features/admin/inventory/inventory-reference.page").then(
             (m) => m.InventoryReferencePage,
           ),
       },
       ...["stock-in", "stock-out", "adjustments"].map((path) => ({
         path: `inventory/${path}`,
         loadComponent: () =>
-          import("./features/admin/inventory-reference.page").then(
+          import("./features/admin/inventory/inventory-reference.page").then(
             (m) => m.InventoryReferencePage,
           ),
       })),
       {
         path: "inventory/warehouses",
         loadComponent: () =>
-          import("./features/admin/warehouses.page").then(
+          import("./features/admin/inventory/warehouses.page").then(
             (m) => m.WarehousesPage,
           ),
       },
@@ -427,7 +439,7 @@ export const routes: Routes = [
         path: "inventory/add",
         title: "Add Inventory · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/inventory.page").then(
+          import("./features/admin/inventory/inventory.page").then(
             (m) => m.InventoryPage,
           ),
       },
@@ -435,7 +447,7 @@ export const routes: Routes = [
         path: "inventory/edit",
         title: "Edit Inventory · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/inventory.page").then(
+          import("./features/admin/inventory/inventory.page").then(
             (m) => m.InventoryPage,
           ),
       },
@@ -443,7 +455,7 @@ export const routes: Routes = [
         path: "inventory/details",
         title: "Inventory Details · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/inventory.page").then(
+          import("./features/admin/inventory/inventory.page").then(
             (m) => m.InventoryPage,
           ),
       },
@@ -452,27 +464,27 @@ export const routes: Routes = [
         title: "Sales Report · ShopAdmin",
         data: { report: "sales" },
         loadComponent: () =>
-          import("./features/admin/reports.page").then((m) => m.ReportsPage),
+          import("./features/admin/reports/reports.page").then((m) => m.ReportsPage),
       },
       {
         path: "payment-report",
         title: "Payment Report · ShopAdmin",
         data: { report: "payment" },
         loadComponent: () =>
-          import("./features/admin/reports.page").then((m) => m.ReportsPage),
+          import("./features/admin/reports/reports.page").then((m) => m.ReportsPage),
       },
       {
         path: "tax-report",
         title: "Tax Report · ShopAdmin",
         data: { report: "tax" },
         loadComponent: () =>
-          import("./features/admin/reports.page").then((m) => m.ReportsPage),
+          import("./features/admin/reports/reports.page").then((m) => m.ReportsPage),
       },
       {
         path: "settings",
         title: "Settings · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/settings.page").then(
+          import("./features/admin/settings/settings.page").then(
             (m) => m.AdminSettingsPage,
           ),
       },
@@ -480,7 +492,7 @@ export const routes: Routes = [
         path: "promotions/add",
         canActivate: [adminGuard],
         loadComponent: () =>
-          import("./features/admin/promotions.page").then(
+          import("./features/admin/promotions/promotions.page").then(
             (m) => m.PromotionsPage,
           ),
       },
@@ -488,7 +500,7 @@ export const routes: Routes = [
         path: "promotions/:id",
         canActivate: [adminGuard],
         loadComponent: () =>
-          import("./features/admin/promotions.page").then(
+          import("./features/admin/promotions/promotions.page").then(
             (m) => m.PromotionsPage,
           ),
       },
@@ -497,7 +509,7 @@ export const routes: Routes = [
         canActivate: [adminGuard],
         title: "Promotions · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/promotions.page").then(
+          import("./features/admin/promotions/promotions.page").then(
             (m) => m.PromotionsPage,
           ),
       },
@@ -506,7 +518,7 @@ export const routes: Routes = [
         canActivate: [adminGuard],
         title: "Service Activity · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/operations.page").then(
+          import("./features/admin/settings/operations.page").then(
             (m) => m.OperationsPage,
           ),
       },
@@ -514,7 +526,7 @@ export const routes: Routes = [
         path: "groups",
         canActivate: [adminGuard],
         loadComponent: () =>
-          import("./features/admin/access-groups.page").then(
+          import("./features/admin/settings/access-groups.page").then(
             (m) => m.AccessGroupsPage,
           ),
       },
@@ -522,7 +534,7 @@ export const routes: Routes = [
         path: "groups/add",
         canActivate: [adminGuard],
         loadComponent: () =>
-          import("./features/admin/access-groups.page").then(
+          import("./features/admin/settings/access-groups.page").then(
             (m) => m.AccessGroupsPage,
           ),
       },
@@ -531,12 +543,12 @@ export const routes: Routes = [
         canActivate: [adminGuard],
         title: "Users · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/users.page").then((m) => m.UsersPage),
+          import("./features/admin/settings/users.page").then((m) => m.UsersPage),
       },
     ],
   },
   {
     path: "**",
-    loadComponent: () => import("./shared/not-found").then((m) => m.NotFound),
+    loadComponent: () => import("./shared/components/not-found").then((m) => m.NotFound),
   },
 ];

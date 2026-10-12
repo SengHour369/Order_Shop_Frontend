@@ -1,3 +1,4 @@
+import { TranslatePipe } from "../../core/i18n/translate.pipe";
 import { Component, inject, signal } from "@angular/core";
 import { CurrencyPipe, DatePipe } from "@angular/common";
 import { FormsModule } from "@angular/forms";
@@ -5,13 +6,13 @@ import { RouterLink } from "@angular/router";
 import { OrdersApi } from "./orders.api";
 import { Order } from "../../core/api/models";
 import { AuthService } from "../../core/auth/auth.service";
-import { Icon } from "../../shared/icon";
-import { OrderProgress } from "../../shared/order-progress";
-import { SignInCard } from "../../shared/sign-in-card";
-import { PageState } from "../../shared/page-state";
-import { Status } from "../../shared/status";
+import { Icon } from "../../shared/components/icon";
+import { OrderProgress } from "../../shared/components/order-progress";
+import { SignInCard } from "../../shared/components/sign-in-card";
+import { PageState } from "../../shared/utils/page-state";
+import { Status } from "../../shared/components/status";
 @Component({
-  imports: [
+  imports: [TranslatePipe, 
     CurrencyPipe,
     DatePipe,
     FormsModule,
@@ -23,7 +24,7 @@ import { Status } from "../../shared/status";
   ],
   template: `<div class="page-heading">
       <div>
-        <h1>My Orders</h1>
+        <h1>{{ "My Orders" | translate }}</h1>
         <p>Track, manage and view all your orders in one place.</p>
       </div>
       <div class="inline-search">
@@ -126,7 +127,7 @@ import { Status } from "../../shared/status";
             }
           </div>
           <div class="total">
-            <span>Total</span
+            <span>{{ "Total" | translate }}</span
             ><strong>{{ o.total_amount | currency: "USD" }}</strong>
           </div>
           <a
@@ -138,7 +139,7 @@ import { Status } from "../../shared/status";
             class="button outline full"
             [routerLink]="['/account/orders', o.id]"
             fragment="tracking"
-            >Track Order <app-icon name="truck"
+            >{{ "Track Order" | translate }} <app-icon name="truck"
           /></a>
         </section>
       }
@@ -149,13 +150,13 @@ import { Status } from "../../shared/status";
           [disabled]="page === 0 || busy()"
           (click)="page = page - 1; load()"
         >
-          Previous</button
+          {{ "Previous" | translate }}</button
         ><span>Page {{ page + 1 }} of {{ pages || 1 }}</span
         ><button
           [disabled]="page + 1 >= pages || busy()"
           (click)="page = page + 1; load()"
         >
-          Next
+          {{ "Next" | translate }}
         </button>
       </div>
     }`,

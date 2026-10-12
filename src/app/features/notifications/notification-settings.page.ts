@@ -1,17 +1,18 @@
+import { TranslatePipe } from "../../core/i18n/translate.pipe";
 import { Component, inject, signal } from "@angular/core";
 import { RouterLink } from "@angular/router";
 import { FormsModule } from "@angular/forms";
 import { NotificationsApi } from "./notifications.api";
 import { AuthService } from "../../core/auth/auth.service";
-import { Icon } from "../../shared/icon";
-import { PageState } from "../../shared/page-state";
-import { Status } from "../../shared/status";
-import { SignInCard } from "../../shared/sign-in-card";
+import { Icon } from "../../shared/components/icon";
+import { PageState } from "../../shared/utils/page-state";
+import { Status } from "../../shared/components/status";
+import { SignInCard } from "../../shared/components/sign-in-card";
 @Component({
-  imports: [RouterLink, FormsModule, Icon, Status, SignInCard],
+  imports: [TranslatePipe, RouterLink, FormsModule, Icon, Status, SignInCard],
   template: `<div class="page-heading">
       <div>
-        <h1>Notification Settings</h1>
+        <h1>{{ "Notification Settings" | translate }}</h1>
         <p>Manage the updates you receive from E-Shop.</p>
       </div>
       <a class="button outline" routerLink="/account/notifications"
@@ -36,7 +37,7 @@ import { SignInCard } from "../../shared/sign-in-card";
       <label class="setting-row"
         ><span class="icon-circle"><app-icon name="mail" /></span
         ><span class="grow"
-          ><strong>Email Notifications</strong>
+          ><strong>{{ "Email Notifications" | translate }}</strong>
           <p>Receive email updates for your assistant requests.</p></span
         ><span class="switch-label"
           ><input
@@ -53,12 +54,12 @@ import { SignInCard } from "../../shared/sign-in-card";
         channel and scheduling preferences are coming soon.
       </p>
       <div class="dialog-actions">
-        <a class="button outline" routerLink="/account/notifications">Cancel</a
+        <a class="button outline" routerLink="/account/notifications">{{ "Cancel" | translate }}</a
         ><button
           class="primary"
           [disabled]="!ready() || busy() || email === saved()"
         >
-          {{ busy() ? "Saving…" : "Save Changes" }}
+          {{ (busy() ? "Saving…" : "Save Changes") | translate }}
         </button>
       </div>
     </form>`,

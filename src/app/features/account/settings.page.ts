@@ -1,14 +1,15 @@
+import { TranslatePipe } from "../../core/i18n/translate.pipe";
 import { Component, inject, signal } from "@angular/core";
 import { RouterLink } from "@angular/router";
 import { switchMap } from "rxjs";
 import { AuthService } from "../../core/auth/auth.service";
 import { ProfileApi, Profile } from "./profile.api";
-import { Icon } from "../../shared/icon";
-import { SignInCard } from "../../shared/sign-in-card";
-import { PageState } from "../../shared/page-state";
-import { Status } from "../../shared/status";
+import { Icon } from "../../shared/components/icon";
+import { SignInCard } from "../../shared/components/sign-in-card";
+import { PageState } from "../../shared/utils/page-state";
+import { Status } from "../../shared/components/status";
 @Component({
-  imports: [RouterLink, Icon, SignInCard, Status],
+  imports: [TranslatePipe, RouterLink, Icon, SignInCard, Status],
   templateUrl: "./settings.html",
 })
 export class SettingsPage extends PageState {

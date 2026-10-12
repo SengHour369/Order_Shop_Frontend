@@ -2,7 +2,8 @@
 @use "./responsive";
 
 :root {
-  font-family: "Segoe UI", Arial, sans-serif;
+  --app-font: "Inter", "Kantumruy Pro", sans-serif;
+  font-family: var(--app-font);
   color: #11132d;
   background: #fff;
   --purple: #5427ff;
@@ -3787,3 +3788,14 @@ td.empty-cell {
   .customer-experience.customer-scanner-page app-customer-chat { display: none; }
   .customer-experience.customer-scanner-page .site-main:not(.admin-host) { padding: 0 0 max(18px, env(safe-area-inset-bottom)); }
 }
+
+/* The selected script applies to both storefront and administration. */
+html[lang="km"] { --app-font: "Kantumruy Pro", "Inter", sans-serif; }
+body, button, input, select, textarea { font-family: var(--app-font); }
+html[lang="km"] { line-height: 1.65; }
+
+.auth-language { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+html[lang="km"] .eyebrow, html[lang="km"] .card-header h2, html[lang="km"] .adm-group { letter-spacing: normal; }
+
+/* Permission-gated controls must remain hidden even when button styles set display. */
+[hidden] { display: none !important; }

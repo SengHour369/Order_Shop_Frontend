@@ -1,3 +1,4 @@
+import { TranslatePipe } from "../../core/i18n/translate.pipe";
 import { Component, DestroyRef, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -7,19 +8,19 @@ import { catchError, forkJoin, of } from 'rxjs';
 import { ScannerApi, ImageCandidate, ScanResult } from './scanner.api';
 import { CatalogApi } from '../catalog/catalog.api';
 import { CartApi } from '../cart/cart.api';
-import { CustomerStore } from '../../core/state/customer.store';
+import { CustomerStore } from '../../core/stores/customer.store';
 import { Product } from '../../core/api/models';
-import { PageState } from '../../shared/page-state';
-import { Icon } from '../../shared/icon';
-import { ProductImage } from '../../shared/product-image';
-import { ProductCard } from '../../shared/product-card';
+import { PageState } from '../../shared/utils/page-state';
+import { Icon } from '../../shared/components/icon';
+import { ProductImage } from '../../shared/components/product-image';
+import { ProductCard } from '../../shared/components/product-card';
 
 interface Detector { detect(source: HTMLVideoElement): Promise<{ rawValue: string }[]>; }
 type DetectorWindow = Window & { BarcodeDetector?: new () => Detector };
 export const MAX_SCAN_IMAGE_BYTES = 4000 * 1024 * 1024;
 
 @Component({
-  imports: [FormsModule, CurrencyPipe, RouterLink, Icon, ProductImage, ProductCard],
+  imports: [TranslatePipe, FormsModule, CurrencyPipe, RouterLink, Icon, ProductImage, ProductCard],
   templateUrl: './scanner.html', styleUrl: './scanner.css',
 })
 export class ScannerPage extends PageState {

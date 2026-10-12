@@ -1,0 +1,177 @@
+<section class="detail-page detail-order">
+  <header class="detail-head">
+<div>
+<h2>{{ "Order Details" | translate }}</h2>
+<nav class="detail-crumbs" aria-label="Breadcrumb">
+<a routerLink="/admin/orders">{{ "Orders" | translate }}</a>
+<span>›</span>{{ "Order Details" | translate }}</nav>
+</div>
+</header>
+  <app-status [busy]="busy()" [error]="error()" [message]="message()" />
+  @if (order(); as current) {
+    <article class="detail-card detail-order-banner">
+<div>
+<h3>Order #{{ text(field(current, 'order_number', 'orderNumber', 'id')) }} <span class="detail-badge" [class.on]="tone(current['status']) === 'on'" [class.off]="tone(current['status']) === 'off'" [class.wait]="tone(current['status']) === 'wait'">{{ pretty(current['status']) }}</span>
+</h3>
+<p>Placed on {{ when(placed(current)) }}</p>
+</div>
+<div class="detail-actions">
+<button class="detail-button" (click)="printInvoice()">
+<app-icon name="list" />Print Invoice</button>
+<button class="detail-button" (click)="downloadInvoice()">
+<app-icon name="download" />{{ "Download Invoice" | translate }}</button>
+</div>
+</article>
+    <div class="detail-summary">
+      <article class="detail-card">
+<h3>
+<span class="detail-order-icon">
+<app-icon name="user" />
+</span>{{ "Customer Details" | translate }}</h3>
+<div class="detail-customer-identity">
+<span class="detail-customer-initial">{{ initial(customerName(current)) }}</span>
+<div>
+<b>{{ customerName(current) }}</b>
+<p class="detail-muted">{{ text(field(current, 'customer_email', 'customerEmail')) }}</p>
+</div>
+</div>
+</article>
+      <article class="detail-card">
+<h3>
+<span class="detail-order-icon">
+<app-icon name="list" />
+</span>{{ "Order Summary" | translate }}</h3>
+<div class="detail-rows">
+<div class="detail-row">
+<span>{{ "Order ID" | translate }}</span>
+<b>{{ text(field(current, 'order_number', 'orderNumber', 'id')) }}</b>
+</div>
+<div class="detail-row">
+<span>{{ "Order Status" | translate }}</span>
+<span class="detail-badge">{{ pretty(current['status']) }}</span>
+</div>
+<div class="detail-row">
+<span>{{ "Payment Status" | translate }}</span>
+<span class="detail-badge">{{ pretty(paymentStatusOf(current)) }}</span>
+</div>
+<div class="detail-row">
+<span>{{ "Payment Method" | translate }}</span>
+<b>{{ text(paymentMethodOf(current)) }}</b>
+</div>
+</div>
+</article>
+      <article class="detail-card">
+<h3>
+<span class="detail-order-icon">
+<app-icon name="wallet" />
+</span>Pricing Summary</h3>
+<div class="detail-row detail-divided">
+<b>{{ "Total Amount" | translate }}</b>
+<b>{{ usd(field(current, 'total_amount', 'totalAmount', 'total')) }}</b>
+</div>
+<p style="text-align:right">
+<span class="detail-badge">{{ pretty(paymentStatusOf(current)) }}</span>
+</p>
+</article>
+      <article class="detail-card">
+<h3>
+<span class="detail-order-icon">
+<app-icon name="pin" />
+</span>{{ "Shipping Address" | translate }}</h3>
+<p>
+<b>{{ customerName(current) }}</b>
+</p>
+<p class="detail-muted">{{ shippingAddress(current) }}</p>
+</article>
+    </div>
+    <div class="detail-grid">
+<div class="detail-stack">
+      <article class="detail-card">
+<h3>
+<span class="detail-order-icon">
+<app-icon name="bag" />
+</span>Ordered Items ({{ items().length }})</h3>
+<div class="detail-table-wrap">
+<table class="detail-table">
+<thead>
+<tr>
+<th>{{ "Product" | translate }}</th>
+<th>{{ "Price" | translate }}</th>
+<th>Qty</th>
+<th>{{ "Total" | translate }}</th>
+</tr>
+</thead>
+<tbody>@for (item of items(); track $index) { <tr>
+<td>
+<b>{{ text(itemName(item)) }}</b>
+<small>SKU: {{ text(field(item, 'sku', 'product_sku_id', 'productSkuId')) }}</small>
+</td>
+<td>{{ usd(field(item, 'unit_price', 'unitPrice', 'price')) }}</td>
+<td>{{ text(field(item, 'quantity', 'qty')) }}</td>
+<td>{{ usd(field(item, 'total_price', 'totalPrice')) }}</td>
+</tr> }
+@empty { <tr>
+<td colspan="4" class="detail-empty">No items in this order.</td>
+</tr> }</tbody>
+</table>
+</div>
+<div class="detail-divided">
+<span class="detail-badge">Total Items: {{ items().length }}</span>
+</div>
+</article>
+      <article class="detail-card">
+<h3>
+<span class="detail-order-icon">
+<app-icon name="shield" />
+</span>{{ "Payment Information" | translate }}</h3>
+<div class="detail-payment-info">
+<div class="detail-rows">
+<div class="detail-row">
+<span>{{ "Payment ID" | translate }}</span>
+<b>{{ text(paymentField(current, 'id', 'payment_id', 'paymentId')) }}</b>
+</div>
+<div class="detail-row">
+<span>{{ "Payment Method" | translate }}</span>
+<b>{{ text(paymentMethodOf(current)) }}</b>
+</div>
+<div class="detail-row">
+<span>{{ "Transaction ID" | translate }}</span>
+<b>{{ text(paymentField(current, 'transaction_id', 'transactionId')) }}</b>
+</div>
+</div>
+<div class="detail-rows">
+<div class="detail-row">
+<span>Paid Amount</span>
+<b>{{ paidAmount(current) === '' ? '—' : usd(paidAmount(current)) }}</b>
+</div>
+<div class="detail-row">
+<span>{{ "Payment Status" | translate }}</span>
+<span class="detail-badge">{{ pretty(paymentStatusOf(current)) }}</span>
+</div>
+<div class="detail-row">
+<span>Paid On</span>
+<b>{{ when(paymentField(current, 'payment_date', 'paymentDate')) }}</b>
+</div>
+</div>
+</div>
+</article>
+    </div>
+<aside class="detail-stack">
+<article class="detail-card">
+<h3>
+<span class="detail-order-icon">
+<app-icon name="clock" />
+</span>{{ "Order Timeline" | translate }}</h3>
+<div class="detail-timeline">
+<div>
+<b>{{ "Order Placed" | translate }}</b>
+<small>{{ when(placed(current)) }}</small>
+</div>@if (field(current, 'status') !== 'PENDING') { <div>
+<b>{{ pretty(current['status']) }}</b>
+<small>{{ when(field(current, 'updated_at', 'updatedAt')) }}</small>
+</div> }</div>
+</article>
+</aside>
+</div>
+  }
+</section>

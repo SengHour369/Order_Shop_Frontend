@@ -4,11 +4,10 @@
       ><span class="brand-bag"><app-icon name="check" /></span
       ><span>E-Shop</span></a
     >
-    <span class="eyebrow">WELCOME TO E-SHOP</span>
-    <h1>Shop Smarter<br /><span>Live Better</span></h1>
+    <span class="eyebrow">{{ "WELCOME TO E-SHOP" | translate }}</span>
+    <h1>{{ "Shop Smarter" | translate }}<br /><span>{{ "Live Better" | translate }}</span></h1>
     <p>
-      Discover products for every part of your life. Find your favorites and
-      make everyday shopping easier.
+      {{ "Discover products for every part of your life. Find your favorites and make everyday shopping easier." | translate }}
     </p>
   </div>
   <img
@@ -23,30 +22,30 @@
     <a
       class="button primary"
       [routerLink]="auth.session() ? '/account' : '/auth'"
-      >Get Started <app-icon name="arrow" /></a
-    ><a class="button outline" routerLink="/shop">Shop Now</a>
+      >{{ "Get Started" | translate }} <app-icon name="arrow" /></a
+    ><a class="button outline" routerLink="/shop">{{ "Shop Now" | translate }}</a>
   </div>
   <div class="customer-perks">
     <a routerLink="/account/orders"
       ><app-icon name="truck" /><span
-        ><strong>Delivery Updates</strong><small>Follow your order</small></span
+        ><strong>{{ "Delivery Updates" | translate }}</strong><small>{{ "Follow your order" | translate }}</small></span
       ></a
     >
     <a routerLink="/account/payments"
       ><app-icon name="shield" /><span
-        ><strong>Payment Options</strong><small>ABA, Bakong & more</small></span
+        ><strong>{{ "Payment Options" | translate }}</strong><small>{{ "ABA, Bakong & more" | translate }}</small></span
       ></a
     >
     <a routerLink="/account/support"
       ><app-icon name="box" /><span
-        ><strong>Order Support</strong
-        ><small>Help with your purchase</small></span
+        ><strong>{{ "Order Support" | translate }}</strong
+        ><small>{{ "Help with your purchase" | translate }}</small></span
       ></a
     >
     <a routerLink="/assistant"
       ><app-icon name="headphones" /><span
-        ><strong>Shopping Assistant</strong
-        ><small>Find your next favorite</small></span
+        ><strong>{{ "Shopping Assistant" | translate }}</strong
+        ><small>{{ "Find your next favorite" | translate }}</small></span
       ></a
     >
   </div>
@@ -61,16 +60,16 @@
           ((i % 4) * 100) / 3 + '% ' + (i < 4 ? 0 : 100) + '%'
         "
       ></span
-      ><strong>{{ c.name }}</strong></a
+      ><strong>{{ c.name | translate }}</strong></a
     >
   }
 </nav>
 <div class="section-heading welcome-products-heading">
   <div>
-    <span class="eyebrow">POPULAR PRODUCTS</span>
-    <h2>Trending Today</h2>
+    <span class="eyebrow">{{ "POPULAR PRODUCTS" | translate }}</span>
+    <h2>{{ "Trending Today" | translate }}</h2>
   </div>
-  <a routerLink="/shop">View All <app-icon name="arrow" /></a>
+  <a routerLink="/shop">{{ "View All" | translate }} <app-icon name="arrow" /></a>
 </div>
 <app-status [busy]="busy()" [error]="error()" />
 @if (auth.session()) {
@@ -79,7 +78,7 @@
       <app-product-card [product]="p" />
     } @empty {
       @if (!busy() && !error()) {
-        <div class="empty">New products are on their way. Check back soon.</div>
+        <div class="empty">{{ "New products are on their way. Check back soon." | translate }}</div>
       }
     }
   </div>
@@ -90,7 +89,7 @@
   />
 }
 <section class="collection-section">
-  <div class="section-heading"><h2>A Little More Everyday</h2></div>
+  <div class="section-heading"><h2>{{ "A Little More Everyday" | translate }}</h2></div>
   <div class="collection-cards">
     @for (c of categories.slice(0, 3); track c.name) {
       <a
@@ -99,9 +98,9 @@
         [queryParams]="{ category: c.name }"
         ><app-icon [name]="c.icon" />
         <div>
-          <span>EXPLORE THE COLLECTION</span>
-          <h2>{{ c.name }}</h2>
-          <p>Discover more <span aria-hidden="true">→</span></p>
+          <span>{{ "EXPLORE THE COLLECTION" | translate }}</span>
+          <h2>{{ c.name | translate }}</h2>
+          <p>{{ "Discover more" | translate }} <span aria-hidden="true">→</span></p>
         </div></a
       >
     }

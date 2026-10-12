@@ -1,0 +1,264 @@
+<section class="dashboard-page">
+  <div class="adm-page-head">
+    <div>
+      <h2>{{ "Dashboard" | translate }}</h2>
+      <p>Your store at a glance.</p>
+    </div>
+    <div class="adm-head-actions">
+      <span class="dashboard-period">January – December {{ year }}</span>
+      <button
+        class="adm-btn"
+        type="button"
+        [disabled]="busy()"
+        (click)="load()"
+      >
+        <app-icon name="refresh" /> {{ "Refresh" | translate }}
+      </button>
+    </div>
+  </div>
+  <app-status [busy]="busy()" [error]="error()" />
+  <div class="dashboard-metrics">
+    <a class="adm-panel metric" routerLink="/admin/sales-report"
+      ><span class="metric-icon blue"><app-icon name="chart" /></span>
+      <div>
+        <span>Sales · {{ year }}</span
+        ><strong>{{ monthly().length ? money(salesTotal()) : "—" }}</strong
+        ><small>{{ currency || "No sales data" }}</small>
+      </div></a
+    >
+    <a class="adm-panel metric" routerLink="/admin/orders"
+      ><span class="metric-icon green"><app-icon name="bag" /></span>
+      <div>
+        <span>{{ "Total Orders" | translate }}</span
+        ><strong>{{ orders()?.totalOrders ?? "—" }}</strong
+        ><small>{{ "All time" | translate }}</small>
+      </div></a
+    >
+    <a class="adm-panel metric" routerLink="/admin/customers"
+      ><span class="metric-icon purple"><app-icon name="user" /></span>
+      <div>
+        <span>{{ "Total Customers" | translate }}</span><strong>{{ customers() ?? "—" }}</strong
+        ><small>Customer accounts</small>
+      </div></a
+    >
+    <a class="adm-panel metric" routerLink="/admin/products"
+      ><span class="metric-icon amber"><app-icon name="box" /></span>
+      <div>
+        <span>{{ "Total Products" | translate }}</span
+        ><strong>{{ inventory()?.total_products ?? "—" }}</strong
+        ><small>Inventory summary</small>
+      </div></a
+    >
+    <a class="adm-panel metric" routerLink="/admin/inventory"
+      ><span class="metric-icon rose"><app-icon name="bell" /></span>
+      <div>
+        <span>{{ "Low Stock" | translate }}</span
+        ><strong>{{ inventory()?.low_stock ?? "—" }}</strong
+        ><small>{{ inventory()?.out_of_stock ?? "—" }} out of stock</small>
+      </div></a
+    >
+  </div>
+  <div class="dashboard-main-grid">
+    <article class="adm-panel sales-panel">
+      <div class="adm-section-title">
+        <h3>Sales Overview</h3>
+        <select aria-label="Sales currency" [(ngModel)]="currency">
+          @for (value of currencies(); track value) {
+            <option [value]="value">{{ value }}</option>
+          }
+        </select>
+      </div>
+      <strong class="sales-total">{{
+        monthly().length ? money(salesTotal()) : "—"
+      }}</strong>
+      <p>Monthly order value · {{ year }}</p>
+      @if (monthly().length) {
+        <svg
+          class="sales-plot"
+          viewBox="0 0 480 200"
+          role="img"
+          aria-label="Monthly sales chart. Monthly amounts are listed below."
+        >
+          <defs>
+            <linearGradient id="sales-fill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#2563eb" stop-opacity=".2" />
+              <stop offset="100%" stop-color="#2563eb" stop-opacity=".01" />
+            </linearGradient>
+          </defs>
+          @for (y of [25, 75, 125, 175]; track y) {
+            <line
+              x1="20"
+              x2="460"
+              [attr.y1]="y"
+              [attr.y2]="y"
+              stroke="#edf0f5"
+            />
+          }
+          <polygon
+            [attr.points]="'20,175 ' + salesPoints() + ' 460,175'"
+            fill="url(#sales-fill)"
+          />
+          <polyline
+            [attr.points]="salesPoints()"
+            fill="none"
+            stroke="#2563eb"
+            stroke-width="2.5"
+            stroke-linejoin="round"
+          />
+        </svg>
+        <div class="month-labels">
+          @for (month of salesMonths(); track month.name) {
+            <span [title]="month.name + ': ' + money(month.value)">{{
+              month.name
+            }}</span>
+          }
+        </div>
+        <details class="chart-values">
+          <summary>View monthly amounts</summary>
+          <div class="adm-kv">
+            @for (month of salesMonths(); track month.name) {
+              <span>{{ month.name }}</span
+              ><b>{{ money(month.value) }}</b>
+            }
+          </div>
+        </details>
+      } @else {
+        <div class="dashboard-empty">
+          {{
+            unavailable().includes("Sales")
+              ? "Sales data is temporarily unavailable."
+              : busy()
+                ? "Loading sales…"
+                : "No sales recorded for this year."
+          }}
+        </div>
+      }
+      <a class="panel-footer" routerLink="/admin/sales-report"
+        >View sales report <span>→</span></a
+      >
+    </article>
+    <article class="adm-panel order-panel">
+      <div class="adm-section-title">
+        <h3>{{ "Order Status" | translate }}</h3>
+        <span class="subtle">{{ "All time" | translate }}</span>
+      </div>
+      <div class="order-chart">
+        <div
+          class="order-donut"
+          [style.background]="donut()"
+          role="img"
+          aria-label="Order status distribution; counts listed alongside"
+        >
+          <div>
+            <strong>{{ orders()?.totalOrders ?? "—" }}</strong
+            ><span>{{ "Total orders" | translate }}</span>
+          </div>
+        </div>
+        <div class="chart-legend">
+          @for (bar of bars(); track bar.name; let i = $index) {
+            <div>
+              <i [style.background]="colors[i]"></i><span>{{ bar.name }}</span
+              ><b>{{ bar.value }}</b>
+            </div>
+          }
+        </div>
+      </div>
+      <a class="panel-footer" routerLink="/admin/orders"
+        >View all orders <span>→</span></a
+      >
+    </article>
+    <article class="adm-panel recent-panel">
+      <div class="adm-section-title">
+        <h3>Recent Orders</h3>
+        <a routerLink="/admin/orders">{{ "View all" | translate }}</a>
+      </div>
+      @for (order of recent(); track field(order, "id")) {
+        <a
+          class="recent-order"
+          [routerLink]="['/admin/orders', field(order, 'id')]"
+          ><span class="order-mini-icon"><app-icon name="box" /></span>
+          <div>
+            <b>{{ text(field(order, "order_number", "orderNumber", "id")) }}</b
+            ><small>{{ customerName(order) }}</small>
+          </div>
+          <span
+            class="adm-badge"
+            [class.on]="tone(field(order, 'status')) === 'on'"
+            [class.off]="tone(field(order, 'status')) === 'off'"
+            [class.wait]="tone(field(order, 'status')) === 'wait'"
+            >{{ text(field(order, "status")) }}</span
+          ></a
+        >
+      } @empty {
+        <div class="dashboard-empty">
+          {{
+            unavailable().includes("Recent orders")
+              ? "Recent orders are temporarily unavailable."
+              : busy()
+                ? "Loading orders…"
+                : "New customer orders will appear here."
+          }}
+        </div>
+      }
+      <a class="panel-footer" routerLink="/admin/orders"
+        >Manage orders <span>→</span></a
+      >
+    </article>
+  </div>
+  <div class="dashboard-bottom-grid">
+    <article class="adm-panel">
+      <div class="adm-section-title">
+        <h3>Orders This Week</h3>
+        <span class="subtle">Monday – Sunday</span>
+      </div>
+      <div class="weekly-chart">
+        @for (bar of weekBars(); track bar.name) {
+          <div>
+            <b>{{
+              unavailable().includes("Weekly orders") ? "—" : bar.value
+            }}</b
+            ><i [style.height.px]="bar.height"></i><span>{{ bar.name }}</span>
+          </div>
+        }
+      </div>
+    </article>
+    <article class="adm-panel">
+      <div class="adm-section-title">
+        <h3>Inventory Overview</h3>
+        <app-icon name="box" />
+      </div>
+      <div class="inventory-summary">
+        <div>
+          <span>Stock units</span
+          ><strong>{{ inventory()?.total_stock ?? "—" }}</strong>
+        </div>
+        <div>
+          <span>Low stock products</span
+          ><strong>{{ inventory()?.low_stock ?? "—" }}</strong>
+        </div>
+        <div>
+          <span>{{ "Out of stock" | translate }}</span
+          ><strong>{{ inventory()?.out_of_stock ?? "—" }}</strong>
+        </div>
+      </div>
+      <a class="panel-footer" routerLink="/admin/inventory"
+        >View inventory <span>→</span></a
+      >
+    </article>
+    <article class="adm-panel">
+      <div class="adm-section-title">
+        <h3>Quick Actions</h3>
+        <app-icon name="grid" />
+      </div>
+      <div class="dashboard-actions">
+        <a routerLink="/admin/products/add"
+          ><app-icon name="plus" />{{ "Add product" | translate }}<span>→</span></a
+        ><a routerLink="/admin/inventory/stock-in"
+          ><app-icon name="box" />Increase stock<span>→</span></a
+        ><a routerLink="/admin/returns"
+          ><app-icon name="refresh" />Review returns<span>→</span></a
+        >
+      </div>
+    </article>
+  </div>
+</section>

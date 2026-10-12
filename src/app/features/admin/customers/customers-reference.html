@@ -1,0 +1,170 @@
+<section class="reference-page">
+  <header class="adm-page-head">
+    <div>
+      <h2>{{ "Customers" | translate }}</h2>
+      <div class="adm-crumbs">
+        <a routerLink="/admin">{{ "Dashboard" | translate }}</a><span>›</span>{{ "Customers" | translate }}
+      </div>
+    </div>
+    <a class="adm-btn adm-primary" routerLink="/admin/customers/add"
+      >＋ Add Customer</a
+    >
+  </header>
+  <div class="reference-stats">
+    <article class="adm-panel">
+      <span class="stat-icon blue"><app-icon name="user" /></span>
+      <div>
+        Accounts in this list<strong>{{ totalCount() }}</strong>
+      </div>
+    </article>
+    <article class="adm-panel">
+      <span class="stat-icon green"><app-icon name="check" /></span>
+      <div>
+        Active Accounts<strong>{{ activeCount() }}</strong>
+      </div>
+    </article>
+    <article class="adm-panel">
+      <span class="stat-icon red"><app-icon name="close" /></span>
+      <div>
+        Blocked Accounts<strong>{{ blockedCount() }}</strong>
+      </div>
+    </article>
+  </div>
+  <app-status [busy]="busy()" [error]="error()" [message]="message()" />
+  <div class="reference-filters adm-panel">
+    <input
+      [ngModel]="query()"
+      (ngModelChange)="query.set($event); page = 1"
+      placeholder="Search by name, email or phone..."
+      aria-label="Search customers"
+    /><button class="adm-btn" (click)="query.set(''); page = 1">{{ "Reset" | translate }}</button
+    ><button class="adm-btn adm-primary" (click)="load()" [disabled]="busy()">
+      {{ "Refresh" | translate }}
+    </button>
+  </div>
+  <div class="ops-work">
+    <section class="adm-panel reference-table">
+      <div class="adm-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>{{ "Customer" | translate }}</th>
+              <th>{{ "Customer ID" | translate }}</th>
+              <th>{{ "Email" | translate }}</th>
+              <th>{{ "Status" | translate }}</th>
+              <th>{{ "Action" | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (
+              row of visible().slice((page - 1) * 10, page * 10);
+              track row["id"];
+              let i = $index
+            ) {
+              <tr>
+                <td>{{ (page - 1) * 10 + i + 1 }}</td>
+                <td>
+                  <div class="ops-profile">
+                    <span class="ops-avatar">{{ initial(row) }}</span>
+                    <div>
+                      <strong>{{
+                        text(field(row, "fullName", "full_name", "username"))
+                      }}</strong
+                      ><small>{{ row["username"] }}</small>
+                    </div>
+                  </div>
+                </td>
+                <td>{{ row["id"] }}</td>
+                <td>{{ row["email"] }}</td>
+                <td>
+                  <span
+                    class="adm-badge"
+                    [class.on]="active(row)"
+                    [class.off]="blocked(row)"
+                    >{{ row["status"] }}</span
+                  >
+                </td>
+                <td>
+                  <button
+                    class="adm-btn"
+                    (click)="selected.set(row)"
+                    aria-label="View customer"
+                  >
+                    <app-icon name="eye" />
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6">No matching customers.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="adm-pager">
+        <span>{{ visible().length }} matching accounts</span
+        ><button
+          class="adm-btn"
+          (click)="page = page - 1"
+          [disabled]="page <= 1"
+        >
+          {{ "Previous" | translate }}</button
+        ><span>{{ page }}</span
+        ><button
+          class="adm-btn"
+          (click)="page = page + 1"
+          [disabled]="page * 10 >= visible().length"
+        >
+          {{ "Next" | translate }}
+        </button>
+      </div>
+    </section>
+    <aside class="adm-panel">
+      <h3>{{ "Customer Details" | translate }}</h3>
+      @if (selected(); as row) {
+        <div class="ops-profile">
+          <span class="ops-avatar">{{ initial(row) }}</span>
+          <div>
+            <h3>{{ text(field(row, "fullName", "full_name", "username")) }}</h3>
+            <p>{{ row["username"] }}</p>
+          </div>
+        </div>
+        <nav class="reference-tabs">
+          <button class="active">{{ "Overview" | translate }}</button
+          ><a [routerLink]="['/admin/customers', row['id']]">Full Details</a>
+        </nav>
+        <h3>{{ "Contact Information" | translate }}</h3>
+        <p>{{ row["email"] }}</p>
+        <p>{{ text(row["phone"]) }}</p>
+        <h3>Account Information</h3>
+        <dl>
+          <dt>{{ "Customer ID" | translate }}</dt>
+          <dd>{{ row["id"] }}</dd>
+          <dt>{{ "Date Joined" | translate }}</dt>
+          <dd>{{ when(field(row, "createdAt", "created_at")) }}</dd>
+          <dt>{{ "Status" | translate }}</dt>
+          <dd>{{ row["status"] }}</dd>
+        </dl>
+        <div class="adm-head-actions">
+          <button
+            class="adm-btn"
+            [disabled]="busy() || active(row)"
+            (click)="set(row, 'ACT')"
+          >
+            Activate</button
+          ><button
+            class="adm-btn"
+            [disabled]="busy() || blocked(row)"
+            (click)="set(row, 'BLK')"
+          >
+            Block
+          </button>
+        </div>
+      } @else {
+        <p>Select a customer to view their contact and account information.</p>
+      }
+    </aside>
+  </div>
+</section>

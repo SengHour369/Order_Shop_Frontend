@@ -1,3 +1,4 @@
+import { TranslatePipe } from "../core/i18n/translate.pipe";
 import { Component, inject } from "@angular/core";
 import {
   Router,
@@ -5,13 +6,13 @@ import {
   RouterLinkActive,
   RouterOutlet,
 } from "@angular/router";
-import { Icon } from "../shared/icon";
+import { Icon } from "../shared/components/icon";
 import { AuthService } from "../core/auth/auth.service";
-import { CustomerStore } from "../core/state/customer.store";
+import { CustomerStore } from "../core/stores/customer.store";
 @Component({
-  imports: [RouterLink, RouterLinkActive, RouterOutlet, Icon],
+  imports: [TranslatePipe, RouterLink, RouterLinkActive, RouterOutlet, Icon],
   template: `<div class="breadcrumbs">
-      <a routerLink="/">Home</a><app-icon name="chevron" /><a
+      <a routerLink="/">{{ "Home" | translate }}</a><app-icon name="chevron" /><a
         routerLink="/account"
         >My Account</a
       >
@@ -25,7 +26,7 @@ import { CustomerStore } from "../core/state/customer.store";
               [routerLink]="item.path"
               routerLinkActive="selected"
               [routerLinkActiveOptions]="{ exact: item.path === '/account' }"
-              ><app-icon [name]="item.icon" /><span>{{ item.label }}</span>
+              ><app-icon [name]="item.icon" /><span>{{ (item.label) | translate }}</span>
               @if (item.icon === "bell" && store.unread()) {
                 <b class="count">{{ store.unread() }}</b>
               }
@@ -34,10 +35,10 @@ import { CustomerStore } from "../core/state/customer.store";
           <div class="sidebar-divider"></div>
           @if (auth.session()) {
             <button class="logout" (click)="logoutDialog.showModal()">
-              <app-icon name="logout" /> Logout
+              <app-icon name="logout" /> {{ "Logout" | translate }}
             </button>
           } @else {
-            <a routerLink="/auth"><app-icon name="logout" /> Sign In</a>
+            <a routerLink="/auth"><app-icon name="logout" /> {{ "Sign In" | translate }}</a>
           }
         </nav>
       </aside>
@@ -62,9 +63,9 @@ import { CustomerStore } from "../core/state/customer.store";
         continue shopping.
       </p>
       <div class="dialog-actions">
-        <button (click)="logoutDialog.close()">Cancel</button
+        <button (click)="logoutDialog.close()">{{ "Cancel" | translate }}</button
         ><button class="primary" (click)="logoutDialog.close(); logout()">
-          Logout
+          {{ "Logout" | translate }}
         </button>
       </div>
     </dialog>`,

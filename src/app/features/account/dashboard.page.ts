@@ -1,18 +1,19 @@
+import { TranslatePipe } from "../../core/i18n/translate.pipe";
 import { Component, inject, signal } from "@angular/core";
 import { RouterLink } from "@angular/router";
 import { CurrencyPipe, DatePipe } from "@angular/common";
 import { forkJoin } from "rxjs";
 import { AuthService } from "../../core/auth/auth.service";
-import { CustomerStore } from "../../core/state/customer.store";
+import { CustomerStore } from "../../core/stores/customer.store";
 import { OrdersApi } from "../orders/orders.api";
 import { AddressesApi } from "../addresses/addresses.api";
 import { Order } from "../../core/api/models";
-import { Icon } from "../../shared/icon";
-import { SignInCard } from "../../shared/sign-in-card";
-import { PageState } from "../../shared/page-state";
-import { Status } from "../../shared/status";
+import { Icon } from "../../shared/components/icon";
+import { SignInCard } from "../../shared/components/sign-in-card";
+import { PageState } from "../../shared/utils/page-state";
+import { Status } from "../../shared/components/status";
 @Component({
-  imports: [RouterLink, CurrencyPipe, DatePipe, Icon, SignInCard, Status],
+  imports: [TranslatePipe, RouterLink, CurrencyPipe, DatePipe, Icon, SignInCard, Status],
   template: `<section class="account-banner">
       <div>
         <span class="eyebrow">YOUR PERSONAL SHOPPING SPACE</span>
@@ -41,7 +42,7 @@ import { Status } from "../../shared/status";
     </div>
     <div class="section-heading">
       <h2>Recent Orders</h2>
-      <a routerLink="/account/orders">View All <app-icon name="arrow" /></a>
+      <a routerLink="/account/orders">{{ "View All" | translate }} <app-icon name="arrow" /></a>
     </div>
     <div class="panel">
       @for (o of recent(); track o.id) {
@@ -73,7 +74,7 @@ import { Status } from "../../shared/status";
     <div class="dashboard-links">
       <a routerLink="/account/security" class="panel"
         ><span class="icon-circle green"><app-icon name="shield" /></span>
-        <h3>Account Security</h3>
+        <h3>{{ "Account Security" | translate }}</h3>
         <p>Manage access to your account.</p>
         <span>Review Security →</span></a
       ><a routerLink="/account/support" class="panel"

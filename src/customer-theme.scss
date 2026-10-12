@@ -1878,7 +1878,7 @@
     .header-actions {
       gap: 12px;
     }
-    .header-actions > a[aria-label="Wishlist"] {
+    .header-actions > a[href="/account/wishlist"] {
       display: none;
     }
     .header-actions .welcome-sign-in,

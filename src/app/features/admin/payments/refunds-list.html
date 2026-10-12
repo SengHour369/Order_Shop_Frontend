@@ -1,0 +1,182 @@
+<section class="refund-ui">
+  <header class="refund-heading">
+    <div>
+      <h2>{{ "Refunds" | translate }}</h2>
+      <p>Manage customer refunds and financial adjustments.</p>
+      <div class="refund-crumbs">
+        <a routerLink="/admin">{{ "Dashboard" | translate }}</a><span>›</span
+        ><a routerLink="/admin/payments">{{ "Payments" | translate }}</a><span>›</span
+        ><span>{{ "Refunds" | translate }}</span>
+      </div>
+    </div>
+  </header>
+  <div class="refund-stats">
+    <article>
+      <span class="stat-icon purple"><app-icon name="bank" /></span>
+      <div>
+        <span>Total Refunds</span
+        ><strong>{{ statistic("total_refunds") }}</strong
+        ><small>{{ "All time" | translate }}</small>
+      </div>
+    </article>
+    <article>
+      <span class="stat-icon amber"><app-icon name="clock" /></span>
+      <div>
+        <span>Pending Refunds</span
+        ><strong>{{ statistic("pending_refunds") }}</strong
+        ><small>Awaiting processing</small>
+      </div>
+    </article>
+    <article>
+      <span class="stat-icon green"><app-icon name="check" /></span>
+      <div>
+        <span>{{ "Completed" | translate }}</span
+        ><strong>{{ statistic("completed_refunds") }}</strong
+        ><small>Successfully processed</small>
+      </div>
+    </article>
+    <article>
+      <span class="stat-icon red"><app-icon name="close" /></span>
+      <div>
+        <span>{{ "Failed" | translate }}</span><strong>{{ failedCount() }}</strong
+        ><small>On this page</small>
+      </div>
+    </article>
+  </div>
+  <app-status [busy]="busy()" [error]="error()" />
+  <section class="refund-card list-card">
+    <form class="refund-filters" (ngSubmit)="apply()">
+      <select name="criteria" [ngModel]="criteria < 0 ? 0 : criteria" (ngModelChange)="changeCriteria($event)" aria-label="Search criterion">
+        @for (option of criteriaOptions; track $index) { <option [ngValue]="$index">{{ option }}</option> }
+      </select>
+      @if (criteria !== 0 && criteria !== 5) {
+        <label class="search-field"><app-icon name="search" /><input name="query" [(ngModel)]="query" aria-label="Search refunds" [placeholder]="'Search by ' + (criteriaOptions[criteria] || 'Order No') + '...'" /></label>
+      }
+      @if (criteria === 5) {
+        <input type="date" name="from" aria-label="From date" [(ngModel)]="from" />
+        <input type="date" name="to" aria-label="To date" [(ngModel)]="to" [min]="from" />
+      }
+      <button class="refund-btn primary" [disabled]="busy() || (criteria === 5 && (!from || !to || to < from))">{{ "Search" | translate }}</button>
+      <button class="refund-btn" type="button" aria-label="Refresh refunds" [disabled]="busy()" (click)="load()"><app-icon name="refresh" /></button>
+      <button class="refund-btn filter-btn" type="button" (click)="filtersOpen = !filtersOpen"><app-icon name="filter" />{{ "Filter" | translate }}</button>
+      @if (filtersOpen) {
+        <div class="date-filters"><label>{{ "Status" | translate }}<select name="status" [(ngModel)]="status"><option value="">{{ "All statuses" | translate }}</option>@for (s of ['PENDING','APPROVED','PROCESSING','PROCESSED','CANCELLED','FAILED']; track s) {<option [value]="s">{{ s }}</option>}</select></label>
+        <label>Payment method on this page<select name="method" [(ngModel)]="method"><option value="">All methods</option>@for (m of ['ABA','VISA','MASTERCARD','BAKONG','CASH']; track m) {<option [value]="m">{{ m }}</option>}</select></label><button class="refund-btn" type="button" (click)="criteria = -1; apply()">Apply filters</button></div>
+      }
+    </form>
+    <div class="refund-table-scroll">
+      <table class="refund-table">
+        <thead>
+          <tr>
+            <th>
+              <button class="sort-btn" (click)="sortAscending = !sortAscending">
+                Refund ID ↕
+              </button>
+            </th>
+            <th>Order #</th>
+            <th>{{ "Customer" | translate }}</th>
+            <th>Date Requested</th>
+            <th>{{ "Amount" | translate }}</th>
+            <th>{{ "Status" | translate }}</th>
+            <th>{{ "Action" | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of visibleRows(); track field(row, "refund_id")) {
+            <tr>
+              <td>
+                <a
+                  class="refund-id"
+                  [routerLink]="['/admin/refunds', field(row, 'refund_id')]"
+                  >{{ text(field(row, "refund_id")) }}</a
+                >
+              </td>
+              <td>
+                <a
+                  [routerLink]="['/admin/refunds', field(row, 'refund_id')]"
+                  [queryParams]="{ tab: 'Order & Payment' }"
+                  >{{ text(field(row, "order_no", "orderNo")) }}</a
+                >
+              </td>
+              <td>
+                <div class="customer-cell">
+                  <span class="customer-avatar">{{
+                    customerName(row).slice(0, 1)
+                  }}</span>
+                  <div>
+                    <strong>{{ customerName(row) }}</strong
+                    ><small>{{ text(field(customer(row), "email")) }}</small>
+                  </div>
+                </div>
+              </td>
+              <td>{{ when(field(row, "requested_at", "requestedAt")) }}</td>
+              <td>{{ usd(field(row, "amount")) }}</td>
+              <td>
+                <span
+                  class="refund-badge"
+                  [class]="'refund-badge ' + tone(row)"
+                  >{{ text(field(row, "status")) }}</span
+                >
+              </td>
+              <td>
+                <div class="row-actions">
+                  <a
+                    class="refund-btn icon"
+                    [routerLink]="['/admin/refunds', field(row, 'refund_id')]"
+                    aria-label="View refund"
+                    ><app-icon name="eye" /></a
+                  ><a
+                    class="refund-btn icon"
+                    [routerLink]="['/admin/refunds', field(row, 'refund_id')]"
+                    [queryParams]="{ tab: 'Refund Process' }"
+                    aria-label="Refund actions"
+                    >⋯</a
+                  >
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7" class="refund-empty">
+                {{
+                  busy() ? "Loading refunds…" : "No refunds match your filters."
+                }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <footer class="refund-pager">
+      <span>{{ range() }}</span>
+      <div>
+        <button
+          class="refund-btn icon"
+          aria-label="Previous page"
+          [disabled]="page <= 1 || busy()"
+          (click)="goto(page - 1)"
+        >
+          ‹
+        </button>
+        @for (n of pageList(); track n) {
+          <button
+            class="refund-btn"
+            [class.primary]="n === page"
+            [disabled]="busy()"
+            (click)="goto(n)"
+          >
+            {{ n }}
+          </button>
+        }
+        <button
+          class="refund-btn icon"
+          aria-label="Next page"
+          [disabled]="page >= pages() || busy()"
+          (click)="goto(page + 1)"
+        >
+          ›
+        </button>
+      </div>
+    </footer>
+  </section>
+</section>

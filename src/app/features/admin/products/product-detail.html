@@ -1,0 +1,94 @@
+<section class="detail-page">
+  <header class="detail-head">
+    <div>
+<h2>{{ "Product details" | translate }}</h2>
+<nav class="detail-crumbs" aria-label="Breadcrumb">
+<a routerLink="/admin">{{ "Dashboard" | translate }}</a>
+<span>›</span>
+<a routerLink="/admin/products">{{ "Products" | translate }}</a>
+<span>›</span>{{ text(row()?.['name']) }}</nav>
+</div>
+    <div class="detail-actions">
+<a class="detail-button" routerLink="/admin/products">
+<app-icon name="arrow-left" /> {{ "Back to Products" | translate }}</a>@if (row(); as product) { <a class="detail-button primary" [routerLink]="['/admin/products/edit', product['id']]">
+<app-icon name="edit" /> {{ "Edit product" | translate }}</a> }</div>
+  </header>
+  <app-status [busy]="busy()" [error]="error()" [message]="message()" />
+  @if (row(); as product) {
+    <div class="detail-grid detail-product">
+      <div class="detail-stack">
+        <article class="detail-card framed">
+<h3>{{ "General Information" | translate }}</h3>
+<div class="detail-card-body">
+          <div>
+<span class="detail-label">{{ "Product Name" | translate }}</span>
+<p>{{ text(product['name']) }}</p>
+</div>
+          <div>
+<span class="detail-label">{{ "Description" | translate }}</span>
+<p>{{ product['description'] || 'No description provided.' }}</p>
+</div>
+          <div class="detail-fields">
+<div>
+<span class="detail-label">{{ "Created At" | translate }}</span>{{ when(field(product, 'created_at', 'createdAt')) }}</div>
+<div>
+<span class="detail-label">{{ "Updated At" | translate }}</span>{{ when(field(product, 'updated_at', 'updatedAt')) }}</div>
+</div>
+        </div>
+</article>
+        <article class="detail-card framed">
+<h3>{{ "Variants (SKUs)" | translate }}</h3>
+<div class="detail-card-body">
+          @for (sku of skus(product); track $index; let i = $index) {
+            <section class="detail-variant">
+              <header class="detail-variant-head">
+<strong>{{ sku['description'] || sku['sku'] || 'SKU ' + (i + 1) }}</strong>@if (field(sku, 'is_default', 'isDefault') === true) { <span class="detail-badge on dot">{{ "Default Variant" | translate }}</span> }</header>
+              <div class="detail-variant-stats">
+<div>
+<small>{{ "Price" | translate }}</small>
+<b>{{ usd(sku['price']) }}</b>
+</div>
+<div>
+<small>{{ "Inventory" | translate }}</small>
+<b>{{ text(stockOf(sku)) }}</b>
+</div>
+<div>
+<small>{{ "Warehouse" | translate }}</small>
+<b>{{ text(warehouseOf(sku)) }}</b>
+</div>
+</div>
+              @if (attrsOf(sku).length) { <div class="detail-tags">@for (attr of attrsOf(sku); track $index) { <span>
+<b>{{ text(attr['name']) }}:</b> {{ attrText(attr) }}</span> }</div> }
+            </section>
+          }
+@empty { <div class="detail-empty">No variants available.</div> }
+        </div>
+</article>
+      </div>
+      <aside class="detail-stack">
+        <article class="detail-card framed">
+<h3>{{ "Status & Organization" | translate }}</h3>
+<div class="detail-card-body">
+          <div>
+<span class="detail-label">{{ "Status" | translate }}</span>
+<span class="detail-badge dot" [class.on]="activeRow(product) === true" [class.off]="activeRow(product) === false">{{ (activeRow(product) === null ? '—' : activeRow(product) ? 'Active' : 'Inactive') | translate }}</span>
+</div>
+          <div class="detail-divided">
+<span class="detail-label">{{ "Category" | translate }}</span>{{ text(categoryOf(product)) }}</div>
+          <div class="detail-divided">
+<span class="detail-label">{{ "Sub-Category / Brand" | translate }}</span>{{ text(brandOf(product)) }}</div>
+        </div>
+</article>
+        <article class="detail-card framed">
+<h3>{{ "Product Images" | translate }}</h3>
+<div class="detail-card-body">
+<div class="detail-images">@for (url of imagesOf(product); track $index) { <a [href]="url" target="_blank" rel="noopener">
+<img appProductImage [src]="url" [alt]="text(product['name']) + ' - ' + ($index + 1)" />
+</a> }
+@empty { <p class="detail-empty">No images uploaded</p> }</div>
+</div>
+</article>
+      </aside>
+    </div>
+  }
+</section>

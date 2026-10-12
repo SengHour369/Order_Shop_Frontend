@@ -1,3 +1,4 @@
+import { TranslatePipe } from "../../core/i18n/translate.pipe";
 import { Component, inject, signal } from "@angular/core";
 import { DatePipe } from "@angular/common";
 import { RouterLink } from "@angular/router";
@@ -5,17 +6,17 @@ import { switchMap } from "rxjs";
 import { NotificationsApi } from "./notifications.api";
 import { Notice } from "../../core/api/models";
 import { AuthService } from "../../core/auth/auth.service";
-import { CustomerStore } from "../../core/state/customer.store";
-import { Icon } from "../../shared/icon";
-import { SignInCard } from "../../shared/sign-in-card";
-import { PageState } from "../../shared/page-state";
-import { Status } from "../../shared/status";
+import { CustomerStore } from "../../core/stores/customer.store";
+import { Icon } from "../../shared/components/icon";
+import { SignInCard } from "../../shared/components/sign-in-card";
+import { PageState } from "../../shared/utils/page-state";
+import { Status } from "../../shared/components/status";
 @Component({
-  imports: [DatePipe, RouterLink, Icon, SignInCard, Status],
+  imports: [TranslatePipe, DatePipe, RouterLink, Icon, SignInCard, Status],
   template: `<div class="page-heading">
       <div>
         <h1>
-          Notifications
+          {{ "Notifications" | translate }}
           @if (store.unread() !== null) {
             ({{ store.unread() }})
           }
@@ -28,11 +29,11 @@ import { Status } from "../../shared/status";
           [disabled]="!auth.session() || busy()"
           (click)="readAll()"
         >
-          <app-icon name="check" />Mark All as Read</button
+          <app-icon name="check" />{{ "Mark All as Read" | translate }}</button
         ><a
           routerLink="/account/notification-settings"
           class="button icon-button"
-          aria-label="Notification settings"
+          [attr.aria-label]='"Notification settings" | translate'
           ><app-icon name="settings"
         /></a>
       </div>
@@ -103,13 +104,13 @@ import { Status } from "../../shared/status";
             [disabled]="page <= 1 || busy()"
             (click)="page = page - 1; load()"
           >
-            Previous</button
+            {{ "Previous" | translate }}</button
           ><span>Page {{ page }}</span
           ><button
             [disabled]="page >= pages || busy()"
             (click)="page = page + 1; load()"
           >
-            Next
+            {{ "Next" | translate }}
           </button>
         </div>
       </section>

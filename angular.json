@@ -13,7 +13,7 @@
           "options": {
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
-            "styles": ["src/styles.scss", "src/app/features/admin/admin.css"],
+            "styles": ["src/styles.scss", "src/app/features/admin/styles/admin.css"],
             "assets": [{ "glob": "**/*", "input": "public" }]
           },
           "configurations": {

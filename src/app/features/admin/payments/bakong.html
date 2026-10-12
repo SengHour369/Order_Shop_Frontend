@@ -1,0 +1,34 @@
+
+<section class="callback-page">
+  <header><h2>Process Bakong Payment Callback</h2><nav><a routerLink="/admin">{{ "Dashboard" | translate }}</a><span>›</span><a routerLink="/admin/payments">{{ "Payments" | translate }}</a><span>›</span>Bakong Callback</nav></header>
+  <app-status [busy]="busy()" [error]="error()" />
+  <div class="callback-grid">
+    <div class="callback-main">
+      <article class="callback-card"><div class="card-head"><h3>{{ "Callback Information" | translate }} <span class="badge">{{ text(paymentValue('status')) }}</span></h3><p>Review payment information and verify a transaction with Bakong.</p></div>
+        <div class="callback-facts"><div><small>{{ "PAYMENT ID" | translate }}</small><strong>{{ text(paymentValue('code','id')) }}</strong></div><div><small>RECEIVED AT</small><strong>{{ when(paymentValue('payment_date','paymentDate','datetime')) }}</strong></div><div><small>{{ "PAYMENT STATUS" | translate }}</small><strong>{{ text(paymentValue('status')) }}</strong></div></div>
+      </article>
+      <article class="callback-card"><div class="card-head"><h3>{{ "Payment Information" | translate }}</h3></div>
+        <form class="payment-lookup" (ngSubmit)="loadPayment()"><label>{{ "Transaction ID" | translate }}<input name="transaction" [(ngModel)]="lookup" placeholder="Payment transaction ID" /></label><label>{{ "Order ID" | translate }}<input name="order" [(ngModel)]="orderId" type="number" min="1" [placeholder]='"Order ID" | translate' /></label><button class="cb-button" [disabled]="busy()">Load payment</button></form>
+        @if(payment()) {<div class="payment-info"><dl><dt>Order Number</dt><dd>{{ text(paymentValue('order_number','codeOrder','orderNo')) }}</dd><dt>{{ "Order ID" | translate }}</dt><dd>{{ text(paymentValue('order_id','orderId')) }}</dd><dt>{{ "Payment Method" | translate }}</dt><dd>{{ text(paymentValue('payment_method','paymentMethod','method')) }}</dd><dt>Payment Provider</dt><dd>{{ text(paymentValue('payment_provider','provider')) }}</dd></dl><dl><dt>{{ "Amount" | translate }}</dt><dd>{{ amountDisplay() }}</dd><dt>{{ "Currency" | translate }}</dt><dd>{{ text(paymentValue('currency')) }}</dd><dt>{{ "Payment Status" | translate }}</dt><dd>{{ text(paymentValue('status')) }}</dd><dt>Bakong Txn ID</dt><dd>{{ text(paymentValue('transaction_id','transactionId')) }}</dd></dl></div>}
+        @else {<div class="cb-empty"><app-icon name="card" /><strong>No payment selected</strong><p>Load an existing payment by transaction ID or order ID.</p></div>}
+      </article>
+      <article class="callback-card"><div class="card-head"><h3>Processing History</h3><p>Verification requests in this session. Payment status remains the backend record.</p></div>
+        @for(entry of history(); track $index){<div class="history-entry"><app-icon name="clock" /><div><strong>Bakong verification response</strong><p>{{ text(field(entry.response,'responseMessage','message')) }}</p><code>{{ entry.md5 }}</code><small>{{ when(entry.at) }}</small></div></div>}
+        @empty {<div class="cb-empty"><app-icon name="clock" /><strong>No processing history yet</strong><p>Submit a verification request to inspect the provider response.</p></div>}
+      </article>
+    </div>
+    <aside>
+      @if(result(); as current){<article class="callback-card"><div class="card-head"><h3>Bakong Response</h3></div><div class="response-body"><dl><dt>{{ "Response Code" | translate }}</dt><dd>{{ text(field(current,'responseCode','response_code')) }}</dd><dt>{{ "Description" | translate }}</dt><dd>{{ text(field(current,'responseMessage','response_message','message')) }}</dd><dt>{{ "Error Code" | translate }}</dt><dd>{{ text(field(current,'errorCode','error_code')) }}</dd></dl>@if(dataText()){<pre>{{ dataText() }}</pre>}</div></article>}
+      <article class="callback-card"><div class="card-head"><h3>Process Action</h3><p>Verify directly with Bakong. This check does not change financial status.</p></div>
+        <form class="process-form" (ngSubmit)="check()"><label><span>TRANSACTION MD5 <b class="required">*</b></span><input name="md5" [(ngModel)]="md5" required maxlength="32" placeholder="32-character transaction MD5" /></label>
+          <div class="verification-note"><app-icon name="shield" /><p>Payment success is determined by trusted backend verification. Manual status overrides are unavailable.</p></div>
+          <label><span>KHQR PAYLOAD <small>{{ "(Optional)" | translate }}</small></span><textarea name="qr" rows="3" [(ngModel)]="qr" placeholder="Paste KHQR text to preview the QR image"></textarea></label>
+          @if(qrUrl()){<img class="qr-image" [src]="qrUrl()" alt="Bakong payment QR" />}
+          @if(qrError()){<p role="alert" class="qr-error">{{ qrError() }}</p>}
+          <button class="cb-button" type="button" [disabled]="qrBusy() || !qr.trim() || !md5.trim()" (click)="loadQr()">Load QR</button>
+          <div class="action-row"><a class="cb-button" routerLink="/admin/payments">{{ "Cancel" | translate }}</a><button class="cb-button primary" [disabled]="busy()"><app-icon name="refresh" />{{ busy() ? 'Verifying…' : 'Verify Callback' }}</button></div>
+        </form>
+      </article>
+    </aside>
+  </div>
+</section>

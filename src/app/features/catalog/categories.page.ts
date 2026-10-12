@@ -1,22 +1,23 @@
+import { TranslatePipe } from "../../core/i18n/translate.pipe";
 import { Component } from "@angular/core";
 import { RouterLink } from "@angular/router";
-import { Icon } from "../../shared/icon";
+import { Icon } from "../../shared/components/icon";
 @Component({
-  imports: [RouterLink, Icon],
+  imports: [TranslatePipe, RouterLink, Icon],
   template: `<div class="page-heading">
       <div>
-        <h1>All Categories</h1>
+        <h1>{{ "All Categories" | translate }}</h1>
         <p>Explore our wide range of products.</p>
       </div>
       <div class="breadcrumbs">
-        <a routerLink="/">Home</a><app-icon name="chevron" /><span
-          >Categories</span
+        <a routerLink="/">{{ "Home" | translate }}</a><app-icon name="chevron" /><span
+          >{{ "Categories" | translate }}</span
         >
       </div>
     </div>
     <section class="category-feature">
       <div>
-        <span class="eyebrow">ELECTRONICS</span>
+        <span class="eyebrow">{{ "ELECTRONICS" | translate }}</span>
         <h2>Latest Tech<br /><span>For a Smarter Life</span></h2>
         <p>Discover your next everyday essential.</p>
         <a
@@ -33,7 +34,7 @@ import { Icon } from "../../shared/icon";
     </section>
     <div class="section-heading">
       <h2>Shop by Category</h2>
-      <a routerLink="/shop">View All <app-icon name="arrow" /></a>
+      <a routerLink="/shop">{{ "View All" | translate }} <app-icon name="arrow" /></a>
     </div>
     <nav
       class="category-tiles category-directory"

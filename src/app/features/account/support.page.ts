@@ -1,12 +1,13 @@
+import { TranslatePipe } from "../../core/i18n/translate.pipe";
 import { Component } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { RouterLink } from "@angular/router";
-import { Icon } from "../../shared/icon";
+import { Icon } from "../../shared/components/icon";
 @Component({
-  imports: [RouterLink, Icon, FormsModule],
+  imports: [TranslatePipe, RouterLink, Icon, FormsModule],
   template: `<div class="page-heading">
       <div>
-        <h1>Help & Support</h1>
+        <h1>{{ "Help & Support" | translate }}</h1>
         <p>We’re here to help you.</p>
       </div>
     </div>
@@ -31,7 +32,7 @@ import { Icon } from "../../shared/icon";
       }
     </nav>
     <section class="panel faq">
-      <h2>Frequently Asked Questions</h2>
+      <h2>{{ "Frequently Asked Questions" | translate }}</h2>
       @for (q of filtered(); track q.question) {
         <details>
           <summary>{{ q.question }}</summary>

@@ -1,0 +1,265 @@
+:host {
+  display: block;
+  margin: 14px 0;
+  font-size: 12px;
+  color: #122139;
+}
+
+.purchase-panel {
+  border: 1px solid #cae5d7;
+  background: #fff;
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 5px 20px #087b4608;
+}
+
+.purchase-panel header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #edf2ef;
+}
+
+.purchase-icon {
+  background: #e5f8ed;
+  color: #00864b;
+  border-radius: 10px;
+  padding: 9px;
+  display: flex;
+}
+
+.purchase-panel h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.purchase-panel header p {
+  margin: 3px 0 0;
+  color: #748095;
+  font-size: 11px;
+}
+
+.purchase-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 0;
+  border-bottom: 1px solid #edf2ef;
+}
+
+.purchase-item>div:first-child {
+  flex: 1;
+}
+
+.purchase-item strong,.purchase-item small {
+  display: block;
+}
+
+.purchase-item small {
+  color: #78839b;
+  margin-top: 3px;
+}
+
+.item-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.item-controls button {
+  border: 1px solid #dce8e1;
+  background: white;
+  border-radius: 6px;
+  min-width: 30px;
+  min-height: 30px;
+  color: #007445;
+  font: inherit;
+}
+
+.item-controls .remove-item {
+  margin-left: auto;
+  color: #b53347;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.remove-item app-icon {
+  width: 15px;
+  height: 15px;
+}
+
+.purchase-total {
+  display: flex;
+  justify-content: space-between;
+  padding: 14px 0;
+  font-size: 14px;
+}
+
+.purchase-total strong {
+  color: #007445;
+}
+
+.purchase-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.purchase-panel select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #dce5df;
+  border-radius: 8px;
+  font: inherit;
+  background: white;
+  color: inherit;
+}
+
+.selected-address {
+  background: #f6faf8;
+  border-radius: 8px;
+  padding: 10px;
+  line-height: 1.5;
+}
+
+.purchase-panel fieldset {
+  border: 0;
+  padding: 0;
+  margin: 14px 0;
+}
+
+.purchase-panel legend {
+  font-weight: 600;
+  padding: 0;
+  margin-bottom: 7px;
+}
+
+.payment-options {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 6px;
+}
+
+.payment-options label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 5px;
+  border: 1px solid #e3e9e5;
+  border-radius: 8px;
+  font-size: 11px;
+}
+
+.payment-options label.chosen {
+  border-color: #00965a;
+  background: #f0fbf5;
+}
+
+.payment-options input {
+  width: auto;
+  margin: 0;
+  accent-color: #00864b;
+}
+
+.payment-note {
+  background: #f5f7fb;
+  border-radius: 8px;
+  padding: 10px;
+  line-height: 1.5;
+  color: #607088;
+}
+
+.payment-note app-icon {
+  width: 14px;
+  height: 14px;
+  vertical-align: middle;
+}
+
+.purchase-primary,.purchase-secondary {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+  padding: 11px 8px;
+  margin-top: 8px;
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.purchase-primary {
+  background: #00864b;
+  color: white;
+  border: 1px solid #00864b;
+}
+
+.purchase-secondary {
+  background: white;
+  color: #007445;
+  border: 1px solid #d8e8df;
+}
+
+.purchase-panel button:disabled {
+  opacity: .5;
+  cursor: default;
+}
+
+.confirmation-note {
+  padding: 9px 0;
+  color: #007445;
+  line-height: 1.5;
+}
+
+.purchase-notice {
+  background: #ecfaf2;
+  color: #006e40;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.purchase-error {
+  color: #a02e40;
+  background: #fff3f5;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.order-receipt {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 15px 0;
+  color: #007445;
+}
+
+.order-receipt app-icon {
+  width: 30px;
+  height: 30px;
+}
+
+.order-receipt b {
+  font-size: 21px;
+}
+
+.purchase-record {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid #e5ece8;
+  border-radius: 7px;
+  padding: 10px;
+  margin-top: 8px;
+}
+
+.purchase-item>img {
+  width: 42px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 6px;
+}

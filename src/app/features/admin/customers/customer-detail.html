@@ -1,0 +1,63 @@
+<section class="detail-page">
+  <header class="detail-head">
+<div>
+<h2>{{ "Customer Detail" | translate }}</h2>
+<nav class="detail-crumbs" aria-label="Breadcrumb">
+<a routerLink="/admin">{{ "Dashboard" | translate }}</a>
+<span>›</span>
+<a routerLink="/admin/customers">{{ "Customers" | translate }}</a>
+<span>›</span>{{ row() ? customerName(row()!) : 'Customer' }}</nav>
+</div>
+</header>
+  <app-status [busy]="busy()" [error]="error()" [message]="message()" />
+  @if (row(); as current) {
+    <div class="detail-grid detail-customer">
+      <article class="detail-card detail-profile">
+        @if (field(current, 'avatar', 'profileImage', 'profile_image', 'image')) { <img class="detail-avatar" [src]="text(field(current, 'avatar', 'profileImage', 'profile_image', 'image'))" [alt]="customerName(current)" /> }
+@else { <span class="detail-avatar">{{ customerName(current).slice(0,1) }}</span> }
+        <h3>{{ customerName(current) }}</h3>
+<span class="detail-badge dot" [class.on]="tone(current['status']) === 'on'" [class.off]="tone(current['status']) === 'off'">{{ text(current['status']) }}</span>
+        <div class="detail-contact">
+<p>
+<app-icon name="mail" />{{ text(current['email']) }}</p>
+<p>
+<app-icon name="phone" />{{ text(field(current, 'phone', 'phoneNumber')) }}</p>
+<p>
+<app-icon name="pin" />{{ text(field(current, 'city', 'address')) }}</p>
+<p>
+<app-icon name="calendar" />Joined {{ when(field(current, 'createdAt', 'created_at', 'joinDate')) }}</p>
+</div>
+        <div class="detail-profile-stats">
+<div>
+<b>{{ orderTotal() ?? '—' }}</b>
+<small>{{ "Orders" | translate }}</small>
+</div>
+<div>
+<b>{{ field(current, 'totalSpent', 'total_spent') === '' ? '—' : usd(field(current, 'totalSpent', 'total_spent')) }}</b>
+<small>{{ "Total Spent" | translate }}</small>
+</div>
+</div>
+      </article>
+      <article class="detail-card">
+<h3>Order History</h3>
+<app-status [busy]="ordersBusy()" [error]="ordersError()" />
+        <div class="detail-history">@for (order of orders(); track order['id']) { <article>
+<div>
+<a [routerLink]="['/admin/orders', order['id']]">{{ text(field(order, 'order_number', 'orderNumber', 'id')) }}</a>
+<small>{{ when(field(order, 'order_date', 'orderDate', 'created_at')) }}@if (field(order, 'item_count', 'itemCount') !== '') { · {{ field(order, 'item_count', 'itemCount') }} items }</small>
+</div>
+<div>
+<span class="detail-badge dot" [class.on]="tone(order['status']) === 'on'" [class.off]="tone(order['status']) === 'off'" [class.wait]="tone(order['status']) === 'wait'">{{ text(order['status']) }}</span>
+<b>{{ usd(field(order, 'total_amount', 'totalAmount', 'total')) }}</b>
+</div>
+</article> }
+@empty { @if (!ordersBusy() && !ordersError()) { <p class="detail-empty">No orders found.</p> } }</div>
+        @if (orderPages() > 1) { <div class="detail-actions detail-divided">
+<button class="detail-button" [disabled]="orderPage <= 1 || ordersBusy()" (click)="loadOrders(+current['id']!, orderPage - 1)">{{ "Previous" | translate }}</button>
+<span>Page {{ orderPage }} of {{ orderPages() }}</span>
+<button class="detail-button" [disabled]="orderPage >= orderPages() || ordersBusy()" (click)="loadOrders(+current['id']!, orderPage + 1)">{{ "Next" | translate }}</button>
+</div> }
+      </article>
+    </div>
+  }
+</section>

@@ -1,6 +1,6 @@
 <div class="page-heading">
   <div>
-    <h1>Account Settings</h1>
+    <h1>{{ "Account Settings" | translate }}</h1>
     <p>Manage your profile information and preferences.</p>
   </div>
 </div>
@@ -18,7 +18,7 @@
       (click)="section = 'profile'"
     >
       <app-icon name="user" /><span
-        ><strong>Profile Information</strong
+        ><strong>{{ "Profile Information" | translate }}</strong
         ><small>Your personal information</small></span
       >
     </button>
@@ -33,19 +33,19 @@
       (click)="section = 'preferences'"
     >
       <app-icon name="settings" /><span
-        ><strong>Preferences</strong><small>Language and currency</small></span
+        ><strong>{{ "Preferences" | translate }}</strong><small>Language and currency</small></span
       >
     </button>
     <a routerLink="/account/notification-settings"
       ><app-icon name="bell" /><span
-        ><strong>Notifications</strong
+        ><strong>{{ "Notifications" | translate }}</strong
         ><small>Choose your email updates</small></span
       ></a
     >
   </nav>
   @if (section === "profile") {
     <section class="panel">
-      <h2>Profile Information</h2>
+      <h2>{{ "Profile Information" | translate }}</h2>
       <div class="profile-photo">
         <span>
           @if (profile()?.image) {
@@ -60,7 +60,7 @@
           <p>Upload a new photo</p>
           <small>JPG, PNG (Max 5MB)</small
           ><label class="button outline small upload-label"
-            >Change Photo<input
+            >{{ "Change Photo" | translate }}<input
               type="file"
               accept="image/jpeg,image/png"
               [disabled]="!auth.session() || busy()"
@@ -69,17 +69,17 @@
         </div>
       </div>
       <label
-        >Full Name<input
+        >{{ "Full Name" | translate }}<input
           [value]="profile()?.fullName || auth.session()?.username || ''"
           readonly
       /></label>
       <label
-        >Email Address<input
+        >{{ "Email Address" | translate }}<input
           [value]="profile()?.email || auth.session()?.email || ''"
           readonly
       /></label>
       <label
-        >Phone Number<input
+        >{{ "Phone Number" | translate }}<input
           [value]="profile()?.phone || ''"
           readonly
           placeholder="No phone number available"
@@ -90,18 +90,18 @@
       </p>
       <a class="setting-row" routerLink="/account/addresses"
         ><app-icon name="pin" /><span class="grow"
-          ><strong>Shipping Addresses</strong>
+          ><strong>{{ "Shipping Addresses" | translate }}</strong>
           <p>Manage your saved delivery addresses.</p></span
         ><app-icon name="chevron"
       /></a>
     </section>
   } @else {
     <section class="panel">
-      <h2>Preferences</h2>
+      <h2>{{ "Preferences" | translate }}</h2>
       <p>Your current shopping preferences.</p>
       <div class="form-grid">
-        <label>Language<input value="English" readonly /></label
-        ><label>Currency<input value="USD ($)" readonly /></label
+        <label>{{ "Language" | translate }}<input value="English" readonly /></label
+        ><label>{{ "Currency" | translate }}<input value="USD ($)" readonly /></label
         ><label>Time Zone<input value="Device time zone" readonly /></label
         ><label>Date Format<input value="Local date format" readonly /></label>
       </div>

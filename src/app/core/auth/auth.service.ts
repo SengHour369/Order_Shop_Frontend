@@ -2,9 +2,11 @@ import { inject, Injectable, signal } from "@angular/core";
 import { map, tap, throwError } from "rxjs";
 import { ApiClient } from "../api/api-client";
 import { Session } from "../api/models";
+import { KeycloakService } from "./keycloak.service";
 @Injectable({ providedIn: "root" })
 export class AuthService {
   private api = inject(ApiClient);
+  private sso = inject(KeycloakService);
   // Keep bearer credentials in memory; re-authenticate after a full page reload.
   readonly session = signal<Session | null>(null);
   login(CriteriaValue: string, Password: string) {
@@ -56,7 +58,7 @@ export class AuthService {
   logout() {
     return this.api.post("/api/v1/public/logout", {
       refreshToken: this.session()?.refresh_token,
-    });
+    }).pipe(tap(() => this.sso.endSession()));
   }
   checkUser(email: string) {
     return this.api.post<Session>("/api/v1/public/check-user", {}, { email });

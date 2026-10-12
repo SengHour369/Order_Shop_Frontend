@@ -1,70 +1,62 @@
 <section class="auth-layout customer-auth">
   <div class="auth-story">
-    <span class="eyebrow">{{
-      mode === "Sign in"
+    <span class="eyebrow">{{ (mode === "Sign in"
         ? "WELCOME BACK"
         : mode === "Register"
           ? "JOIN E-SHOP"
-          : "YOUR ACCOUNT"
-    }}</span>
+          : "YOUR ACCOUNT") | translate }}</span>
     <h1>
-      {{
-        mode === "Sign in"
+      {{ (mode === "Sign in"
           ? "Welcome Back"
           : mode === "Register"
             ? "Shop Smarter"
-            : "Keep Your Account"
-      }}<br /><span>{{
-        mode === "Sign in"
+            : "Keep Your Account") | translate }}<br /><span>{{ (mode === "Sign in"
           ? "to E-Shop"
           : mode === "Register"
             ? "Live Better"
-            : "Safe & Secure"
-      }}</span>
+            : "Safe & Secure") | translate }}</span>
     </h1>
     <p>
-      {{
-        mode === "Sign in"
+      {{ (mode === "Sign in"
           ? "Sign in to continue shopping your favorite products."
           : mode === "Register"
             ? "Create an account to save your favorites, manage orders, and check out easily."
-            : "A few simple steps to get you back to shopping."
-      }}
+            : "A few simple steps to get you back to shopping.") | translate }}
     </p>
     <ul class="auth-benefits">
       <li>
         <app-icon name="gift" /><span
-          ><strong>Discover More</strong
-          ><small>Explore products for your everyday</small></span
+          ><strong>{{ "Discover More" | translate }}</strong
+          ><small>{{ "Explore products for your everyday" | translate }}</small></span
         >
       </li>
       <li>
         <app-icon name="shield" /><span
-          ><strong>Your Account, Protected</strong
-          ><small>Keep your information safe</small></span
+          ><strong>{{ "Your Account, Protected" | translate }}</strong
+          ><small>{{ "Keep your information safe" | translate }}</small></span
         >
       </li>
       <li>
         <app-icon name="box" /><span
-          ><strong>Track Your Orders</strong
-          ><small>All your purchases in one place</small></span
+          ><strong>{{ "Track Your Orders" | translate }}</strong
+          ><small>{{ "All your purchases in one place" | translate }}</small></span
         >
       </li>
     </ul>
     <img src="/images/eshop-scene.svg" alt="E-Shop shopping essentials" />
   </div>
   <div class="panel auth-form">
+    <div class="auth-language"><app-language-select /></div>
     <a class="auth-brand" routerLink="/"
       ><span class="brand-bag"><app-icon name="check" /></span>E-Shop</a
     >
     @if (auth.session() && mode === "Sign in") {
       <h2>Hello, {{ auth.session()?.username }}</h2>
       <p>{{ auth.session()?.email }}</p>
-      <button (click)="logout()" [disabled]="busy()">Sign out</button>
+      <button (click)="logout()" [disabled]="busy()">{{ "Sign out" | translate }}</button>
     } @else {
       <h2>
-        {{
-          mode === "Register"
+        {{ (mode === "Register"
             ? "Create Your Account"
             : mode === "Forgot password"
               ? "Forgot Password?"
@@ -72,12 +64,10 @@
                 ? "Reset Your Password"
                 : mode === "Verify"
                   ? "Verify Your Email"
-                  : "Sign In"
-        }}
+                  : "Sign In") | translate }}
       </h2>
       <p class="auth-intro">
-        {{
-          mode === "Sign in"
+        {{ (mode === "Sign in"
             ? "Welcome back! Please enter your details."
             : mode === "Register"
               ? "Fill in your details to get started."
@@ -85,38 +75,37 @@
                 ? "Enter your email and we’ll send you reset instructions."
                 : mode === "Verify"
                   ? "Enter the verification code sent to your email."
-                  : "Enter and confirm your new password."
-        }}
+                  : "Enter and confirm your new password.") | translate }}
       </p>
       <form #form="ngForm" (ngSubmit)="submit()">
         @if (mode === "Register") {
           <label
-            >Full Name <b>*</b
+            >{{ "Full Name" | translate }} <b>*</b
             ><input
               name="fullName"
               [(ngModel)]="fullName"
               required
               autocomplete="name"
-              placeholder="Your full name"
+              [placeholder]='"Your full name" | translate'
           /></label>
         }
         @if (mode === "Sign in" || mode === "Register") {
           <label
-            >{{ mode === "Register" ? "Username" : "Email or Username" }}
+            >{{ (mode === "Register" ? "Username" : "Email or Username") | translate }}
             <b>*</b
             ><input
               name="username"
               [(ngModel)]="username"
               required
               autocomplete="username"
-              placeholder="Enter your username"
+              [placeholder]='"Enter your username" | translate'
           /></label>
         }
         @if (
           mode === "Register" || mode === "Verify" || mode === "Forgot password"
         ) {
           <label
-            >Email Address <b>*</b
+            >{{ "Email Address" | translate }} <b>*</b
             ><input
               type="email"
               name="email"
@@ -129,7 +118,7 @@
         }
         @if (mode === "Register") {
           <label
-            >Phone Number <b>*</b
+            >{{ "Phone Number" | translate }} <b>*</b
             ><input
               type="tel"
               autocomplete="tel"
@@ -143,7 +132,7 @@
           mode === "Sign in" || mode === "Register" || mode === "Reset password"
         ) {
           <label
-            >{{ mode === "Reset password" ? "New Password" : "Password" }}
+            >{{ (mode === "Reset password" ? "New Password" : "Password") | translate }}
             <b>*</b
             ><span class="password-field"
               ><input
@@ -155,12 +144,12 @@
                 [autocomplete]="
                   mode === 'Sign in' ? 'current-password' : 'new-password'
                 "
-                placeholder="Enter your password" /><button
+                [placeholder]='"Enter your password" | translate' /><button
                 type="button"
                 (click)="showPassword = !showPassword"
                 [attr.aria-label]="
-                  showPassword ? 'Hide password' : 'Show password'
-                "
+                  (showPassword ? 'Hide password' : 'Show password'
+                ) | translate"
                 [attr.aria-pressed]="showPassword"
               >
                 <app-icon name="eye" /></button></span
@@ -168,7 +157,7 @@
         }
         @if (mode === "Register" || mode === "Reset password") {
           <label
-            >Confirm Password <b>*</b
+            >{{ "Confirm Password" | translate }} <b>*</b
             ><input
               [type]="showPassword ? 'text' : 'password'"
               name="confirmation"
@@ -214,7 +203,7 @@
             type="button"
             (click)="changeMode('Forgot password')"
           >
-            Forgot password?
+            {{ "Forgot password?" | translate }}
           </button>
         }
         <button
@@ -226,8 +215,7 @@
               password !== confirmation)
           "
         >
-          {{
-            busy()
+          {{ (busy()
               ? "Please wait…"
               : mode === "Register"
                 ? "Create Account"
@@ -237,15 +225,19 @@
                     ? "Reset Password"
                     : mode === "Verify"
                       ? "Verify Email"
-                      : "Sign In"
-          }}
+                      : "Sign In") | translate }}
         </button>
       </form>
       @if (mode === "Sign in") {
+        @if (sso.enabled()) {
+          <button type="button" class="full" style="margin-top:16px" (click)="signInWithKeycloak()" [disabled]="busy()">
+            <app-icon name="shield" /> {{ "Continue with Keycloak" | translate }}
+          </button>
+        }
         <p class="auth-switch">
-          Don’t have an account?
+          {{ "Don’t have an account?" | translate }}
           <button class="text-button" (click)="changeMode('Register')">
-            Register now
+            {{ "Register now" | translate }}
           </button>
         </p>
       } @else {

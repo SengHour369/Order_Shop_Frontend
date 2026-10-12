@@ -1,0 +1,148 @@
+<section class="reference-page">
+  <header class="adm-page-head">
+    <div>
+      <h2>Add Customer</h2>
+      <div class="adm-crumbs">
+        <a routerLink="/admin">{{ "Dashboard" | translate }}</a><span>›</span
+        ><a routerLink="/admin/customers">{{ "Customers" | translate }}</a><span>›</span>Add
+        Customer
+      </div>
+    </div>
+  </header>
+  <app-status [busy]="busy()" [error]="error()" />
+  <form (ngSubmit)="save()">
+    <div class="ops-work">
+      <div>
+        <section class="adm-panel">
+          <h3>{{ "Basic Information" | translate }}</h3>
+          <p>Enter the customer's basic information.</p>
+          <div class="ops-form-grid">
+            <label
+              >{{ "First Name *" | translate }}<input
+                name="firstName"
+                [(ngModel)]="firstName"
+                required
+                autocomplete="given-name"
+                placeholder="e.g. Sophea"
+            /></label>
+            <label
+              >{{ "Last Name *" | translate }}<input
+                name="lastName"
+                [(ngModel)]="lastName"
+                required
+                autocomplete="family-name"
+                placeholder="e.g. Chhun"
+            /></label>
+            <label
+              >{{ "Phone Number *" | translate }}<input
+                name="phone"
+                [(ngModel)]="phone"
+                required
+                type="tel"
+                autocomplete="tel"
+                placeholder="+855 12 345 678"
+            /></label>
+            <label
+              >{{ "Email *" | translate }}<input
+                name="email"
+                [(ngModel)]="email"
+                required
+                type="email"
+                autocomplete="email"
+                placeholder="Customer email address"
+            /></label>
+          </div>
+        </section>
+        <section class="adm-panel">
+          <h3>{{ "Default Address" | translate }}</h3>
+          <p>
+            Address creation for another customer's account is not available
+            from this service.
+          </p>
+          <div class="ops-form-grid">
+            <label
+              >{{ "Country" | translate }}<select disabled>
+                <option>Cambodia</option>
+              </select></label
+            ><label
+              >Province / City<select disabled>
+                <option>Phnom Penh</option>
+              </select></label
+            ><label
+              >Address Detail<input
+                disabled
+                placeholder="Address support is unavailable" /></label
+            ><label>Postal Code<input disabled /></label>
+          </div>
+        </section>
+        <section class="adm-panel">
+          <h3>{{ "Customer Group" | translate }}</h3>
+          <p>Choose active groups. This user inherits all permissions granted to those groups.</p>
+          @for (group of groups(); track group['group_id']) {
+            <label style="display:flex;align-items:center;gap:12px;padding:14px;margin-top:8px;border:1px solid #dce7f6;border-radius:10px;background:#f8fbff">
+              <input type="checkbox" [checked]="chosenGroups.has(+group['group_id']!)" (change)="toggleGroup(group['group_id'])" [disabled]="busy()" />
+              <span><strong>{{ group['group_name'] }}</strong><small style="display:block;color:#64748b">{{ group['description'] }}</small></span>
+            </label>
+          } @empty { <p>No active groups available.</p> }
+        </section>
+        <app-permission-picker [rows]="functions()" [(selected)]="chosenPermissions" [disabled]="busy()" />
+      </div>
+      <div>
+        <section class="adm-panel">
+          <h3>Profile Image</h3>
+          <div class="ops-upload">
+            <p>Profile image uploads are not currently saved by the service.</p>
+            <input
+              type="file"
+              accept="image/*"
+              disabled
+              aria-label="Profile image unavailable"
+            />
+          </div>
+        </section>
+        <section class="adm-panel">
+          <h3>Account Information</h3>
+          <div class="ops-form-grid">
+            <label
+              >{{ "Username *" | translate }}<input
+                name="username"
+                [(ngModel)]="username"
+                required
+                autocomplete="off" /></label
+            ><label
+              >{{ "Password *" | translate }}<input
+                name="password"
+                [(ngModel)]="password"
+                required
+                type="password"
+                autocomplete="new-password" /></label
+            ><label
+              >Customer Role ID *<input
+                name="roleId"
+                [(ngModel)]="roleId"
+                required
+                type="number"
+                min="1"
+                step="1"
+            /></label>
+          </div>
+          <p>
+            Use the existing customer role ID configured for your service. The
+            service requires a role but does not provide a role list.
+          </p>
+        </section>
+        <section class="adm-panel">
+          <h3>{{ "Preferences" | translate }}</h3>
+          <label><input type="checkbox" disabled /> Send Welcome Email</label>
+          <p>Welcome email and notification preferences are unavailable.</p>
+        </section>
+      </div>
+    </div>
+    <footer class="ops-footer">
+      <a class="adm-btn" routerLink="/admin/customers">← Cancel</a
+      ><button class="adm-btn adm-primary" [disabled]="busy()">
+        Create Customer
+      </button>
+    </footer>
+  </form>
+</section>

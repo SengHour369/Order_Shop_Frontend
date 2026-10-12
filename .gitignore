@@ -5,3 +5,9 @@
 *.log
 
 /.npm-cache
+/.cache/keycloak/
+/.cache/ai-training-10m/
+/ai-training-data/*.gz
+/ai-training-data/*.partial
+
+.cache/

@@ -1,3 +1,4 @@
+import { TranslatePipe } from "../../core/i18n/translate.pipe";
 import { Component, inject, signal, DestroyRef } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { of, switchMap } from "rxjs";
@@ -6,17 +7,15 @@ import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { AuthService } from "../../core/auth/auth.service";
 import { CatalogApi } from "./catalog.api";
 import { Product } from "../../core/api/models";
-import { ProductCard } from "../../shared/product-card";
-import { SignInCard } from "../../shared/sign-in-card";
-import { Icon } from "../../shared/icon";
-import { PageState } from "../../shared/page-state";
-import { Status } from "../../shared/status";
+import { ProductCard } from "../../shared/components/product-card";
+import { SignInCard } from "../../shared/components/sign-in-card";
+import { Icon } from "../../shared/components/icon";
+import { PageState } from "../../shared/utils/page-state";
+import { Status } from "../../shared/components/status";
 @Component({
-  imports: [FormsModule, RouterLink, ProductCard, SignInCard, Icon, Status],
+  imports: [TranslatePipe, FormsModule, RouterLink, ProductCard, SignInCard, Icon, Status],
   template: `<div class="breadcrumbs">
-      <a routerLink="/">Home</a><app-icon name="chevron" /><span>{{
-        search || category || (deals ? "Deals" : "All Categories")
-      }}</span>
+      <a routerLink="/">{{ "Home" | translate }}</a><app-icon name="chevron" /><span>{{ (search || category || (deals ? "Deals" : "All Categories")) | translate }}</span>
     </div>
     <section class="catalog-banner">
       <div>
@@ -29,7 +28,7 @@ import { Status } from "../../shared/status";
         </h1>
         <p>Explore fresh finds for every part of your life.</p>
         <a href="#products" class="button primary round"
-          >Shop Now <app-icon name="arrow"
+          >{{ "Shop Now" | translate }} <app-icon name="arrow"
         /></a>
       </div>
       <img src="/images/eshop-scene.svg" alt="E-Shop everyday essentials" />

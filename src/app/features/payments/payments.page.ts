@@ -1,3 +1,4 @@
+import { TranslatePipe } from "../../core/i18n/translate.pipe";
 import { Component, inject, signal } from "@angular/core";
 import { CurrencyPipe } from "@angular/common";
 import { FormsModule } from "@angular/forms";
@@ -7,12 +8,12 @@ import { PaymentsApi } from "./payments.api";
 import { Order, Transaction } from "../../core/api/models";
 import { OrdersApi } from "../orders/orders.api";
 import { AuthService } from "../../core/auth/auth.service";
-import { Icon } from "../../shared/icon";
-import { SignInCard } from "../../shared/sign-in-card";
-import { PageState } from "../../shared/page-state";
-import { Status } from "../../shared/status";
+import { Icon } from "../../shared/components/icon";
+import { SignInCard } from "../../shared/components/sign-in-card";
+import { PageState } from "../../shared/utils/page-state";
+import { Status } from "../../shared/components/status";
 @Component({
-  imports: [CurrencyPipe, FormsModule, Icon, SignInCard, Status],
+  imports: [TranslatePipe, CurrencyPipe, FormsModule, Icon, SignInCard, Status],
   template: `<div class="page-heading">
       <div>
         <h1>Payment Methods</h1>
@@ -40,7 +41,7 @@ import { Status } from "../../shared/status";
         @if (canCreatePayment()) {
           <form (ngSubmit)="createPayment()">
             <label
-              >Payment method
+              >{{ "Payment method" | translate }}
               <select
                 name="paymentMethod"
                 [(ngModel)]="paymentMethod"
@@ -107,7 +108,7 @@ import { Status } from "../../shared/status";
         <div class="section-title">
           <span class="icon-circle"><app-icon name="card" /></span>
           <div>
-            <h2>Payment Information</h2>
+            <h2>{{ "Payment Information" | translate }}</h2>
             <p>Know what happens next.</p>
           </div>
         </div>
@@ -117,10 +118,10 @@ import { Status } from "../../shared/status";
         </div>
         <div class="unavailable-box">
           <span class="icon-circle"><app-icon name="lock" /></span>
-          <h3>Online payment is not available yet</h3>
+          <h3>Pay from your order</h3>
           <p>
-            You can place an order and check its payment records. Starting a new
-            online payment will be available when payment setup is complete.
+            When the shop enables KHQR, open your order details or chat checkout to scan its order-specific QR. A new
+            payment is confirmed only after verification with Bakong.
           </p>
         </div>
         <p class="availability-note">
@@ -130,13 +131,13 @@ import { Status } from "../../shared/status";
       </section>
     </div>
     <div class="section-heading">
-      <h2>Payment History</h2>
+      <h2>{{ "Payment History" | translate }}</h2>
       <button
         class="outline small"
         [disabled]="!auth.session() || busy()"
         (click)="load()"
       >
-        <app-icon name="refresh" />Refresh
+        <app-icon name="refresh" />{{ "Refresh" | translate }}
       </button>
     </div>
     <div class="panel table-scroll">
@@ -144,10 +145,10 @@ import { Status } from "../../shared/status";
         <thead>
           <tr>
             <th>Transaction</th>
-            <th>Order</th>
+            <th>{{ "Order" | translate }}</th>
             <th>Method</th>
-            <th>Amount</th>
-            <th>Status</th>
+            <th>{{ "Amount" | translate }}</th>
+            <th>{{ "Status" | translate }}</th>
           </tr>
         </thead>
         <tbody>

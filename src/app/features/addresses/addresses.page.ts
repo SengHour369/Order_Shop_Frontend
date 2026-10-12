@@ -1,3 +1,4 @@
+import { TranslatePipe } from "../../core/i18n/translate.pipe";
 import {
   Component,
   inject,
@@ -10,16 +11,16 @@ import { switchMap } from "rxjs";
 import { AddressesApi } from "./addresses.api";
 import { Address } from "../../core/api/models";
 import { AuthService } from "../../core/auth/auth.service";
-import { Icon } from "../../shared/icon";
-import { SignInCard } from "../../shared/sign-in-card";
-import { PageState } from "../../shared/page-state";
-import { Status } from "../../shared/status";
+import { Icon } from "../../shared/components/icon";
+import { SignInCard } from "../../shared/components/sign-in-card";
+import { PageState } from "../../shared/utils/page-state";
+import { Status } from "../../shared/components/status";
 @Component({
-  imports: [FormsModule, Icon, SignInCard, Status],
+  imports: [TranslatePipe, FormsModule, Icon, SignInCard, Status],
   template: `<div class="banner-with-action">
       <section class="account-banner">
         <div>
-          <h1>My Addresses</h1>
+          <h1>{{ "My Addresses" | translate }}</h1>
           <p>
             Manage your shipping addresses for a faster and<br />
             easier checkout.
@@ -30,7 +31,7 @@ import { Status } from "../../shared/status";
         </div>
       </section>
       <button class="primary" (click)="open()" [disabled]="!auth.session()">
-        <app-icon name="plus" /> Add New Address
+        <app-icon name="plus" /> {{ "Add New Address" | translate }}
       </button>
     </div>
     <app-status [busy]="busy()" [error]="error()" [message]="message()" />
@@ -52,9 +53,9 @@ import { Status } from "../../shared/status";
             /></span>
             <div>
               @if (a.is_default) {
-                <span class="badge purple">Default</span>
+                <span class="badge purple">{{ "Default" | translate }}</span>
               }
-              <h2>{{ a.is_default ? "Home" : "Address #" + a.id }}</h2>
+              <h2>{{ (a.is_default ? "Home" : "Address #" + a.id) | translate }}</h2>
               <p>{{ auth.session()?.username }}</p>
               <p class="address-text">
                 <app-icon name="pin" />{{ a.address_line1 }}, {{ a.city }},
@@ -64,13 +65,13 @@ import { Status } from "../../shared/status";
           </div>
           <div class="address-actions">
             <button class="outline" (click)="open(a)" [disabled]="busy()">
-              <app-icon name="edit" /> Edit</button
+              <app-icon name="edit" /> {{ "Edit" | translate }}</button
             ><button
               class="danger-outline"
               (click)="deleteId.set(a.id)"
               [disabled]="busy()"
             >
-              <app-icon name="trash" /> Delete
+              <app-icon name="trash" /> {{ "Delete" | translate }}
             </button>
           </div>
           @if (deleteId() === a.id) {
@@ -82,7 +83,7 @@ import { Status } from "../../shared/status";
                 (click)="remove(a.id)"
               >
                 Delete Address</button
-              ><button (click)="deleteId.set(null)">Cancel</button>
+              ><button (click)="deleteId.set(null)">{{ "Cancel" | translate }}</button>
             </div>
           }
         </article>
@@ -92,7 +93,7 @@ import { Status } from "../../shared/status";
             <app-icon name="pin" />
             <h2>A home for your deliveries</h2>
             <p>Add your first shipping address to get started.</p>
-            <button class="primary" (click)="open()">Add New Address</button>
+            <button class="primary" (click)="open()">{{ "Add New Address" | translate }}</button>
           </div>
         }
       }
@@ -100,11 +101,11 @@ import { Status } from "../../shared/status";
     <dialog
       #editor
       class="address-dialog customer-dialog"
-      aria-label="Address information"
+      [attr.aria-label]='"Address information" | translate'
       (close)="editing.set(null)"
     >
       <div class="dialog-heading">
-        <h2>{{ editing() ? "Edit Address" : "Add New Address" }}</h2>
+        <h2>{{ (editing() ? "Edit Address" : "Add New Address") | translate }}</h2>
         <button
           type="button"
           class="icon-button"
@@ -117,10 +118,10 @@ import { Status } from "../../shared/status";
       <form #f="ngForm" (ngSubmit)="save()">
         <div class="form-section-title">
           <span class="icon-circle"><app-icon name="pin" /></span>
-          <h3>Address Information</h3>
+          <h3>{{ "Address Information" | translate }}</h3>
         </div>
         <label
-          >Street Address <b>*</b
+          >{{ "Street Address" | translate }} <b>*</b
           ><textarea
             name="street"
             [(ngModel)]="form.address_line1"
@@ -144,7 +145,7 @@ import { Status } from "../../shared/status";
           /></label>
         </div>
         <label
-          >Country <b>*</b
+          >{{ "Country" | translate }} <b>*</b
           ><input name="country" [(ngModel)]="form.country" required /></label
         ><label class="switch-label"
           ><input
@@ -153,15 +154,15 @@ import { Status } from "../../shared/status";
             [(ngModel)]="form.is_default"
           /><span class="switch"></span
           ><span
-            >Set as default address<small
+            >{{ "Set as default address" | translate }}<small
               >This address will be selected automatically at checkout.</small
             ></span
           ></label
         ><app-status [error]="error()" />
         <div class="dialog-actions">
-          <button type="button" (click)="close()">Cancel</button
+          <button type="button" (click)="close()">{{ "Cancel" | translate }}</button
           ><button class="primary" [disabled]="f.invalid || busy()">
-            <app-icon name="check" />{{ busy() ? "Saving…" : "Save Address" }}
+            <app-icon name="check" />{{ (busy() ? "Saving…" : "Save Address") | translate }}
           </button>
         </div>
       </form>

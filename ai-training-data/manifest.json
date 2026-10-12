@@ -1,0 +1,21 @@
+{
+  "file": "eshop-bilingual-10000000-draft.jsonl.gz",
+  "records": 10000000,
+  "languages": {
+    "en": 5000000,
+    "km": 5000000
+  },
+  "splits": {
+    "TRAIN": 8000000,
+    "VALIDATION": 1200000,
+    "TEST": 800000
+  },
+  "compressed_bytes": 254444891,
+  "sha256": "eb0a500f9aa355ee32ffe1c208d67b29ecd2047fb1e227274519cdcf8b9d3eb8",
+  "generator": "eshop-bilingual-context-v2",
+  "review_status": "DRAFT",
+  "model_training_started": false,
+  "limitations": "Template-generated context combinations, not 10 million independent facts. Responses repeat. Human review required. Do not use held-out templates as a quality benchmark.",
+  "database_loaded": false,
+  "database_load_blocker": "C: has approximately 1.6 GB free; existing 100,000 database examples occupy approximately 91 MB excluding WAL/headroom."
+}

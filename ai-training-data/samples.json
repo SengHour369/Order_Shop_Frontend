@@ -1,0 +1,116 @@
+[
+  {
+    "index": 0,
+    "language": "en",
+    "split": "TRAIN",
+    "review_status": "DRAFT",
+    "source_verified": false,
+    "consent_confirmed": false,
+    "source": "synthetic:eshop-bilingual-context-v2",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Please help me: Find wireless headphones."
+      },
+      {
+        "role": "assistant",
+        "content": "I can search the current catalog. Tell me your budget and preferred features; I will show matching products without inventing prices or availability."
+      }
+    ]
+  },
+  {
+    "index": 1,
+    "language": "km",
+    "split": "TRAIN",
+    "review_status": "DRAFT",
+    "source_verified": false,
+    "consent_confirmed": false,
+    "source": "synthetic:eshop-bilingual-context-v2",
+    "messages": [
+      {
+        "role": "user",
+        "content": "សូមជួយខ្ញុំ៖ ស្វែងរក កាសឥតខ្សែ។"
+      },
+      {
+        "role": "assistant",
+        "content": "ខ្ញុំអាចស្វែងរកក្នុងកាតាឡុកបច្ចុប្បន្ន។ សូមប្រាប់ថវិកា និងលក្ខណៈដែលអ្នកចង់បាន។ ខ្ញុំនឹងបង្ហាញផលិតផលដែលត្រូវគ្នា ដោយមិនប្រឌិតតម្លៃ ឬស្តុក។"
+      }
+    ]
+  },
+  {
+    "index": 100000,
+    "language": "en",
+    "split": "TRAIN",
+    "review_status": "DRAFT",
+    "source_verified": false,
+    "consent_confirmed": false,
+    "source": "synthetic:eshop-bilingual-context-v2",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Please help me: Find wireless headphones.\nDo not assume that a previous chat completed an action."
+      },
+      {
+        "role": "assistant",
+        "content": "I can search the current catalog. Tell me your budget and preferred features; I will show matching products without inventing prices or availability."
+      }
+    ]
+  },
+  {
+    "index": 100001,
+    "language": "km",
+    "split": "TRAIN",
+    "review_status": "DRAFT",
+    "source_verified": false,
+    "consent_confirmed": false,
+    "source": "synthetic:eshop-bilingual-context-v2",
+    "messages": [
+      {
+        "role": "user",
+        "content": "សូមជួយខ្ញុំ៖ ស្វែងរក កាសឥតខ្សែ។\nកុំសន្មតថាការជជែកមុនបានបញ្ចប់សកម្មភាព។"
+      },
+      {
+        "role": "assistant",
+        "content": "ខ្ញុំអាចស្វែងរកក្នុងកាតាឡុកបច្ចុប្បន្ន។ សូមប្រាប់ថវិកា និងលក្ខណៈដែលអ្នកចង់បាន។ ខ្ញុំនឹងបង្ហាញផលិតផលដែលត្រូវគ្នា ដោយមិនប្រឌិតតម្លៃ ឬស្តុក។"
+      }
+    ]
+  },
+  {
+    "index": 9999998,
+    "language": "en",
+    "split": "TEST",
+    "review_status": "DRAFT",
+    "source_verified": false,
+    "consent_confirmed": false,
+    "source": "synthetic:eshop-bilingual-context-v2",
+    "messages": [
+      {
+        "role": "user",
+        "content": "I want to check the details before taking any action.\nWhat should I check first? I cannot find my earlier chat about a school backpack.\nPlease respect account permissions throughout."
+      },
+      {
+        "role": "assistant",
+        "content": "Check your signed-in account and available conversation history. I cannot recover unavailable history or assume an earlier chat completed a business action; verify any order or payment through its service."
+      }
+    ]
+  },
+  {
+    "index": 9999999,
+    "language": "km",
+    "split": "TEST",
+    "review_status": "DRAFT",
+    "source_verified": false,
+    "consent_confirmed": false,
+    "source": "synthetic:eshop-bilingual-context-v2",
+    "messages": [
+      {
+        "role": "user",
+        "content": "ខ្ញុំចង់ពិនិត្យព័ត៌មានមុនធ្វើសកម្មភាពណាមួយ។\nតើខ្ញុំគួរពិនិត្យអ្វីមុន? ខ្ញុំរកការជជែកមុនអំពី កាបូបស្ពាយសាលា មិនឃើញ។\nសូមគោរពសិទ្ធិគណនីគ្រប់ជំហាន។"
+      },
+      {
+        "role": "assistant",
+        "content": "សូមពិនិត្យគណនីដែលបានចូល និងប្រវត្តិសន្ទនាដែលមាន។ ខ្ញុំមិនអាចស្ដារប្រវត្តិដែលមិនមាន ឬសន្មតថាការជជែកមុនបានបញ្ចប់សកម្មភាពទេ។ សូមផ្ទៀងផ្ទាត់ការបញ្ជាទិញ ឬទូទាត់តាមសេវា។"
+      }
+    ]
+  }
+]

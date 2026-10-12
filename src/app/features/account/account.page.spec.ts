@@ -4,7 +4,7 @@ import {
   convertToParamMap,
   provideRouter,
 } from "@angular/router";
-import { of } from "rxjs";
+import { of, throwError } from "rxjs";
 import { AccountPage } from "./account.page";
 import { AuthService } from "../../core/auth/auth.service";
 import { ApiClient } from "../../core/api/api-client";
@@ -20,7 +20,7 @@ describe("Customer account forms", () => {
           provide: ActivatedRoute,
           useValue: { snapshot: { queryParamMap: convertToParamMap({}) } },
         },
-        { provide: AuthService, useValue: { session: () => null } },
+        { provide: AuthService, useValue: { session: () => null, login: vi.fn(() => of({})) } },
         { provide: ApiClient, useValue: { post } },
       ],
     });
@@ -50,5 +50,37 @@ describe("Customer account forms", () => {
     expect(page.showPassword).toBe(false);
     expect(page.error()).toBe("");
     expect(page.message()).toBe("");
+  });
+  it("remembers only the username when selected and removes it when unchecked", () => {
+    const page = TestBed.createComponent(AccountPage).componentInstance;
+    vi.spyOn(page, "done").mockImplementation(() => {});
+    page.username = "test-customer";
+    page.password = "test-password";
+    page.rememberMe = true;
+    page.submit();
+    expect(localStorage.getItem("eshop.rememberedUsername")).toBe("test-customer");
+    expect(localStorage.getItem("eshop.rememberedUsername")).not.toContain(page.password);
+    page.rememberMe = false;
+    page.submit();
+    expect(localStorage.getItem("eshop.rememberedUsername")).toBeNull();
+  });
+  it("requests the existing email reset API and shows a non-enumerating confirmation", () => {
+    const page = TestBed.createComponent(AccountPage).componentInstance;
+    page.changeMode("Forgot password");
+    page.email = "  customer@example.com  ";
+    page.submit();
+    expect(post).toHaveBeenCalledWith("/api/v1/public/forgot-password", { email: "customer@example.com" });
+    expect(page.message()).toBe("If an account exists for this email, you will receive a password reset link.");
+    expect(page.busy()).toBe(false);
+  });
+  it("shows reset delivery failures without displaying a success confirmation", () => {
+    post.mockReturnValueOnce(throwError(() => ({ error: { message: "Reset email could not be sent" } })));
+    const page = TestBed.createComponent(AccountPage).componentInstance;
+    page.changeMode("Forgot password");
+    page.email = "customer@example.com";
+    page.submit();
+    expect(page.error()).toBe("Reset email could not be sent");
+    expect(page.message()).toBe("");
+    expect(page.busy()).toBe(false);
   });
 });

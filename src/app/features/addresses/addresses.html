@@ -1,0 +1,19 @@
+<header class="addresses-heading"><div><h1>{{ 'My Addresses' | translate }}</h1><p>{{ 'Manage your shipping addresses for a faster checkout experience.' | translate }}</p></div><button class="address-add" (click)="open()" [disabled]="!auth.session() || busy()"><app-icon name="plus" />{{ 'Add New Address' | translate }}</button></header>
+<app-status [busy]="busy()" [error]="error()" [message]="message()" />
+@if (error() && !addresses().length && auth.session()) { <button (click)="reload()">{{ 'Try again' | translate }}</button> }
+@if (!auth.session()) { <app-sign-in-card action="manage your shipping addresses" path="/account/addresses" /> }
+<div class="addresses-list" role="radiogroup" [attr.aria-label]="'Default shipping address' | translate">
+ @for (a of addresses(); track a.id) {
+  <article class="saved-address" [class.is-default]="a.is_default">
+   <button class="address-radio" role="radio" [attr.aria-checked]="a.is_default" [disabled]="busy()" (click)="makeDefault(a)" [attr.aria-label]="('Set as default address' | translate) + ': ' + a.address_line1"></button>
+   <app-icon class="address-symbol" [name]="a.label === 'Office' ? 'bank' : a.label === 'Other' ? 'box' : a.label === 'Home' || a.is_default ? 'home' : 'pin'" />
+   <div class="address-copy"><div class="address-title"><h2>{{ (a.label || (a.is_default ? 'Default Address' : 'Address')) | translate }}@if (!a.label && !a.is_default) { <span> #{{ a.id }}</span> }</h2>@if (a.is_default) { <span class="default-badge">{{ 'Default' | translate }}</span> }</div>
+    <p>{{ a.recipient_name || auth.session()?.username }}</p><p class="street-lines">{{ a.address_line1 }}</p><p>@if (a.commune) { {{ a.commune }}, }@if (a.district) { {{ a.district }}, }{{ a.city }} {{ a.zip_code }}</p><p>{{ a.country }}</p>@if (a.phone_number) { <p>{{ a.phone_number }}</p> }@if (a.additional_information) { <p>{{ a.additional_information }}</p> }
+   </div>
+   <div class="address-controls"><button class="address-edit" (click)="open(a)" [disabled]="busy()" [attr.aria-label]="('Edit Address' | translate) + ': ' + a.address_line1"><app-icon name="edit" /></button><details class="address-menu"><summary [attr.aria-label]="('Address actions' | translate) + ': ' + a.address_line1">⋮</summary><div><button [disabled]="busy() || a.is_default" (click)="makeDefault(a)">{{ 'Set as default address' | translate }}</button><button class="remove-address" [disabled]="busy()" (click)="deleteId.set(a.id)">{{ 'Delete Address' | translate }}</button></div></details></div>
+   @if (deleteId() === a.id) { <div class="address-confirm" role="alert"><p>{{ 'Remove this address from your account?' | translate }}</p><button class="danger-outline" [disabled]="busy()" (click)="remove(a.id)">{{ 'Delete Address' | translate }}</button><button [disabled]="busy()" (click)="deleteId.set(null)">{{ 'Cancel' | translate }}</button></div> }
+  </article>
+ } @empty {
+  @if (auth.session() && !busy() && !error()) { <div class="addresses-empty"><app-icon name="pin" /><h2>{{ 'A home for your deliveries' | translate }}</h2><p>{{ 'Add your first shipping address to get started.' | translate }}</p><button class="primary" (click)="open()">{{ 'Add New Address' | translate }}</button></div> }
+ }
+</div>

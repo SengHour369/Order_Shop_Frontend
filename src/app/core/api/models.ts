@@ -31,6 +31,10 @@ export interface Sku {
   quantity: number;
   image_url?: string;
   is_default?: boolean;
+  originalPrice?: number;
+  description?: string;
+  barcode?: string;
+  attributes?: { id: number; name: string; attributes: { id: number; value: string }[] }[];
 }
 export interface Product {
   id: number;
@@ -53,6 +57,12 @@ export interface Cart {
   items: CartItem[];
 }
 export interface Address {
+  label?: string;
+  recipient_name?: string;
+  phone_number?: string;
+  district?: string;
+  commune?: string;
+  additional_information?: string;
   id: number;
   address_line1: string;
   city: string;
@@ -61,6 +71,8 @@ export interface Address {
   is_default: boolean;
 }
 export interface Order {
+  created_at?: string;
+  updated_at?: string;
   items?: OrderItem[];
   id: number;
   order_number: string;

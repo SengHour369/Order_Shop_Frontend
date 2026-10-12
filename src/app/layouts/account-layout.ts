@@ -11,13 +11,17 @@ import { AuthService } from "../core/auth/auth.service";
 import { CustomerStore } from "../core/stores/customer.store";
 @Component({
   imports: [TranslatePipe, RouterLink, RouterLinkActive, RouterOutlet, Icon],
-  template: `<div class="breadcrumbs">
+  styles: [`.account-layout.wishlist-layout { display: block; } @media(max-width:700px) { .addresses-layout .account-sidebar, .tracking-layout .account-sidebar, .addresses-breadcrumbs, .tracking-breadcrumbs { display:none; } }`],
+  template: `@if (!isWishlist()) { <div class="breadcrumbs" [class.addresses-breadcrumbs]="isAddresses()" [class.tracking-breadcrumbs]="isTracking()">
       <a routerLink="/">{{ "Home" | translate }}</a><app-icon name="chevron" /><a
         routerLink="/account"
-        >My Account</a
+        >{{ "Account" | translate }}</a
       >
+      @if (isTracking()) { <app-icon name="chevron" /><a routerLink="/account/orders">{{ 'My Orders' | translate }}</a><app-icon name="chevron" /><b>{{ 'Track Order' | translate }}</b> }
+      @if (isAddresses()) { <app-icon name="chevron" /><a routerLink="/account/addresses">{{ 'My Addresses' | translate }}</a> }
+      @if (router.url.includes('/addresses/add') || router.url.endsWith('/edit')) { <app-icon name="chevron" /><b>{{ (router.url.endsWith('/edit') ? 'Edit Address' : 'Add Address') | translate }}</b> }
     </div>
-    <div class="account-layout">
+    } <div class="account-layout" [class.wishlist-layout]="isWishlist()" [class.addresses-layout]="isAddresses()" [class.tracking-layout]="isTracking()"> @if (!isWishlist()) {
       <aside class="account-sidebar">
         <h2 class="account-nav-title">My Account</h2>
         <nav aria-label="Account navigation">
@@ -42,7 +46,7 @@ import { CustomerStore } from "../core/stores/customer.store";
           }
         </nav>
       </aside>
-      <section class="account-content"><router-outlet /></section>
+      } <section class="account-content"><router-outlet /></section>
     </div>
     <dialog
       #logoutDialog
@@ -74,6 +78,9 @@ export class AccountLayout {
   auth = inject(AuthService);
   store = inject(CustomerStore);
   router = inject(Router);
+  isTracking() { return /^\/account\/orders\/\d+\/track(?:[?#]|$)/.test(this.router.url); }
+  isAddresses() { return this.router.url.split(/[?#]/)[0].startsWith("/account/addresses"); }
+  isWishlist() { return this.router.url.split(/[?#]/)[0] === "/account/wishlist"; }
   links = [
     { path: "/account", label: "Dashboard", icon: "home" },
     { path: "/account/orders", label: "My Orders", icon: "box" },

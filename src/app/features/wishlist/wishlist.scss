@@ -1,0 +1,49 @@
+:host { display:block; color:#0c103d; }
+button,input,select { font:inherit; } label { margin:0; font-weight:400; } label input { margin:0; } button { cursor:pointer; } button:disabled { cursor:default; opacity:.55; }
+.wish-breadcrumbs { display:flex; align-items:center; gap:12px; font-size:13px; margin:8px 0 22px; color:#666596; app-icon { width:12px; } b { color:#101139; } }
+.wish-heading { display:flex; justify-content:space-between; align-items:flex-end; gap:24px; margin-bottom:24px; h1 { font-size:28px; line-height:1.3; margin:0 0 6px; letter-spacing:-.6px; } p { margin:0; color:#555580; font-size:14px; } }
+.wish-tools { display:flex; gap:10px; align-items:center; } input,select { min-width:0; border:1px solid #dfe2ef; border-radius:6px; background:white; color:#151542; padding:10px 12px; }
+.wish-search { position:relative; width:240px; input { width:100%; padding-right:34px; } app-icon { position:absolute; right:12px; top:11px; width:17px; color:#7472a5; pointer-events:none; } }
+.wish-sort { display:flex; gap:8px; align-items:center; font-size:12px; label { white-space:nowrap; } select { max-width:170px; } }
+.wish-view { display:flex; button { border:1px solid #e1e4ef; color:#7775a4; padding:9px; background:white; } button:first-child { border-radius:5px 0 0 5px; } button:last-child { border-radius:0 5px 5px 0; } button.active { border-color:#00894e; color:#00894e; } app-icon { width:17px; height:17px; } }
+.wish-categories { display:flex; gap:12px; overflow-x:auto; padding-bottom:6px; button { flex-shrink:0; border:1px solid #e1e4ef; background:white; color:#575784; border-radius:6px; padding:10px 18px; font-size:13px; } .active { border-color:#009055; color:#008147; background:#f4fcf7; font-weight:600; } }
+.wish-selection { display:flex; justify-content:space-between; align-items:center; margin:16px 0; font-size:13px; label { display:flex; gap:10px; align-items:center; } button { display:flex; align-items:center; gap:8px; border:0; background:none; color:#64618b; } app-icon { width:16px; } }
+input[type=checkbox] { accent-color:#008b50; width:17px; height:17px; padding:0; cursor:pointer; }
+.wish-products { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; }
+.wish-card { position:relative; border:1px solid #e9ebf4; border-radius:8px; padding:16px; min-width:0; background:#fff; }
+.wish-checkbox { position:absolute; left:12px; top:12px; z-index:1; }
+.wish-heart { position:absolute; right:10px; top:10px; padding:5px; border:0; background:white; color:#ff0926; z-index:1; app-icon { width:21px; height:21px; } ::ng-deep svg { fill:currentColor; } }
+.wish-image { display:flex; height:190px; padding:12px 0; align-items:center; justify-content:center; img { max-width:100%; width:100%; height:100%; object-fit:contain; } }
+.wish-info { display:flex; flex-direction:column; gap:8px; min-width:0; h2 { font-size:14px; line-height:1.4; margin:4px 12px 2px 0; min-height:40px; font-weight:650; } a { color:inherit; text-decoration:none; } }
+.wish-prices { display:flex; gap:8px; flex-wrap:wrap; align-items:center; strong { font-size:19px; } .sale { color:#ff101e; } del { font-size:13px; color:#75719d; } span { background:#ff3047; color:white; font-size:12px; padding:3px 7px; border-radius:4px; } }
+.wish-stock { margin:0; font-size:12px; color:#008148; } .wish-stock.unavailable { color:#857a86; }
+.wish-cart { display:flex; justify-content:center; align-items:center; gap:10px; background:white; border:1px solid #008a4b; color:#008047; border-radius:5px; width:100%; padding:8px; font-size:13px; font-weight:600; app-icon { width:19px; } &:hover:not(:disabled) { background:#effaf4; } }
+.wish-feedback,.wish-note { font-size:12px; color:#676787; margin:4px 0; } .wish-note { margin-top:22px; } .wish-error { color:#bd1737; }
+.wish-empty { grid-column:1/-1; padding:60px 20px; text-align:center; border:1px solid #e9ebf4; border-radius:8px; >app-icon { color:#008a4b; width:40px; height:40px; } p { color:#676787; } a { margin-top:16px; } }
+.list-view { grid-template-columns:1fr; .wish-card { display:grid; grid-template-columns:180px 1fr; gap:20px; padding-left:42px; } .wish-image { height:160px; } .wish-info { justify-content:center; padding-right:24px; } .wish-cart { max-width:240px; } .wish-info h2 { min-height:0; } }
+@media (max-width:1150px) { .wish-heading { align-items:flex-start; flex-direction:column; gap:18px; } .wish-tools { width:100%; } .wish-search { flex:1; } .wish-image { height:160px; } }
+@media (max-width:700px) {
+ .wish-breadcrumbs,.wish-heading p,.wish-view { display:none; } .wish-heading { margin:10px 0 14px; gap:12px; h1 { font-size:22px; margin:0; } }
+ .wish-tools { display:block; } .wish-search { width:100%; } .wish-sort { margin-top:68px; select { max-width:190px; } }
+ .wish-categories { margin-top:-100px; margin-bottom:56px; gap:8px; button { padding:10px 12px; font-size:12px; } }
+ .wish-selection { margin:16px 0; font-size:12px; }
+ .wish-products,.list-view { grid-template-columns:1fr; gap:0; }
+ .wish-card,.list-view .wish-card { display:grid; grid-template-columns:105px minmax(0,1fr); gap:14px; padding:18px 4px 18px 0; border:0; border-bottom:1px solid #eef0f5; border-radius:0; }
+ .wish-checkbox { left:0; top:9px; } .wish-heart { top:12px; right:0; } .wish-image,.list-view .wish-image { height:145px; padding:20px 0 0; }
+ .wish-info,.list-view .wish-info { padding:0; gap:6px; justify-content:center; h2 { font-size:13px; margin:0 28px 4px 0; min-height:0; } }
+ .wish-prices { gap:7px; strong { font-size:17px; } del { font-size:12px; } span { font-size:11px; } } .wish-cart,.list-view .wish-cart { max-width:none; font-size:12px; } .wish-note { line-height:1.6; }
+}
+@media (max-width:700px) {
+ section { display:flex; flex-direction:column; }
+ .wish-heading,.wish-tools { display:contents; }
+ .wish-heading > div:first-child { order:0; margin:10px 0 12px; }
+ .wish-search { order:1; }
+ .wish-categories { order:2; margin:12px 0; }
+ .wish-sort { order:3; margin:0; }
+ .wish-selection { order:4; }
+ .wish-error { order:5; }
+ .wish-products { order:6; }
+ .wish-note { order:7; }
+}
+
+input[type=checkbox] { min-height:17px; }

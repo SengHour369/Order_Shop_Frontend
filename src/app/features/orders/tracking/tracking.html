@@ -1,0 +1,30 @@
+<header class="tracking-heading"><div><h1>{{ 'Track Order' | translate }}</h1>@if (order(); as o) { <h2>{{ 'Order' | translate }} #{{ o.order_number }}</h2><p>{{ 'Placed on' | translate }} {{ o.order_date | date:'MMM d, y, h:mm a' }}</p> }</div>
+ @if (order(); as o) { <div class="tracking-actions"><span class="tracking-badge" [class.exceptional]="exceptional()">{{ statusLabel(o.status) | translate }}</span><a [routerLink]="['/account/orders',o.id]">{{ 'View Order Details' | translate }}<app-icon name="chevron" /></a></div> }
+</header>
+<app-status [busy]="busy()" [error]="error()" />
+@if (error()) { <button class="tracking-refresh" (click)="load()" [disabled]="busy()">{{ 'Try again' | translate }}</button> }
+@if (order(); as o) {
+ <section class="tracking-progress" [attr.aria-label]="'Order progress' | translate">
+ @for (step of steps; track step; let i=$index) {
+  <div class="tracking-step" [class.complete]="current() >= i" [class.current]="current() === i" [attr.aria-current]="current() === i ? 'step' : null"><span class="step-dot">@if (current() >= i) { <app-icon name="check" /> }</span><strong>{{ step | translate }}</strong>@if (i===0) { <small>{{ o.order_date | date:'MMM d' }}</small> }</div>
+ }
+ </section>
+ @if (exceptional() || current() < 0) { <p class="tracking-notice" role="status">{{ description(o.status) | translate }}</p> }
+ <div class="tracking-columns">
+  <section class="tracking-panel history-panel"><div class="tracking-panel-title"><h2>{{ 'Tracking Details' | translate }}</h2><button class="tracking-refresh" (click)="load()" [disabled]="busy()"><app-icon name="refresh" />{{ 'Refresh Status' | translate }}</button></div>
+   <div class="tracking-timeline">
+    @for (event of events(); track event.key; let first=$first) { <article class="tracking-event-row" [class.latest]="first" [class.history-collapsed]="!expanded() && $index >= 4"><span class="event-dot"></span><span class="event-icon"><app-icon [name]="event.icon" /></span><div><h3>{{ event.title | translate }}</h3>@if (event.date) { <p class="event-date">@if (event.snapshot) { {{ 'Last updated' | translate }}: }{{ event.date | date:'MMM d, y · h:mm a' }}</p> } @else { <p class="event-date">{{ 'Update time is not available.' | translate }}</p> }<p>{{ event.description | translate }}</p></div></article> }
+   </div>
+   @if (events().length > 4) { <button class="view-updates" [attr.aria-expanded]="expanded()" (click)="expanded.set(!expanded())">{{ (expanded() ? 'Show fewer updates' : 'View All Updates') | translate }}<app-icon name="down" /></button> }
+   <p class="tracking-data-note">{{ 'Only updates supplied by the shop are shown. Detailed courier history is not available yet.' | translate }}</p>
+  </section>
+  <aside class="tracking-right"><section class="tracking-panel delivery-panel"><h2>{{ 'Live Tracking Map' | translate }}</h2><div class="tracking-map-empty"><span><app-icon name="pin" /></span><h3>{{ 'Live location unavailable' | translate }}</h3><p>{{ 'Courier location has not been provided for this order.' | translate }}</p></div>
+    <h2 class="delivery-title">{{ 'Delivery Information' | translate }}</h2><div class="delivery-unassigned"><app-icon name="user" /><div><strong>{{ 'Delivery partner unavailable' | translate }}</strong><p>{{ 'Contact support for delivery assistance.' | translate }}</p></div></div>
+    <dl class="delivery-facts"><div><dt><app-icon name="shield" />{{ 'Tracking Number' | translate }}</dt><dd>{{ 'Not available' | translate }}</dd></div><div><dt><app-icon name="truck" />{{ 'Courier' | translate }}</dt><dd>{{ 'Not available' | translate }}</dd></div><div><dt><app-icon name="calendar" />{{ 'Estimated Delivery' | translate }}</dt><dd>{{ 'Not available' | translate }}</dd></div><div><dt><app-icon name="clock" />{{ 'Delivered At' | translate }}</dt><dd>{{ 'Not available' | translate }}</dd></div></dl>
+    <div class="tracking-destination"><h3><app-icon name="pin" />{{ 'Shipping Address' | translate }}</h3>@if (address(); as a) { @if (a.recipient_name) { <p>{{ a.recipient_name }}</p> }<p>{{ a.address_line1 }}</p><p>@if (a.commune) { {{ a.commune }}, }@if (a.district) { {{ a.district }}, }{{ a.city }} {{ a.zip_code }}</p><p>{{ a.country }}</p> } @else { <p>{{ (addressBusy() ? 'Loading…' : 'Shipping address is not available.') | translate }}</p> }</div>
+   </section>
+   <section class="tracking-items"><h2>{{ 'Items in this Order' | translate }} ({{ o.items?.length || 0 }})</h2>@for (item of o.items || []; track item.id) { <article><span class="tracking-item-placeholder"><app-icon name="box" /></span><div><h3>{{ 'Product SKU' | translate }} #{{ item.product_sku_id }}</h3><p>{{ 'Quantity' | translate }}: {{ item.quantity }}</p></div><strong>{{ item.total_price | currency:'USD' }}</strong></article> } @empty { <p>{{ 'Item details are not available.' | translate }}</p> }</section>
+   <a class="tracking-support" routerLink="/account/support"><app-icon name="headphones" />{{ 'Contact Support' | translate }}<app-icon name="chevron" /></a>
+  </aside>
+ </div>
+}

@@ -69,7 +69,8 @@ import { Status } from "../../shared/components/status";
             }
           </section>
           <section class="panel" id="tracking">
-            <h2>Tracking Information</h2>
+            <h2>{{ 'Tracking Information' | translate }}</h2>
+            <a class="button outline full" [routerLink]="['/account/orders', o.id, 'track']"><app-icon name="truck" />{{ 'Track Order' | translate }}</a>
             <p>
               Order status is provided by the shop. Courier tracking and
               estimated delivery dates are not yet available.

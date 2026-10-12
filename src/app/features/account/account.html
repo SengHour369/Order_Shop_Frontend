@@ -1,10 +1,17 @@
-<section class="auth-layout customer-auth">
+<section class="auth-layout customer-auth login-reference" [class.forgot-reference]="mode === 'Forgot password'">
+  @if (mode === "Forgot password") { <button type="button" class="auth-back" (click)="changeMode('Sign in')" [attr.aria-label]="'Back to Sign In' | translate"><app-icon name="arrow-left" /></button> } @else { <a class="auth-back" routerLink="/" [attr.aria-label]="'Back to home' | translate"><app-icon name="arrow-left" /></a> }
   <div class="auth-story">
-    <span class="eyebrow">{{ (mode === "Sign in"
-        ? "WELCOME BACK"
-        : mode === "Register"
-          ? "JOIN E-SHOP"
-          : "YOUR ACCOUNT") | translate }}</span>
+    @if (mode === "Forgot password") {
+      <span class="forgot-eyebrow">{{ "FORGOT PASSWORD" | translate }}</span>
+      <h1>{{ "Reset Your" | translate }}<br /><span>{{ "Password" | translate }}</span></h1>
+      <p>{{ "No worries! Enter your email and we will send you a link to reset your password." | translate }}</p>
+      <ul class="auth-benefits forgot-benefits">
+        <li><span class="forgot-benefit-icon"><app-icon name="mail" /></span><span><strong>{{ "Secure Verification" | translate }}</strong><small>{{ "We will send a reset link to your email" | translate }}</small></span></li>
+        <li><span class="forgot-benefit-icon"><app-icon name="shield" /></span><span><strong>{{ "Keep Your Account Safe" | translate }}</strong><small>{{ "Follow simple steps to reset your password" | translate }}</small></span></li>
+        <li><span class="forgot-benefit-icon"><app-icon name="lock" /></span><span><strong>{{ "Quick & Easy" | translate }}</strong><small>{{ "Back to shopping in minutes" | translate }}</small></span></li>
+      </ul>
+      <img src="/images/eshop-forgot-scene.png" alt="Secure password recovery envelope with a padlock" />
+    } @else {
     <h1>
       {{ (mode === "Sign in"
           ? "Welcome Back"
@@ -18,35 +25,43 @@
     </h1>
     <p>
       {{ (mode === "Sign in"
-          ? "Sign in to continue shopping your favorite products."
+          ? "Sign in to continue shopping your favorite products with great deals and fast delivery."
           : mode === "Register"
             ? "Create an account to save your favorites, manage orders, and check out easily."
             : "A few simple steps to get you back to shopping.") | translate }}
     </p>
     <ul class="auth-benefits">
       <li>
-        <app-icon name="gift" /><span
-          ><strong>{{ "Discover More" | translate }}</strong
-          ><small>{{ "Explore products for your everyday" | translate }}</small></span
+        <app-icon name="truck" /><span
+          ><strong>{{ "Wide Product Selection" | translate }}</strong
+          ><small>{{ "Electronics, Fashion, Home & Living and more" | translate }}</small></span
         >
       </li>
       <li>
         <app-icon name="shield" /><span
-          ><strong>{{ "Your Account, Protected" | translate }}</strong
-          ><small>{{ "Keep your information safe" | translate }}</small></span
+          ><strong>{{ "Secure & Safe Payment" | translate }}</strong
+          ><small>{{ "100% secure transaction" | translate }}</small></span
         >
       </li>
       <li>
-        <app-icon name="box" /><span
-          ><strong>{{ "Track Your Orders" | translate }}</strong
-          ><small>{{ "All your purchases in one place" | translate }}</small></span
+        <app-icon name="gift" /><span
+          ><strong>{{ "Exclusive Offers" | translate }}</strong
+          ><small>{{ "Get special discounts and promotions" | translate }}</small></span
         >
       </li>
     </ul>
-    <img src="/images/eshop-scene.svg" alt="E-Shop shopping essentials" />
+    <img src="/images/eshop-login-art.png" alt="E-Shop shopping essentials" />
+    }
   </div>
   <div class="panel auth-form">
-    <div class="auth-language"><app-language-select /></div>
+
+    <details class="auth-additional-options"><summary [attr.aria-label]="'More sign-in options' | translate" [title]="'More sign-in options' | translate"><app-icon name="settings" /></summary><div class="auth-options-popover"><app-language-select />
+        @if (sso.enabled()) {
+          <button type="button" class="full" style="margin-top:16px" (click)="signInWithKeycloak()" [disabled]="busy()">
+            <app-icon name="shield" /> {{ "Continue with Keycloak" | translate }}
+          </button>
+        }
+    </div></details>
     <a class="auth-brand" routerLink="/"
       ><span class="brand-bag"><app-icon name="check" /></span>E-Shop</a
     >
@@ -55,7 +70,8 @@
       <p>{{ auth.session()?.email }}</p>
       <button (click)="logout()" [disabled]="busy()">{{ "Sign out" | translate }}</button>
     } @else {
-      <h2>
+      @if (mode === "Forgot password") { <img class="forgot-mobile-art" src="/images/eshop-forgot-envelope.png" alt="" /> }
+      <h2 class="auth-heading">
         {{ (mode === "Register"
             ? "Create Your Account"
             : mode === "Forgot password"
@@ -66,13 +82,14 @@
                   ? "Verify Your Email"
                   : "Sign In") | translate }}
       </h2>
+      @if (mode === "Sign in") { <h2 class="mobile-welcome">{{ "Welcome Back" | translate }}</h2><p class="mobile-intro">{{ "Sign in to continue shopping your favorite products." | translate }}</p> }
       <p class="auth-intro">
         {{ (mode === "Sign in"
             ? "Welcome back! Please enter your details."
             : mode === "Register"
               ? "Fill in your details to get started."
               : mode === "Forgot password"
-                ? "Enter your email and we’ll send you reset instructions."
+                ? "Enter your email and we’ll send you a link to reset your password."
                 : mode === "Verify"
                   ? "Enter the verification code sent to your email."
                   : "Enter and confirm your new password.") | translate }}
@@ -93,28 +110,28 @@
           <label
             >{{ (mode === "Register" ? "Username" : "Email or Username") | translate }}
             <b>*</b
-            ><input
+            ><span class="credential-field"><app-icon name="mail" /><input
               name="username"
               [(ngModel)]="username"
               required
               autocomplete="username"
-              [placeholder]='"Enter your username" | translate'
-          /></label>
+              [placeholder]='(mode === "Sign in" ? "Enter your email or username" : "Enter your username") | translate'
+          /></span></label>
         }
         @if (
           mode === "Register" || mode === "Verify" || mode === "Forgot password"
         ) {
           <label
             >{{ "Email Address" | translate }} <b>*</b
-            ><input
+            ><span class="credential-field"><app-icon name="mail" /><input
               type="email"
               name="email"
               [(ngModel)]="email"
               required
               email
               autocomplete="email"
-              placeholder="you@example.com"
-          /></label>
+              [placeholder]="(mode === 'Forgot password' ? 'Enter your email address' : 'you@example.com') | translate"
+          /></span></label>
         }
         @if (mode === "Register") {
           <label
@@ -135,7 +152,7 @@
             >{{ (mode === "Reset password" ? "New Password" : "Password") | translate }}
             <b>*</b
             ><span class="password-field"
-              ><input
+              ><app-icon name="lock" /><input
                 [type]="showPassword ? 'text' : 'password'"
                 name="password"
                 [(ngModel)]="password"
@@ -198,13 +215,10 @@
           /></label>
         }
         @if (mode === "Sign in") {
-          <button
-            class="text-button forgot-link"
-            type="button"
-            (click)="changeMode('Forgot password')"
-          >
-            {{ "Forgot password?" | translate }}
-          </button>
+          <div class="auth-options">
+            <label class="remember-option"><input type="checkbox" name="rememberMe" [(ngModel)]="rememberMe" [attr.aria-description]="'Remember your username on this device.' | translate" />{{ "Remember me" | translate }}</label>
+            <button class="text-button forgot-link" type="button" (click)="changeMode('Forgot password')">{{ "Forgot password?" | translate }}</button>
+          </div>
         }
         <button
           class="primary full"
@@ -220,7 +234,7 @@
               : mode === "Register"
                 ? "Create Account"
                 : mode === "Forgot password"
-                  ? "Send Reset Instructions"
+                  ? "Send Reset Link"
                   : mode === "Reset password"
                     ? "Reset Password"
                     : mode === "Verify"
@@ -229,11 +243,12 @@
         </button>
       </form>
       @if (mode === "Sign in") {
-        @if (sso.enabled()) {
-          <button type="button" class="full" style="margin-top:16px" (click)="signInWithKeycloak()" [disabled]="busy()">
-            <app-icon name="shield" /> {{ "Continue with Keycloak" | translate }}
-          </button>
-        }
+        <div class="auth-divider"><span>{{ "or continue with" | translate }}</span></div>
+        <div class="social-signin">
+          <button type="button" (click)="socialSignIn()"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M21.6 12.23c0-.71-.06-1.39-.18-2.05H12v3.88h5.38a4.6 4.6 0 0 1-2 3.02v2.51h3.24c1.9-1.75 2.98-4.33 2.98-7.36Z"/><path fill="#34A853" d="M12 22c2.7 0 4.96-.9 6.62-2.41l-3.24-2.51c-.9.6-2.05.97-3.38.97-2.6 0-4.8-1.76-5.59-4.12H3.07v2.59A10 10 0 0 0 12 22Z"/><path fill="#FBBC05" d="M6.41 13.93a6 6 0 0 1 0-3.86V7.48H3.07a10 10 0 0 0 0 9.04l3.34-2.59Z"/><path fill="#EA4335" d="M12 5.95c1.47 0 2.79.5 3.82 1.49l2.86-2.87A9.6 9.6 0 0 0 12 2a10 10 0 0 0-8.93 5.48l3.34 2.59A5.99 5.99 0 0 1 12 5.95Z"/></svg>Google</button>
+          <button type="button" (click)="socialSignIn()"><span class="facebook-mark" aria-hidden="true">f</span>Facebook</button>
+          <button type="button" (click)="socialSignIn()"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.1 12.4c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.5-.2-2.9.9-3.7.9-.7 0-1.9-.9-3.1-.8C7.3 7.2 5.8 8.2 5 9.6c-1.7 2.9-.4 7.2 1.2 9.5.8 1.1 1.7 2.3 2.9 2.2 1.2 0 1.6-.7 3-.7s1.8.7 3 .7c1.3 0 2.1-1.1 2.9-2.2a10.7 10.7 0 0 0 1.3-2.7c-.1 0-2.2-.8-2.2-4ZM14.7 5.5c.6-.8 1.1-1.9 1-3-.9 0-2.1.6-2.8 1.4-.6.7-1.2 1.8-1.1 2.9 1.1.1 2.2-.5 2.9-1.3Z"/></svg>Apple</button>
+        </div>
         <p class="auth-switch">
           {{ "Don’t have an account?" | translate }}
           <button class="text-button" (click)="changeMode('Register')">
@@ -241,9 +256,15 @@
           </button>
         </p>
       } @else {
+        @if (mode === "Forgot password") {
+          <div class="auth-divider"><span>{{ "or" | translate }}</span></div>
+          <button type="button" class="forgot-google" (click)="socialSignIn()">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M21.6 12.23c0-.71-.06-1.39-.18-2.05H12v3.88h5.38a4.6 4.6 0 0 1-2 3.02v2.51h3.24c1.9-1.75 2.98-4.33 2.98-7.36Z"/><path fill="#34A853" d="M12 22c2.7 0 4.96-.9 6.62-2.41l-3.24-2.51c-.9.6-2.05.97-3.38.97-2.6 0-4.8-1.76-5.59-4.12H3.07v2.59A10 10 0 0 0 12 22Z"/><path fill="#FBBC05" d="M6.41 13.93a6 6 0 0 1 0-3.86V7.48H3.07a10 10 0 0 0 0 9.04l3.34-2.59Z"/><path fill="#EA4335" d="M12 5.95c1.47 0 2.79.5 3.82 1.49l2.86-2.87A9.6 9.6 0 0 0 12 2a10 10 0 0 0-8.93 5.48l3.34 2.59A5.99 5.99 0 0 1 12 5.95Z"/></svg>{{ "Continue with Google" | translate }}
+          </button>
+        }
         <p class="auth-switch">
           <button class="text-button" (click)="changeMode('Sign in')">
-            ← Back to Sign In
+            <app-icon name="arrow-left" /> {{ "Back to Sign In" | translate }}
           </button>
         </p>
       }
@@ -257,6 +278,7 @@
         </button>
       }
     }
+
     <app-status [busy]="busy()" [error]="error()" [message]="message()" />
   </div>
 </section>

@@ -1,0 +1,46 @@
+<div class="reviews-layout">
+  <aside class="review-summary">
+    <h2>{{ 'Customer Reviews' | translate }}</h2>
+    <div class="average-rating"><strong>{{ available() && total() ? averageLabel() : '—' }}</strong><span>{{ 'out of 5' | translate }}</span></div>
+    <div class="rating-stars" role="img" [style.--rating-fill]="available() ? average() / 5 * 100 + '%' : '0%'" [attr.aria-label]="available() && total() ? averageLabel() + ' / 5' : ('No ratings available' | translate)">★★★★★</div>
+    <p class="rating-total">{{ available() ? total() : '—' }} {{ 'global ratings' | translate }}</p>
+    <div class="rating-distribution">
+      @for (row of distribution(); track row.stars) {
+        <button type="button" [disabled]="!available()" (click)="rating.set(row.stars)" [attr.aria-pressed]="rating() === row.stars" [attr.aria-label]="('Filter by rating' | translate) + ': ' + row.stars">
+          <span>{{ row.stars }} <b>★</b></span><span class="rating-track"><span [style.width.%]="row.percent"></span></span><span>{{ available() ? row.percent + '%' : '—' }}</span>
+        </button>
+      }
+    </div>
+    <button class="write-review" type="button" disabled [title]="'Review submission is not connected yet.' | translate"><app-icon name="edit" />{{ 'Write a Review' | translate }}</button>
+  </aside>
+  <section class="review-results" [attr.aria-label]="'Product reviews' | translate">
+    <div class="review-toolbar">
+      <label class="review-search"><span class="sr-only">{{ 'Search reviews' | translate }}</span><input type="search" [ngModel]="search()" (ngModelChange)="search.set($event)" [disabled]="!available()" [placeholder]="'Search reviews...' | translate" /><app-icon name="search" /></label>
+      <label class="review-sort"><span class="sr-only">{{ 'Sort reviews' | translate }}</span><select [ngModel]="sort()" (ngModelChange)="sort.set($event)" [disabled]="!available()"><option value="recent">{{ 'Most Recent' | translate }}</option><option value="helpful">{{ 'Most Helpful' | translate }}</option><option value="highest">{{ 'Highest Rated' | translate }}</option></select></label>
+    </div>
+    <div class="review-filters" [attr.aria-label]="'Review filters' | translate">
+      <button type="button" [disabled]="!available()" [class.active]="!rating() && !photosOnly()" (click)="rating.set(0); photosOnly.set(false)">{{ 'All' | translate }} ({{ available() ? total() : '—' }})</button>
+      <button type="button" [disabled]="!available()" [class.active]="photosOnly()" [attr.aria-pressed]="photosOnly()" (click)="photosOnly.set(!photosOnly())">{{ 'With Photos' | translate }} ({{ available() ? withPhotos() : '—' }})</button>
+      @for (row of distribution(); track row.stars) { <button type="button" [disabled]="!available()" [class.active]="rating() === row.stars" [attr.aria-pressed]="rating() === row.stars" (click)="rating.set(rating() === row.stars ? 0 : row.stars)">{{ row.stars }} <b>★</b> ({{ available() ? row.count : '—' }})</button> }
+    </div>
+    @if (!available()) {
+      <div class="reviews-empty" role="status"><app-icon name="star" /><h3>{{ 'Reviews are currently unavailable.' | translate }}</h3><p>{{ 'Customer reviews are not connected yet. Please contact support if you have questions about this product.' | translate }}</p></div>
+    } @else {
+      <p class="sr-only" role="status">{{ filtered().length }} {{ 'reviews found' | translate }}</p>
+      @for (review of filtered(); track review.id) {
+        <article class="review-card">
+          <div class="review-avatar">@if (review.avatar) { <img appProductImage [src]="review.avatar" alt="" /> } @else { {{ initials(review.author) }} }</div>
+          <div class="review-content">
+            <div class="review-meta"><strong>{{ review.author }}</strong>@if (review.verifiedPurchase) { <span class="verified"><app-icon name="check" />{{ 'Verified Purchase' | translate }}</span> }<time [attr.datetime]="review.createdAt">{{ review.createdAt | date:'MMM d, y' }}</time></div>
+            <div class="review-title"><span class="individual-stars" [attr.aria-label]="review.rating + ' / 5'">@for (star of [1,2,3,4,5]; track star) { <span [class.filled]="star <= review.rating">★</span> }</span><h3>{{ review.title }}</h3></div>
+            <p class="review-body">{{ review.body }}</p>
+            @if (review.photos.length) { <div class="review-photos">@for (photo of review.photos; track $index) { <a [href]="photo" target="_blank" rel="noopener noreferrer" [attr.aria-label]="('Open review photo' | translate) + ' ' + ($index + 1)"><img appProductImage [src]="photo" alt="" loading="lazy" /></a> }</div> }
+            <div class="review-actions"><button type="button" disabled [title]="'Review actions are not connected yet.' | translate"><app-icon name="check" />{{ 'Helpful' | translate }} ({{ review.helpfulCount }})</button><button type="button" disabled [title]="'Review actions are not connected yet.' | translate"><app-icon name="arrow" />{{ 'Reply' | translate }}</button></div>
+          </div>
+        </article>
+      } @empty {
+        <div class="reviews-empty"><h3>{{ (total() ? 'No reviews match your filters.' : 'No reviews yet.') | translate }}</h3>@if (total()) { <button type="button" (click)="reset()">{{ 'Clear filters' | translate }}</button> }</div>
+      }
+    }
+  </section>
+</div>

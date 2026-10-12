@@ -3795,6 +3795,32 @@ body, button, input, select, textarea { font-family: var(--app-font); }
 html[lang="km"] { line-height: 1.65; }
 
 .auth-language { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+
+/* Login reference uses a compact, single-row storefront header. */
+.customer-experience.customer-auth-page {
+  background: #fbfdfc;
+  .shop-header .category-nav, .shop-header .brand small,
+  .shop-header .header-camera, .shop-header .header-actions app-language-select,
+  .shop-header .header-actions > a[aria-label="Wishlist"],
+  .shop-header .header-actions > a[aria-label="បញ្ជីប្រាថ្នា"] { display: none; }
+  .shop-header .header-top { max-width: 1200px; margin: auto; gap: 28px; min-height: 84px; }
+  .shop-header .header-actions > a[href="/account/wishlist"] { display: none; }
+  .shop-header .header-actions .welcome-register { color: #fff; }
+  .shop-header .brand { font-size: 28px; }
+  .shop-header .welcome-navigation { display: flex; align-items: center; gap: 25px; white-space: nowrap; font-size: 12px; }
+  .shop-header .header-search { flex: 1; max-width: 230px; min-width: 130px; border-radius: 30px; }
+  .shop-header .header-search input { font-size: 11px; }
+  .shop-header .header-actions { gap: 10px; }
+  .shop-header .header-actions > a[aria-label="Shopping cart"] > span:last-child { display: none; }
+  .shop-header .welcome-sign-in,.shop-header .welcome-register { min-height: 36px; padding: 8px 20px; font-size: 12px; border-radius: 6px; }
+  .site-main { max-width: 1240px; padding-top: 12px; }
+  app-customer-chat { display: none; }
+  @media (max-width: 1000px) and (min-width: 651px) {
+    .shop-header .header-top { gap: 14px; }
+    .shop-header .welcome-navigation { gap: 12px; }
+  }
+  @media (max-width: 650px) { background: #fff; .site-main { padding: 14px 20px 24px; } }
+}
 html[lang="km"] .eyebrow, html[lang="km"] .card-header h2, html[lang="km"] .adm-group { letter-spacing: normal; }
 
 /* Permission-gated controls must remain hidden even when button styles set display. */

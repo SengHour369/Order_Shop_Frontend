@@ -1,0 +1,150 @@
+<nav class="detail-breadcrumbs" aria-label="Breadcrumb">
+  <a routerLink="/">{{ 'Home' | translate }}</a><app-icon name="chevron" />
+  <a routerLink="/shop">{{ 'Products' | translate }}</a><app-icon name="chevron" />
+  <span>{{ product()?.name || ('Product Details' | translate) }}</span>
+</nav>
+<app-status [busy]="busy()" [error]="error()" [message]="message()" />
+@if (product(); as p) {
+  <section class="detail-layout" [class.specifications-view]="tab() === 'specifications'" [class.reviews-view]="tab() === 'reviews'">
+    <div class="detail-gallery">
+      <div class="detail-thumbnails" aria-label="Product images">
+        @for (image of images(); track image; let i = $index) {
+          <button type="button" [class.selected]="imageIndex() === i" [attr.aria-pressed]="imageIndex() === i"
+            (click)="imageIndex.set(i)" [attr.aria-label]="('Product image' | translate) + ' ' + (i + 1)">
+            <img appProductImage [src]="image" alt="" />
+          </button>
+        }
+      </div>
+      <div class="detail-main-image">
+        @if (currentImage(); as image) { <img appProductImage [src]="image" [alt]="p.name" /> }
+        @else { <app-icon class="image-placeholder" name="bag" /> }
+        <button class="gallery-wishlist" type="button" (click)="save(p)" [class.saved]="store.has(p.id)"
+          [attr.aria-pressed]="store.has(p.id)" [attr.aria-label]="(store.has(p.id) ? 'Remove from Wishlist' : 'Add to Wishlist') | translate"><app-icon name="heart" /></button>
+        @if (images().length > 1) {
+          <button class="gallery-arrow previous" type="button" (click)="moveImage(-1)" [attr.aria-label]="'Previous image' | translate"><app-icon name="chevron" /></button>
+          <button class="gallery-arrow next" type="button" (click)="moveImage(1)" [attr.aria-label]="'Next image' | translate"><app-icon name="chevron" /></button>
+          <span class="image-counter">{{ imageIndex() + 1 }}/{{ images().length }}</span>
+        }
+      </div>
+    </div>
+    <div class="detail-info">
+      <span class="availability" [class.unavailable]="!p.is_active || maxQuantity() === 0">{{ (p.is_active && maxQuantity() > 0 ? 'In Stock' : 'Out of Stock') | translate }}</span>
+      @if (brand()) { <p class="detail-brand">{{ brand() }}</p> }
+      <h1>{{ p.name }}</h1>
+      @if (selected(); as sku) {
+        <div class="detail-price">
+          <strong>{{ sku.finalPrice ?? sku.price | currency:'USD' }}</strong>
+          @if (discount()) {
+            <del>{{ sku.originalPrice ?? sku.price | currency:'USD' }}</del><span class="discount">−{{ discount() }}%</span>
+          }
+        </div>
+      }
+      <p class="detail-summary">{{ p.description }}</p>
+      @if (selected(); as sku) {
+        <p class="option-heading">{{ 'Option' | translate }}: <strong>{{ optionLabel(sku) }}</strong></p>
+      }
+      <div class="detail-variants" aria-label="Product options">
+        @for (sku of p.skus; track sku.id) {
+          <button type="button" [class.selected]="skuId() === sku.id" [attr.aria-pressed]="skuId() === sku.id" (click)="choose(sku)">
+            @if (sku.image_url || p.main_image[0]; as image) { <img appProductImage [src]="image" alt="" /> }
+            <span>{{ optionLabel(sku) }}</span>
+          </button>
+        }
+      </div>
+      <label class="quantity-label" for="product-quantity">{{ 'Quantity' | translate }}</label>
+      <div class="detail-quantity">
+        <button type="button" [disabled]="quantity <= 1" (click)="quantity = quantity - 1" [attr.aria-label]="'Decrease quantity' | translate">−</button>
+        <input id="product-quantity" type="number" [(ngModel)]="quantity" min="1" [max]="maxQuantity()" />
+        <button type="button" [disabled]="quantity >= maxQuantity()" (click)="quantity = quantity + 1" [attr.aria-label]="'Increase quantity' | translate">+</button>
+      </div>
+    </div>
+    <aside class="detail-benefits" [attr.aria-label]="'Shopping assistance' | translate">
+      <div><span><app-icon name="truck" /></span><section><strong>{{ 'Delivery Updates' | translate }}</strong><p>{{ 'Track your order status' | translate }}</p></section></div>
+      <div><span><app-icon name="shield" /></span><section><strong>{{ 'Secure Payment' | translate }}</strong><p>{{ 'Verified by the payment service' | translate }}</p></section></div>
+      <a routerLink="/account/support"><span><app-icon name="box" /></span><section><strong>{{ 'Returns & Refunds' | translate }}</strong><p>{{ 'Help through your account' | translate }}</p></section></a>
+      <a routerLink="/account/support"><span><app-icon name="headphones" /></span><section><strong>{{ 'Help & Support' | translate }}</strong><p>{{ 'We’re here to help' | translate }}</p></section></a>
+    </aside>
+    <div class="detail-purchase">
+      <div class="detail-actions">
+        <button type="button" class="add-cart" [disabled]="!canPurchase()" (click)="add(false)"><app-icon name="cart" />{{ 'Add to Cart' | translate }}</button>
+        <button type="button" class="buy-now" [disabled]="!canPurchase()" (click)="add(true)"><app-icon name="flash" />{{ 'Buy Now' | translate }}</button>
+      </div>
+      <div class="detail-secondary-actions">
+        <button type="button" (click)="save(p)" [attr.aria-pressed]="store.has(p.id)"><app-icon name="heart" />{{ (store.has(p.id) ? 'Remove from Wishlist' : 'Add to Wishlist') | translate }}</button>
+        <button type="button" (click)="share()"><app-icon name="attachment" />{{ 'Share' | translate }}</button>
+      </div>
+    </div>
+  </section>
+  <section class="detail-information">
+    <div class="detail-tabs" role="tablist" [attr.aria-label]="'Product information' | translate">
+      @for (item of tabs; track item.id) {
+        <button type="button" role="tab" [id]="'tab-' + item.id" aria-controls="product-tab-panel"
+          [attr.aria-selected]="tab() === item.id" [class.active]="tab() === item.id" (click)="tab.set(item.id)">{{ item.label | translate }}</button>
+      }
+    </div>
+    <div id="product-tab-panel" role="tabpanel" [attr.aria-labelledby]="'tab-' + tab()">
+      @if (tab() === 'specifications') {
+        <section class="specifications-panel">
+          <h2 class="specifications-heading">{{ 'Specifications' | translate }}</h2>
+          @if (specifications().length) {
+            <div id="specification-tables" class="specification-columns">
+              @for (column of specificationColumns(); track $index) {
+                <table class="specification-table" [class.mobile-hidden]="!specificationsExpanded() && column.offset >= 8">
+                  <caption class="visually-hidden">{{ 'Specifications' | translate }} · {{ $index + 1 }}</caption>
+                  <colgroup><col class="spec-label-column" /><col /></colgroup>
+                  <tbody>
+                    @for (row of column.rows; track $index) {
+                      <tr [class.mobile-hidden]="!specificationsExpanded() && column.offset + $index >= 8">
+                        <th scope="row">{{ row.name | translate }}</th>
+                        <td>
+                          @if (row.values.length > 1) {
+                            <ul>@for (value of row.values; track $index) { <li>{{ value }}</li> }</ul>
+                          } @else {
+                            {{ row.name === 'Availability' ? (row.values[0] | translate) : row.values[0] }}
+                          }
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              }
+            </div>
+            @if (specifications().length > 8) {
+              <button class="specifications-toggle" type="button" aria-controls="specification-tables"
+                [attr.aria-expanded]="specificationsExpanded()" (click)="specificationsExpanded.set(!specificationsExpanded())">
+                {{ (specificationsExpanded() ? 'Show Fewer Specifications' : 'View All Specifications') | translate }}
+                <app-icon name="down" [class.rotated]="specificationsExpanded()" />
+              </button>
+            }
+          } @else {
+            <p class="specifications-empty">{{ 'Specifications are not available for this product yet.' | translate }}</p>
+          }
+        </section>
+      } @else if (tab() === 'details') {
+        <div class="detail-overview">
+          <section><h2>{{ 'Top Highlights' | translate }}</h2><dl>
+            @for (attribute of highlights(); track $index) { <div><dt>{{ attribute.name }}</dt><dd>{{ attribute.value }}</dd></div> }
+            @if (selected(); as sku) {
+              <div><dt>{{ 'SKU' | translate }}</dt><dd>{{ sku.sku }}</dd></div>
+              @if (sku.barcode) { <div><dt>{{ 'Barcode' | translate }}</dt><dd>{{ sku.barcode }}</dd></div> }
+              <div><dt>{{ 'Availability' | translate }}</dt><dd>{{ (p.is_active && sku.quantity > 0 ? 'In Stock' : 'Out of Stock') | translate }}</dd></div>
+            }
+          </dl></section>
+          @if (tab() === 'details') {
+            <section><h2>{{ 'About This Item' | translate }}</h2>
+              <div class="detail-about"><app-icon name="check" /><p>{{ p.description || ('Product description is not available yet.' | translate) }}</p></div>
+              @if (selected()?.description) { <div class="detail-about"><app-icon name="check" /><p>{{ selected()?.description }}</p></div> }
+            </section>
+          }
+        </div>
+      } @else if (tab() === 'reviews') {
+        <app-product-reviews />
+      } @else {
+        <div class="detail-empty"><app-icon [name]="tab() === 'reviews' ? 'star' : 'help'" /><h2>{{ (tab() === 'reviews' ? 'Customer Reviews' : 'Customer Questions & Answers') | translate }}</h2>
+          <p>{{ (tab() === 'reviews' ? 'Reviews are not available for this product yet.' : 'Need more information about this product? Contact our support team.') | translate }}</p>
+          @if (tab() === 'questions') { <a routerLink="/account/support">{{ 'Contact Support' | translate }}<app-icon name="arrow" /></a> }
+        </div>
+      }
+    </div>
+  </section>
+}

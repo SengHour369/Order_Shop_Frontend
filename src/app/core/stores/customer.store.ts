@@ -47,6 +47,13 @@ export class CustomerStore {
     const next = this.has(p.id)
       ? this.saved().filter((i) => i.id !== p.id)
       : [p, ...this.saved()];
+    return this.persist(next);
+  }
+  remove(ids: readonly number[]) {
+    const removed = new Set(ids);
+    return this.persist(this.saved().filter(p => !removed.has(p.id)));
+  }
+  private persist(next: Product[]) {
     try {
       localStorage.setItem(
         "shopkart.wishlist." + (this.auth.session()?.id || "guest"),

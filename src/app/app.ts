@@ -37,13 +37,15 @@ import { CustomerChat } from "./features/assistant/customer-chat/customer-chat";
             ><span class="brand-bag"><app-icon name="check" /></span
             ><span>E-Shop<small>{{ "Shop Smarter. Live Better." | translate }}</small></span></a
           >
-          @if (router.url.split("?")[0] === "/") {
+          @if (["/", "/auth"].includes(router.url.split("?")[0])) {
             <nav class="welcome-navigation" aria-label="Welcome navigation">
               <a routerLink="/">{{ "Home" | translate }}</a><a routerLink="/shop">{{ "Shop" | translate }}</a
               ><a routerLink="/categories">{{ "Categories" | translate }}</a
               ><a routerLink="/shop" [queryParams]="{ collection: 'deals' }"
                 >{{ "Promotions" | translate }}</a
-              ><a routerLink="/account/support">{{ "Help" | translate }}</a>
+              >@if (router.url.split("?")[0] === "/auth") {
+                <a routerLink="/shop" [queryParams]="{ collection: 'brands' }">{{ "Brands" | translate }}</a><a routerLink="/account/support">{{ "About" | translate }}</a>
+              } @else { <a routerLink="/account/support">{{ "Help" | translate }}</a> }
             </nav>
           }
           <form class="header-search" (ngSubmit)="search()">
@@ -90,7 +92,7 @@ import { CustomerChat } from "./features/assistant/customer-chat/customer-chat";
                 }</span
               ><span>{{ "Cart" | translate }}</span></a
             >
-            @if (!auth.session() && router.url.split("?")[0] === "/") {
+            @if (!auth.session() && ["/", "/auth"].includes(router.url.split("?")[0])) {
               <a class="button outline welcome-sign-in" routerLink="/auth"
                 >{{ "Sign In" | translate }}</a
               >

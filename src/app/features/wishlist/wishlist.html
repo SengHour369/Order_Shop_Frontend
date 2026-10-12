@@ -1,0 +1,22 @@
+<nav class="wish-breadcrumbs" aria-label="Breadcrumb"><a routerLink="/">{{ 'Home' | translate }}</a><app-icon name="chevron" /><a routerLink="/account">{{ 'Account' | translate }}</a><app-icon name="chevron" /><b>{{ 'Wishlist' | translate }}</b></nav>
+<section aria-labelledby="wishlist-title">
+  <div class="wish-heading"><div><h1 id="wishlist-title">{{ 'My Wishlist' | translate }} ({{ store.savedCount() }})</h1><p>{{ 'Save your favorite products and shop them later.' | translate }}</p></div>
+    <div class="wish-tools"><div class="wish-search"><input type="search" [ngModel]="query()" (ngModelChange)="query.set($event)" [placeholder]="'Search in wishlist...' | translate" [attr.aria-label]="'Search in wishlist...' | translate" /><app-icon name="search" /></div>
+      <div class="wish-sort"><label for="wishlist-sort">{{ 'Sort by' | translate }}</label><select id="wishlist-sort" [ngModel]="sort()" (ngModelChange)="sort.set($event)"><option value="recent">{{ 'Recently Added' | translate }}</option><option value="name">{{ 'Name' | translate }}</option><option value="price">{{ 'Price: Low to High' | translate }}</option><option value="price-desc">{{ 'Price: High to Low' | translate }}</option></select></div>
+      <div class="wish-view" aria-label="Product layout"><button [class.active]="view() === 'grid'" [attr.aria-pressed]="view() === 'grid'" aria-label="Grid view" (click)="view.set('grid')"><app-icon name="grid" /></button><button [class.active]="view() === 'list'" [attr.aria-pressed]="view() === 'list'" aria-label="List view" (click)="view.set('list')"><app-icon name="list" /></button></div>
+    </div>
+  </div>
+  <div class="wish-categories" aria-label="Wishlist categories"><button [class.active]="!category()" (click)="category.set('')">{{ 'All' | translate }} ({{ store.savedCount() }})</button>@for (item of categories(); track item) { <button [class.active]="category() === item" (click)="category.set(item)">{{ item }} ({{ categoryCount(item) }})</button> }</div>
+  <div class="wish-selection"><label><input type="checkbox" [checked]="allSelected()" [indeterminate]="partiallySelected()" (change)="selectAll()" />{{ 'Select All' | translate }}</label><button [disabled]="!selectedIds().length" (click)="remove(selectedIds())"><app-icon name="trash" />{{ 'Remove Selected' | translate }} ({{ selectedIds().length }})</button></div>
+  @if (error()) { <p class="wish-error" role="alert">{{ error() | translate }}</p> }
+  <div class="wish-products" [class.list-view]="view() === 'list'">
+    @for (p of visible(); track p.id) {
+      <article class="wish-card"><label class="wish-checkbox"><input type="checkbox" [checked]="selected().has(p.id)" (change)="select(p.id)" [attr.aria-label]="('Select' | translate) + ' ' + p.name" /></label><button class="wish-heart" (click)="remove([p.id])" [attr.aria-label]="('Remove from wishlist' | translate) + ': ' + p.name"><app-icon name="heart" /></button>
+        <a class="wish-image" [routerLink]="['/shop', p.id]"><img appProductImage [src]="p.main_image[0] || sku(p)?.image_url || '/images/product-placeholder.svg'" [alt]="p.name" loading="lazy" /></a>
+        <div class="wish-info"><a [routerLink]="['/shop', p.id]"><h2>{{ p.name }}</h2></a><div class="wish-prices">@if (sku(p)) { <strong [class.sale]="discount(p) > 0">{{ price(p) | currency:'USD' }}</strong>@if (discount(p) > 0) { <del>{{ original(p) | currency:'USD' }}</del><span>-{{ discount(p) }}%</span> } } @else { <span>{{ 'Price unavailable' | translate }}</span> }</div>
+          <p class="wish-stock" [class.unavailable]="!available(p)">{{ (available(p) ? 'In Stock' : 'Out of Stock') | translate }}</p><button class="wish-cart" [disabled]="!available(p) || pending().has(p.id)" (click)="add(p)"><app-icon name="cart" />{{ (pending().has(p.id) ? 'Adding…' : 'Add to Cart') | translate }}</button>@if (feedback()[p.id]) { <p class="wish-feedback" role="status">{{ feedback()[p.id] | translate }}</p> }</div>
+      </article>
+    } @empty { <div class="wish-empty"><app-icon name="heart" /><h2>{{ (store.savedCount() ? 'No matching products' : 'Make room for your favorites') | translate }}</h2><p>{{ 'Tap the heart on a product to save it here.' | translate }}</p><a routerLink="/shop" class="button primary">{{ 'Discover Products' | translate }}<app-icon name="arrow" /></a></div> }
+  </div>
+  <p class="wish-note">{{ 'Saved in this browser for your current account. Prices are confirmed when you add to cart.' | translate }}</p>
+</section>

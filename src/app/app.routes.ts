@@ -77,11 +77,29 @@ export const routes: Routes = [
           import("./features/orders/orders.page").then((m) => m.OrdersPage),
       },
       {
+        path: "orders/:id/track",
+        canActivate: [authGuard],
+        title: "Track Order · E-Shop",
+        loadComponent: () => import("./features/orders/tracking/tracking.page").then(m => m.TrackingPage),
+      },
+      {
         path: "orders/:id",
         canActivate: [authGuard],
         title: "Order Details · E-Shop",
         loadComponent: () =>
           import("./features/orders/order.page").then((m) => m.OrderPage),
+      },
+      {
+        path: "addresses/add",
+        canActivate: [authGuard],
+        title: "Add Address · E-Shop",
+        loadComponent: () => import("./features/addresses/address-form.page").then(m => m.AddressFormPage),
+      },
+      {
+        path: "addresses/:id/edit",
+        canActivate: [authGuard],
+        title: "Edit Address · E-Shop",
+        loadComponent: () => import("./features/addresses/address-form.page").then(m => m.AddressFormPage),
       },
       {
         path: "addresses",
@@ -199,6 +217,12 @@ export const routes: Routes = [
         title: "Orders · ShopAdmin",
         loadComponent: () =>
           import("./features/admin/orders/orders.page").then((m) => m.OrdersPage),
+      },
+      {
+        path: "orders/:id/track",
+        canActivate: [authGuard],
+        title: "Track Order · E-Shop",
+        loadComponent: () => import("./features/orders/tracking/tracking.page").then(m => m.TrackingPage),
       },
       {
         path: "orders/:id",

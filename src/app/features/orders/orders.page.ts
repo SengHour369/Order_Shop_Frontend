@@ -137,8 +137,7 @@ import { Status } from "../../shared/components/status";
           /></a>
           <a
             class="button outline full"
-            [routerLink]="['/account/orders', o.id]"
-            fragment="tracking"
+            [routerLink]="['/account/orders', o.id, 'track']"
             >{{ "Track Order" | translate }} <app-icon name="truck"
           /></a>
         </section>

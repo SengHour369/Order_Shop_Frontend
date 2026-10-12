@@ -1,6 +1,7 @@
 import { LanguageSelect } from "../../core/i18n/language-select";
 import { TranslatePipe } from "../../core/i18n/translate.pipe";
-import { Component, inject } from "@angular/core";
+import { ChangeDetectorRef, Component, inject } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { AuthService } from "../../core/auth/auth.service";
@@ -13,8 +14,10 @@ import { Status } from "../../shared/components/status";
   standalone: true,
   imports: [LanguageSelect, TranslatePipe, FormsModule, Status, Icon, RouterLink],
   templateUrl: "./account.html",
+  styleUrl: "./account.scss",
 })
 export class AccountPage extends PageState {
+  private readonly changeDetector = inject(ChangeDetectorRef);
   auth = inject(AuthService);
   sso = inject(KeycloakService);
   async signInWithKeycloak() {
@@ -40,6 +43,19 @@ export class AccountPage extends PageState {
       ? "Reset password"
       : "Sign in";
   username = "";
+  rememberMe = false;
+  constructor() {
+    super();
+    try { this.username = localStorage.getItem("eshop.rememberedUsername") || ""; this.rememberMe = !!this.username; } catch { /* Storage is optional. */ }
+    this.route.queryParamMap?.pipe(takeUntilDestroyed()).subscribe(params => {
+      const requested = params.get("mode");
+      this.changeMode(requested && this.modes.includes(requested) ? requested : params.has("token") ? "Reset password" : "Sign in");
+      this.token = params.get("token") || "";
+    });
+  }
+  socialSignIn() {
+    this.error.set("This sign-in provider is not configured. Please use your E-Shop account or Keycloak.");
+  }
   password = "";
   confirmation = "";
   showPassword = false;
@@ -61,6 +77,7 @@ export class AccountPage extends PageState {
     this.password = "";
     this.confirmation = "";
     this.showPassword = false;
+    this.changeDetector.markForCheck();
   }
   submit() {
     if (
@@ -70,11 +87,15 @@ export class AccountPage extends PageState {
       this.error.set("Your passwords do not match.");
       return;
     }
-    if (this.mode === "Sign in")
+    if (this.mode === "Sign in") {
+      try {
+        if (this.rememberMe) localStorage.setItem("eshop.rememberedUsername", this.username);
+        else localStorage.removeItem("eshop.rememberedUsername");
+      } catch { /* Never store credentials; username preference is optional. */ }
       this.run(this.auth.login(this.username, this.password), () =>
         this.done(),
       );
-    else if (this.mode === "Register")
+    } else if (this.mode === "Register")
       this.run(
         this.api.post("/api/v1/public/register", {
           username: this.username,
@@ -93,9 +114,9 @@ export class AccountPage extends PageState {
       this.run(this.auth.verify(this.email, this.code), () => this.done());
     else if (this.mode === "Forgot password")
       this.run(
-        this.api.post("/api/v1/public/forgot-password", { email: this.email }),
+        this.api.post("/api/v1/public/forgot-password", { email: this.email.trim() }),
         () =>
-          this.message.set("Check your email for password reset instructions."),
+          this.message.set("If an account exists for this email, you will receive a password reset link."),
       );
     else
       this.run(

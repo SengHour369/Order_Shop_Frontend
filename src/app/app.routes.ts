@@ -77,6 +77,14 @@ export const routes: Routes = [
           import("./features/orders/orders.page").then((m) => m.OrdersPage),
       },
       {
+        path: "returns", canActivate: [authGuard], title: "My Returns · E-Shop",
+        loadComponent: () => import("./features/orders/returns/returns.page").then(m => m.CustomerReturnsPage),
+      },
+      {
+        path: "returns/:id", canActivate: [authGuard], title: "Return Detail · E-Shop",
+        loadComponent: () => import("./features/orders/returns/return-detail.page").then(m => m.CustomerReturnDetailPage),
+      },
+      {
         path: "orders/:id/track",
         canActivate: [authGuard],
         title: "Track Order · E-Shop",
@@ -195,6 +203,9 @@ export const routes: Routes = [
       import("./features/admin/layout/admin-layout").then((m) => m.AdminLayout),
     children: [
       {path: "access-denied", loadComponent: () => import("./features/admin/settings/access-denied.page").then(m => m.AccessDeniedPage)},
+      ...([
+        ['imports', 'upload'], ['import-approvals', 'review'], ['import-executions', 'executions'],
+      ] as const).map(([path, importMode]) => ({path, data:{importMode}, title:'Excel Imports · ShopAdmin', loadComponent:()=>import('./features/admin/imports/ai-imports.page').then(m=>m.AiImportsPage)})),
       {
         path: "automation", canActivate: [adminGuard], title: "Payment Automation · E-Shop", loadComponent: () => import("./features/admin/automation/automation.page").then(m => m.AutomationPage),
       },
@@ -217,12 +228,6 @@ export const routes: Routes = [
         title: "Orders · ShopAdmin",
         loadComponent: () =>
           import("./features/admin/orders/orders.page").then((m) => m.OrdersPage),
-      },
-      {
-        path: "orders/:id/track",
-        canActivate: [authGuard],
-        title: "Track Order · E-Shop",
-        loadComponent: () => import("./features/orders/tracking/tracking.page").then(m => m.TrackingPage),
       },
       {
         path: "orders/:id",

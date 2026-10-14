@@ -1,0 +1,20 @@
+<header class="notices-heading"><h1>{{ 'Notifications' | translate }}@if(store.unread()!==null){ <span>({{store.unread()}})</span> }</h1><div class="notices-actions"><button [attr.aria-label]="'Mark all as read' | translate" (click)="readAll()" [disabled]="!auth.session()||busy()||actionBusy()||store.unread()===0"><app-icon name="check" />{{ 'Mark all as read' | translate }}</button><a routerLink="/account/notification-settings" [attr.aria-label]="'Notification settings' | translate"><app-icon name="settings" /></a></div></header>
+@if(!auth.session()){<app-sign-in-card action="read your latest notifications" path="/account/notifications" />}
+<app-status [busy]="busy()" [error]="error()" />
+@if(error()){<button class="notices-retry" (click)="load()" [disabled]="busy()">{{ 'Try again' | translate }}</button>}
+@if(actionError()){<p class="notices-error" role="alert">{{actionError() | translate}}</p>}
+@if(auth.session()){
+ <nav class="notices-tabs" [attr.aria-label]="'Notification categories' | translate">@for(tab of tabs;track tab.key){<button [class.active]="filter===tab.key" [attr.aria-pressed]="filter===tab.key" (click)="filter=tab.key">{{tab.label | translate}}@if(tab.key!=='all'){ <span>({{count(tab.key)}})</span> }</button>}</nav>
+ @if(pages>1){<p class="notices-page-note">{{ 'Category counts and filters apply to this page.' | translate }}</p>}
+ <section class="notices-list" [attr.aria-label]="'Notifications' | translate" [attr.aria-busy]="busy()||actionBusy()">
+  @for(n of filtered();track n.id){<button class="notice-row" [class.unread]="!n.read" [disabled]="busy()||actionBusy()" (click)="select(n)" [attr.aria-label]="n.title+(!n.read?' — '+('Unread' | translate):'')">
+   <span [class]="'notice-symbol '+category(n)" [class.transit]="icon(n)==='truck' || icon(n)==='card' || icon(n)==='settings'" [class.return-notice]="n.type?.startsWith('RETURN') || n.type?.startsWith('REFUND')"><app-icon [name]="icon(n)" /></span>
+   <span class="notice-content"><strong>{{n.title}}</strong><span>{{n.message}}</span></span>
+   <span class="notice-meta"><time [attr.datetime]="n.createdAt" [attr.title]="n.createdAt | date:'medium'">{{relativeTime(n.createdAt)}}</time>@if(!n.read){<i class="notice-unread" aria-hidden="true"></i>}<app-icon name="chevron" /></span>
+  </button>}@empty{@if(!busy()&&!error()){<div class="notices-empty"><app-icon name="bell" /><h2>{{ (notices().length?'No notifications in this category.':"You're all caught up") | translate }}</h2><p>{{ 'Your latest updates will appear here.' | translate }}</p></div>}}
+ </section>
+ @if(pages>1){<div class="notices-pagination"><button [disabled]="page<=1||busy()||actionBusy()" (click)="goto(page-1)">{{ 'Previous' | translate }}</button><span>{{ 'Page' | translate }} {{page}} / {{pages}}</span><button [disabled]="page>=pages||busy()||actionBusy()" (click)="goto(page+1)">{{ 'Next' | translate }}</button></div>}
+}
+<dialog #detailEditor class="notice-dialog" aria-labelledby="notice-detail-title" (close)="selected.set(null)">
+ @if(selected();as n){<div class="notice-dialog-heading"><span [class]="'notice-symbol '+category(n)" [class.transit]="icon(n)==='truck' || icon(n)==='card' || icon(n)==='settings'" [class.return-notice]="n.type?.startsWith('RETURN') || n.type?.startsWith('REFUND')"><app-icon [name]="icon(n)" /></span><h2 id="notice-detail-title">{{n.title}}</h2><button [attr.aria-label]="'Close notification' | translate" (click)="close()"><app-icon name="close" /></button></div><time>{{n.createdAt | date:'medium'}}</time><p>{{n.message}}</p>@if(actionError()){<p class="notices-error" role="alert">{{actionError() | translate}}</p>}<div class="notice-detail-actions">@if(!n.read){<button [disabled]="actionBusy()" (click)="read(n.id)">{{ 'Mark as Read' | translate }}</button>}@if(destination(n);as path){<a [routerLink]="path" (click)="close()">{{ 'View Details' | translate }}<app-icon name="arrow" /></a>}</div>}
+</dialog>

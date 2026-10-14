@@ -11,6 +11,9 @@ import { AssistantApi, AiResult } from '../../assistant/assistant.api';
 import { AssistantProductCard } from '../../assistant/assistant-product';
 import { AdminApi, Row } from '../api/admin.api';
 import { Icon } from '../../../shared/components/icon';
+import { AiImportComponent } from '../imports/ai-import.component';
+import { AiImportsApi } from '../imports/ai-imports.api';
+import { PermissionService } from '../../../core/auth/permission.service';
 
 interface ProductDraft {
   name: string; description: string; category: number | null;
@@ -20,11 +23,22 @@ interface Operation { title: string; status: string; time: Date; data?: unknown;
 type Turn = NonNullable<ReturnType<AssistantPage['current']>>['messages'][number];
 
 @Component({
-  imports: [TranslatePipe, FormsModule, DatePipe, JsonPipe, RouterLink, Icon, AssistantProductCard],
+  imports: [TranslatePipe, FormsModule, DatePipe, JsonPipe, RouterLink, Icon, AssistantProductCard, AiImportComponent],
   templateUrl: './admin-assistant.html',
   styleUrl: './admin-assistant.css',
 })
 export class AdminAssistantPage extends AssistantPage {
+  importAccess=inject(PermissionService);
+  private importApi=inject(AiImportsApi);
+  importBatchId=signal('');
+  attachAdminFile(event:Event) {
+    const input=event.target as HTMLInputElement; const file=input.files?.[0];
+    if (!file || this.locked()) return;
+    if (!/\.xlsx?$/i.test(file.name)) { this.attachText(event); return; }
+    input.value='';
+    if (!this.importAccess.has('IMPORT_UPLOAD')) {this.error.set('Excel import permission is required.'); return;}
+    this.run(this.importApi.upload(file),batch=>{this.importBatchId.set(batch.id);this.view.set('imports');});
+  }
   private assistantApi = inject(AssistantApi);
   private management = inject(AdminApi);
   private destroy = inject(DestroyRef);

@@ -43,10 +43,10 @@ export class OrdersApi {
       userId: this.auth.userId(),
     });
   }
-  cancel(id: number) {
+  cancel(id: number, reason = "CHANGED_MIND", details = "") {
     return this.api.data<Order>(
       "/api/v1/orders/user/cancel",
-      {},
+      { reason, details },
       { userId: this.auth.userId(), id },
     );
   }

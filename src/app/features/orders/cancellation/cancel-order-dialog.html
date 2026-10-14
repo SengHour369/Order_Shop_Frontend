@@ -1,0 +1,15 @@
+<dialog #editor class="cancel-dialog" aria-labelledby="cancel-title" (cancel)="close($event)">
+  <span class="sheet-handle" aria-hidden="true"></span>
+  <div class="cancel-heading"><h2 id="cancel-title">{{ 'Cancel Order' | translate }}</h2><button type="button" [disabled]="busy()" [attr.aria-label]="'Close cancellation' | translate" (click)="close()"><app-icon name="close" /></button></div>
+  <div class="cancel-notice"><span class="warning-symbol" aria-hidden="true">!</span><div><h3>{{ 'Are you sure you want to cancel this order?' | translate }}</h3><p>{{ 'The shop will check whether your order can still be cancelled.' | translate }}</p></div></div>
+  <form (ngSubmit)="submit()" [attr.aria-busy]="busy()">
+    <fieldset [disabled]="busy()"><legend>{{ 'Reason for cancellation' | translate }} <span>*</span></legend>
+      @for (r of reasons; track r.value) { <label class="reason-option"><input type="radio" name="reason" [value]="r.value" [(ngModel)]="reason" required /><span>{{ r.label | translate }}</span></label> }
+    </fieldset>
+    <label class="details-label" for="cancel-details">{{ 'Additional details' | translate }} <span>({{ 'Optional' | translate }})</span></label>
+    <textarea id="cancel-details" name="details" [(ngModel)]="details" maxlength="500" [disabled]="busy()" [placeholder]="'Tell us more about the reason...' | translate" rows="3" aria-describedby="cancel-count"></textarea>
+    <p class="character-count" id="cancel-count">{{ details.length }}/500</p>
+    @if (error()) { <p class="cancel-error" role="alert">{{ error() | translate }}</p> }
+    <div class="cancel-actions"><button type="button" [disabled]="busy()" (click)="close()">{{ 'Keep Order' | translate }}</button><button type="submit" class="confirm-cancel" [disabled]="busy()">{{ (busy() ? 'Cancelling…' : 'Cancel Order') | translate }}</button></div>
+  </form>
+</dialog>

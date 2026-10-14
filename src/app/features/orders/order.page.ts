@@ -1,10 +1,9 @@
+import { CancelOrderDialog } from './cancellation/cancel-order-dialog';
 import { TranslatePipe } from "../../core/i18n/translate.pipe";
 import {
   Component,
   inject,
   signal,
-  viewChild,
-  ElementRef,
 } from "@angular/core";
 import { PaymentQr } from "../payments/payment-qr";
 import { CurrencyPipe, DatePipe } from "@angular/common";
@@ -17,7 +16,8 @@ import { OrderProgress } from "../../shared/components/order-progress";
 import { PageState } from "../../shared/utils/page-state";
 import { Status } from "../../shared/components/status";
 @Component({
-  imports: [TranslatePipe, PaymentQr, CurrencyPipe, DatePipe, RouterLink, Icon, OrderProgress, Status],
+  imports: [CancelOrderDialog, TranslatePipe, PaymentQr, CurrencyPipe, DatePipe, RouterLink, Icon, OrderProgress, Status],
+  styles: [`.order-detail-actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }`],
   template: `<div class="page-heading">
       <div>
         <h1>{{ "Order Details" | translate }}</h1>
@@ -32,9 +32,10 @@ import { Status } from "../../shared/components/status";
           <h3>Order #{{ o.order_number }}</h3>
           <p>Placed on {{ o.order_date | date: "medium" }}</p>
         </div>
-        <button class="outline" [disabled]="busy()" (click)="load()">
-          <app-icon name="refresh" />Refresh Status
-        </button>
+        <div class="order-detail-actions">
+          <button class="outline" [disabled]="busy()" (click)="load()"><app-icon name="refresh" />{{ 'Refresh Status' | translate }}</button>
+          @if (o.status === 'PENDING') { <button class="danger-outline" [disabled]="busy()" (click)="cancelEditor.open()"><app-icon name="trash" />{{ 'Cancel Order' | translate }}</button> }
+        </div>
       </div>
       <div class="order-detail-grid">
         <div>
@@ -120,15 +121,6 @@ import { Status } from "../../shared/components/status";
           <a class="button outline full" routerLink="/account/support"
             ><app-icon name="headphones" />{{ "Contact Support" | translate }}</a
           >
-          @if (o.status === "PENDING") {
-            <button
-              class="danger-outline full"
-              [disabled]="busy()"
-              (click)="cancelDialog().nativeElement.showModal()"
-            >
-              {{ "Cancel Order" | translate }}
-            </button>
-          }
           @if (o.status === "CHECKOUT_PENDING") {
             <a class="button primary full" routerLink="/checkout"
               >Resume Checkout</a
@@ -139,45 +131,7 @@ import { Status } from "../../shared/components/status";
           }
         </aside>
       </div>
-      <dialog
-        #cancelEditor
-        class="customer-dialog cancel-dialog"
-        aria-labelledby="cancel-title"
-      >
-        <div class="dialog-heading">
-          <h2 id="cancel-title">{{ "Cancel Order" | translate }}</h2>
-          <button
-            class="icon-button"
-            aria-label="Close cancellation"
-            (click)="cancelDialog().nativeElement.close()"
-          >
-            <app-icon name="close" />
-          </button>
-        </div>
-        <div class="cancellation-notice">
-          <app-icon name="help" />
-          <div>
-            <h3>Are you sure you want to cancel this order?</h3>
-            <p>
-              The shop will check whether your order can still be cancelled.
-            </p>
-          </div>
-        </div>
-        <p>
-          Order #{{ o.order_number }} · {{ o.total_amount | currency: "USD" }}
-        </p>
-        <app-status [error]="error()" />
-        <div class="dialog-actions">
-          <button
-            [disabled]="busy()"
-            (click)="cancelDialog().nativeElement.close()"
-          >
-            {{ "Keep Order" | translate }}</button
-          ><button class="danger" [disabled]="busy()" (click)="cancel(o.id)">
-            {{ (busy() ? "Cancelling…" : "Cancel Order") | translate }}
-          </button>
-        </div>
-      </dialog>
+      <app-cancel-order-dialog #cancelEditor [order]="o" (cancelled)="order.set($event)" />
     }`,
 })
 export class OrderPage extends PageState {
@@ -186,8 +140,6 @@ export class OrderPage extends PageState {
   route = inject(ActivatedRoute);
   order = signal<Order | null>(null);
   address = signal<Address | null>(null);
-  cancelDialog =
-    viewChild.required<ElementRef<HTMLDialogElement>>("cancelEditor");
   constructor() {
     super();
     this.load();
@@ -203,12 +155,6 @@ export class OrderPage extends PageState {
         });
       },
     );
-  }
-  cancel(id: number) {
-    this.run(this.api.cancel(id), (o) => {
-      this.order.set(o);
-      this.cancelDialog().nativeElement.close();
-    });
   }
   statusText(s: string) {
     return (

@@ -1,229 +1,97 @@
-import { TranslatePipe } from "../../core/i18n/translate.pipe";
-import { Component, inject, signal } from "@angular/core";
-import { DatePipe } from "@angular/common";
-import { RouterLink } from "@angular/router";
-import { switchMap } from "rxjs";
-import { NotificationsApi } from "./notifications.api";
-import { Notice } from "../../core/api/models";
-import { AuthService } from "../../core/auth/auth.service";
-import { CustomerStore } from "../../core/stores/customer.store";
-import { Icon } from "../../shared/components/icon";
-import { SignInCard } from "../../shared/components/sign-in-card";
-import { PageState } from "../../shared/utils/page-state";
-import { Status } from "../../shared/components/status";
-@Component({
-  imports: [TranslatePipe, DatePipe, RouterLink, Icon, SignInCard, Status],
-  template: `<div class="page-heading">
-      <div>
-        <h1>
-          {{ "Notifications" | translate }}
-          @if (store.unread() !== null) {
-            ({{ store.unread() }})
-          }
-        </h1>
-        <p>Stay updated with your orders, deals, and account activity.</p>
-      </div>
-      <div class="actions">
-        <button
-          class="outline"
-          [disabled]="!auth.session() || busy()"
-          (click)="readAll()"
-        >
-          <app-icon name="check" />{{ "Mark All as Read" | translate }}</button
-        ><a
-          routerLink="/account/notification-settings"
-          class="button icon-button"
-          [attr.aria-label]='"Notification settings" | translate'
-          ><app-icon name="settings"
-        /></a>
-      </div>
-    </div>
-    @if (!auth.session()) {
-      <app-sign-in-card
-        action="read your latest notifications"
-        path="/account/notifications"
-      />
-    }
-    <app-status [busy]="busy()" [error]="error()" />
-    <div class="notification-layout" [class.has-detail]="selected()">
-      <section>
-        <div class="filter-tabs">
-          <button
-            class="tab"
-            [class.active]="filter === 'all'"
-            (click)="filter = 'all'"
-          >
-            All ({{ notices().length }})</button
-          ><button
-            class="tab"
-            [class.active]="filter === 'unread'"
-            (click)="filter = 'unread'"
-          >
-            Unread ({{ unreadOnPage() }})</button
-          ><button
-            class="tab"
-            [class.active]="filter === 'read'"
-            (click)="filter = 'read'"
-          >
-            Read
-          </button>
-        </div>
-        <div class="notification-list">
-          @for (n of filtered(); track n.id) {
-            <button
-              class="notification-row"
-              [class.selected]="selected()?.id === n.id"
-              [class.unread]="!n.read"
-              (click)="select(n)"
-            >
-              <span class="icon-circle" [class.blue]="n.type?.includes('ORDER')"
-                ><app-icon [name]="icon(n)"
-              /></span>
-              <div class="grow">
-                <h3>
-                  {{ n.title }}
-                  @if (!n.read) {
-                    <i class="unread-dot"></i>
-                  }
-                </h3>
-                <p>{{ n.message }}</p>
-              </div>
-              <small>{{ n.createdAt | date: "mediumDate" }}</small
-              ><app-icon name="chevron" />
-            </button>
-          } @empty {
-            <div class="empty">
-              <app-icon name="bell" />
-              <h2>You're all caught up</h2>
-              <p>Your latest updates will appear here.</p>
-            </div>
-          }
-        </div>
-        <div class="pagination">
-          <button
-            [disabled]="page <= 1 || busy()"
-            (click)="page = page - 1; load()"
-          >
-            {{ "Previous" | translate }}</button
-          ><span>Page {{ page }}</span
-          ><button
-            [disabled]="page >= pages || busy()"
-            (click)="page = page + 1; load()"
-          >
-            {{ "Next" | translate }}
-          </button>
-        </div>
-      </section>
-      @if (selected(); as n) {
-        <aside class="panel notification-detail">
-          <div class="section-title">
-            <span class="icon-circle"><app-icon [name]="icon(n)" /></span>
-            <div class="grow">
-              <h2>{{ n.title }}</h2>
-              <p>{{ n.createdAt | date: "medium" }}</p>
-            </div>
-            <button
-              class="icon-button"
-              aria-label="Close notification"
-              (click)="selected.set(null)"
-            >
-              <app-icon name="close" />
-            </button>
-          </div>
-          <div class="notification-art"><app-icon [name]="icon(n)" /></div>
-          <p>{{ n.message }}</p>
-          @if (!n.read) {
-            <button
-              class="outline full"
-              [disabled]="busy()"
-              (click)="read(n.id)"
-            >
-              <app-icon name="check" />Mark as Read
-            </button>
-          }
-          @if (n.resourceType === "ORDER" && numericId(n.resourceId)) {
-            <a
-              class="button primary full"
-              [routerLink]="['/account/orders', n.resourceId]"
-              >View Order Details</a
-            >
-          }
-        </aside>
-      }
-    </div>`,
-})
+import { Component, DestroyRef, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subscription } from 'rxjs';
+import { NotificationsApi } from './notifications.api';
+import { Notice } from '../../core/api/models';
+import { AuthService } from '../../core/auth/auth.service';
+import { CustomerStore } from '../../core/stores/customer.store';
+import { LanguageService } from '../../core/i18n/language.service';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { Icon } from '../../shared/components/icon';
+import { SignInCard } from '../../shared/components/sign-in-card';
+import { PageState } from '../../shared/utils/page-state';
+import { Status } from '../../shared/components/status';
+type Category='all'|'orders'|'promotions'|'account'|'system';
+@Component({imports:[TranslatePipe,DatePipe,RouterLink,Icon,SignInCard,Status],templateUrl:'./notifications.html',styleUrl:'./notifications.scss'})
 export class NotificationsPage extends PageState {
-  api = inject(NotificationsApi);
-  auth = inject(AuthService);
-  store = inject(CustomerStore);
-  notices = signal<Notice[]>([]);
-  selected = signal<Notice | null>(null);
-  page = 1;
-  pages = 0;
-  filter = "all";
-  constructor() {
-    super();
-    this.load();
-  }
-  load() {
-    if (!this.auth.session()) return;
-    this.run(this.api.list(this.page), (r) => {
-      this.notices.set(r.content);
-      this.pages = r.totalPages;
+  private readonly api=inject(NotificationsApi);
+  readonly auth=inject(AuthService);
+  readonly store=inject(CustomerStore);
+  private readonly language=inject(LanguageService);
+  private readonly noticesDestroyRef=inject(DestroyRef);
+  private countRequest?:Subscription;
+  readonly notices=signal<Notice[]>([]);
+  readonly selected=signal<Notice|null>(null);
+  readonly actionBusy=signal(false);
+  readonly actionError=signal('');
+  readonly clock=signal(Date.now());
+  readonly detailDialog=viewChild.required<ElementRef<HTMLDialogElement>>('detailEditor');
+  readonly tabs:{key:Category;label:string}[]=[{key:'all',label:'All'},{key:'orders',label:'Orders'},{key:'promotions',label:'Promotions'},{key:'account',label:'Account'},{key:'system',label:'System'}];
+  page=1; pages=0; filter:Category='all';
+  constructor(){super();this.load();const timer=setInterval(()=>this.clock.set(Date.now()),60000);this.noticesDestroyRef.onDestroy(()=>clearInterval(timer));}
+  load(page=this.page){
+    if(!this.auth.session()||this.busy()||this.actionBusy())return;
+    this.run(this.api.list(page),result=>{
+      this.notices.set(result.content);this.page=page;this.pages=result.totalPages;
+      if(this.selected())this.selected.set(result.content.find(n=>n.id===this.selected()!.id)||null);
       this.updateCount();
     });
   }
-  updateCount() {
-    this.api.count().subscribe({
-      next: (r) => this.store.unread.set(r.count),
-      error: () => this.store.unread.set(null),
+  goto(page:number){if(page<1||page>this.pages||this.busy()||this.actionBusy())return;this.load(page);}
+  updateCount(){
+    this.countRequest?.unsubscribe();
+    this.countRequest=this.api.count().pipe(takeUntilDestroyed(this.noticesDestroyRef)).subscribe({next:result=>this.store.unread.set(result.count),error:()=>this.store.unread.set(null)});
+  }
+  category(n:Notice):Exclude<Category,'all'>{
+    const type=(n.type||'').toUpperCase(),resource=(n.resourceType||'').toUpperCase();
+    if(/^(ORDER|PAYMENT|RETURN|REFUND)(_|$)/.test(type)||['ORDER','PAYMENT','RETURN','REFUND'].includes(resource))return 'orders';
+    if(/^(PROMOTION|SALE|OFFER)(_|$)/.test(type)||resource==='PROMOTION')return 'promotions';
+    if(/^(ACCOUNT|SECURITY|PASSWORD|LOGIN|USER)(_|$)/.test(type)||['ACCOUNT','USER','SECURITY'].includes(resource))return 'account';
+    return 'system';
+  }
+  filtered(){return this.notices().filter(n=>this.filter==='all'||this.category(n)===this.filter);}
+  count(category:Category){return this.notices().filter(n=>category==='all'||this.category(n)===category).length;}
+  select(notice:Notice){this.selected.set(notice);this.actionError.set('');this.detailDialog().nativeElement.showModal();if(!notice.read)this.read(notice.id);}
+  close(){this.detailDialog().nativeElement.close();this.selected.set(null);}
+  read(id:number){
+    if(!this.auth.session()||this.actionBusy()||this.busy())return;
+    this.mutate(()=>this.api.read(id),()=>{
+      this.notices.update(rows=>rows.map(n=>n.id===id?{...n,read:true}:n));
+      if(this.selected()?.id===id)this.selected.update(n=>n?{...n,read:true}:null);
     });
   }
-  filtered() {
-    return this.notices().filter(
-      (n) =>
-        this.filter === "all" || (this.filter === "read" ? n.read : !n.read),
-    );
+  readAll(){
+    if(!this.auth.session()||this.actionBusy()||this.busy()||this.store.unread()===0)return;
+    this.mutate(()=>this.api.readAll(),()=>{this.notices.update(rows=>rows.map(n=>({...n,read:true})));this.selected.update(n=>n?{...n,read:true}:null);});
   }
-  unreadOnPage() {
-    return this.notices().filter((n) => !n.read).length;
+  private mutate(request:()=>ReturnType<NotificationsApi['read']>,success:()=>void){
+    this.actionBusy.set(true);this.actionError.set('');
+    request().pipe(takeUntilDestroyed(this.noticesDestroyRef)).subscribe({
+      next:()=>{success();this.actionBusy.set(false);this.updateCount();},
+      error:e=>{this.actionBusy.set(false);this.actionError.set(e.status===0?'Cannot reach the shop. Please try again shortly.':e.error?.message||e.message||'Could not mark notifications as read. Please try again.');},
+      complete:()=>this.actionBusy.set(false),
+    });
   }
-  select(n: Notice) {
-    this.selected.set(n);
+  icon(n:Notice){
+    const type=(n.type||'').toUpperCase();
+    if(this.category(n)==='account')return 'shield';if(this.category(n)==='promotions')return 'tag';
+    if(type.includes('PAYMENT'))return 'card';if(type.includes('RETURN')||type.includes('REFUND'))return 'box';
+    if(type.includes('PROCESS'))return 'settings';if(type.includes('SHIPP')||type.includes('DELIVERY')||type==='ORDER_UPDATED')return 'truck';
+    return type.startsWith('ORDER')?'box':'bell';
   }
-  read(id: number) {
-    this.run(
-      this.api.read(id).pipe(switchMap(() => this.api.list(this.page))),
-      (r) => {
-        this.notices.set(r.content);
-        this.selected.set(r.content.find((n) => n.id === id) || null);
-        this.updateCount();
-      },
-    );
+  relativeTime(date:string){
+    const value=Date.parse(date);if(!Number.isFinite(value))return this.language.translate('Date unavailable');
+    const seconds=Math.max(0,(this.clock()-value)/1000);if(seconds<60)return this.language.translate('Just now');
+    const formatter=new Intl.RelativeTimeFormat(this.language.language()==='km'?'km':'en',{numeric:'always'});
+    if(seconds<3600)return formatter.format(-Math.floor(seconds/60),'minute');if(seconds<86400)return formatter.format(-Math.floor(seconds/3600),'hour');if(seconds<7*86400)return formatter.format(-Math.floor(seconds/86400),'day');
+    return new Intl.DateTimeFormat(this.language.language()==='km'?'km':'en',{month:'short',day:'numeric',year:'numeric'}).format(value);
   }
-  readAll() {
-    this.run(
-      this.api.readAll().pipe(switchMap(() => this.api.list(this.page))),
-      (r) => {
-        this.notices.set(r.content);
-        if (this.selected())
-          this.selected.set(
-            r.content.find((n) => n.id === this.selected()!.id) || null,
-          );
-        this.updateCount();
-      },
-    );
-  }
-  icon(n: Notice) {
-    return n.type?.includes("ORDER")
-      ? "truck"
-      : n.type?.includes("PAYMENT")
-        ? "card"
-        : n.type?.includes("SECURITY")
-          ? "shield"
-          : "bell";
-  }
-  numericId(id?: string) {
-    return !!id && /^\d+$/.test(id);
+  destination(n:Notice):string[]|null{
+    const type=(n.resourceType||'').toUpperCase(),id=n.resourceId||'';
+    if(type==='ORDER'&&/^[1-9]\d*$/.test(id))return ['/account/orders',id];
+    if(type==='RETURN'&&/^RET[A-Za-z0-9_-]{1,76}$/.test(id))return ['/account/returns',id];
+    if(type==='PRODUCT'&&/^[1-9]\d*$/.test(id))return ['/shop',id];return null;
   }
 }

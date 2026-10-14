@@ -21,7 +21,7 @@ export class TrackingPage extends PageState {
  private readonly api=inject(OrdersApi);
  private readonly addresses=inject(AddressesApi);
  private readonly route=inject(ActivatedRoute);
- private readonly destroyRef=inject(DestroyRef);
+ private readonly trackingDestroyRef=inject(DestroyRef);
  private addressRequest?:Subscription;
  id=0;
  order=signal<Order|null>(null);
@@ -48,7 +48,7 @@ export class TrackingPage extends PageState {
   if(!Number.isSafeInteger(this.id)||this.id<1){this.run(throwError(()=>new Error('Invalid order.')),()=>{},true);return;}
   this.run(this.api.detail(this.id),o=>{
    this.order.set(o);this.address.set(null);this.addressBusy.set(true);
-   this.addressRequest=this.addresses.list().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+   this.addressRequest=this.addresses.list().pipe(takeUntilDestroyed(this.trackingDestroyRef)).subscribe({
     next:rows=>{this.address.set(rows.find(a=>a.id===o.shipping_address_id)||null);this.addressBusy.set(false);},
     error:()=>{this.address.set(null);this.addressBusy.set(false);},
    });

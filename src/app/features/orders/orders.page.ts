@@ -25,7 +25,7 @@ import { Status } from "../../shared/components/status";
   template: `<div class="page-heading">
       <div>
         <h1>{{ "My Orders" | translate }}</h1>
-        <p>Track, manage and view all your orders in one place.</p>
+        <p>Track, manage and view all your orders in one place.</p><a routerLink="/account/returns">{{ 'My Returns' | translate }}</a>
       </div>
       <div class="inline-search">
         <app-icon name="search" /><input

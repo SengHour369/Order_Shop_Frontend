@@ -11,23 +11,26 @@ import { AuthService } from "../core/auth/auth.service";
 import { CustomerStore } from "../core/stores/customer.store";
 @Component({
   imports: [TranslatePipe, RouterLink, RouterLinkActive, RouterOutlet, Icon],
-  styles: [`.account-layout.wishlist-layout { display: block; } @media(max-width:700px) { .addresses-layout .account-sidebar, .tracking-layout .account-sidebar, .addresses-breadcrumbs, .tracking-breadcrumbs { display:none; } }`],
-  template: `@if (!isWishlist()) { <div class="breadcrumbs" [class.addresses-breadcrumbs]="isAddresses()" [class.tracking-breadcrumbs]="isTracking()">
+  styles: [`.account-layout.wishlist-layout { display: block; } .account-sidebar a.return-orders-selected { color:#00834a; background:#eaf8f1; font-weight:650; } @media(max-width:700px) { .addresses-layout .account-sidebar, .tracking-layout .account-sidebar, .returns-layout .account-sidebar, .notifications-layout .account-sidebar, .settings-layout .account-sidebar, .addresses-breadcrumbs, .tracking-breadcrumbs, .returns-breadcrumbs, .notifications-breadcrumbs, .settings-breadcrumbs { display:none; } }`],
+  template: `@if (!isWishlist()) { <div class="breadcrumbs" [class.addresses-breadcrumbs]="isAddresses()" [class.tracking-breadcrumbs]="isTracking()" [class.returns-breadcrumbs]="isReturns()" [class.notifications-breadcrumbs]="isNotifications()" [class.settings-breadcrumbs]="isSettings()">
       <a routerLink="/">{{ "Home" | translate }}</a><app-icon name="chevron" /><a
         routerLink="/account"
         >{{ "Account" | translate }}</a
       >
+      @if (isNotifications()) { <app-icon name="chevron" /><b>{{ 'Notifications' | translate }}</b> }
+      @if (isReturns()) { <app-icon name="chevron" /><a routerLink="/account/orders">{{ 'My Orders' | translate }}</a><app-icon name="chevron" /><a routerLink="/account/returns">{{ 'My Returns' | translate }}</a>@if (isReturnDetail()) { <app-icon name="chevron" /><b>{{ 'Return Detail' | translate }}</b> } }
       @if (isTracking()) { <app-icon name="chevron" /><a routerLink="/account/orders">{{ 'My Orders' | translate }}</a><app-icon name="chevron" /><b>{{ 'Track Order' | translate }}</b> }
       @if (isAddresses()) { <app-icon name="chevron" /><a routerLink="/account/addresses">{{ 'My Addresses' | translate }}</a> }
       @if (router.url.includes('/addresses/add') || router.url.endsWith('/edit')) { <app-icon name="chevron" /><b>{{ (router.url.endsWith('/edit') ? 'Edit Address' : 'Add Address') | translate }}</b> }
     </div>
-    } <div class="account-layout" [class.wishlist-layout]="isWishlist()" [class.addresses-layout]="isAddresses()" [class.tracking-layout]="isTracking()"> @if (!isWishlist()) {
+    } <div class="account-layout" [class.wishlist-layout]="isWishlist()" [class.addresses-layout]="isAddresses()" [class.tracking-layout]="isTracking()" [class.returns-layout]="isReturns()" [class.notifications-layout]="isNotifications()" [class.settings-layout]="isSettings()"> @if (!isWishlist()) {
       <aside class="account-sidebar">
         <h2 class="account-nav-title">My Account</h2>
         <nav aria-label="Account navigation">
           @for (item of links; track item.path) {
             <a
               [routerLink]="item.path"
+              [class.return-orders-selected]="isReturns() && item.path === '/account/orders'"
               routerLinkActive="selected"
               [routerLinkActiveOptions]="{ exact: item.path === '/account' }"
               ><app-icon [name]="item.icon" /><span>{{ (item.label) | translate }}</span>
@@ -78,6 +81,10 @@ export class AccountLayout {
   auth = inject(AuthService);
   store = inject(CustomerStore);
   router = inject(Router);
+  isSettings() { return ["/account/settings", "/account/notification-settings"].includes(this.router.url.split(/[?#]/)[0]); }
+  isNotifications() { return this.router.url.split(/[?#]/)[0] === "/account/notifications"; }
+  isReturnDetail() { return this.isReturns() && this.router.url.split(/[?#]/)[0] !== "/account/returns"; }
+  isReturns() { return this.router.url.split(/[?#]/)[0].startsWith("/account/returns"); }
   isTracking() { return /^\/account\/orders\/\d+\/track(?:[?#]|$)/.test(this.router.url); }
   isAddresses() { return this.router.url.split(/[?#]/)[0].startsWith("/account/addresses"); }
   isWishlist() { return this.router.url.split(/[?#]/)[0] === "/account/wishlist"; }

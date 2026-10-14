@@ -1,90 +1,25 @@
-import { TranslatePipe } from "../../core/i18n/translate.pipe";
-import { Component, inject, signal } from "@angular/core";
-import { RouterLink } from "@angular/router";
-import { FormsModule } from "@angular/forms";
-import { NotificationsApi } from "./notifications.api";
-import { AuthService } from "../../core/auth/auth.service";
-import { Icon } from "../../shared/components/icon";
-import { PageState } from "../../shared/utils/page-state";
-import { Status } from "../../shared/components/status";
-import { SignInCard } from "../../shared/components/sign-in-card";
-@Component({
-  imports: [TranslatePipe, RouterLink, FormsModule, Icon, Status, SignInCard],
-  template: `<div class="page-heading">
-      <div>
-        <h1>{{ "Notification Settings" | translate }}</h1>
-        <p>Manage the updates you receive from E-Shop.</p>
-      </div>
-      <a class="button outline" routerLink="/account/notifications"
-        >Back to Notifications</a
-      >
-    </div>
-    <app-status [busy]="busy()" [error]="error()" [message]="message()" />
-    @if (!auth.session()) {
-      <app-sign-in-card
-        action="manage your notification preferences"
-        path="/account/notification-settings"
-      />
-    }
-    <form class="panel" (ngSubmit)="save()">
-      <div class="section-title">
-        <span class="icon-circle"><app-icon name="bell" /></span>
-        <div>
-          <h2>Notification Channels</h2>
-          <p>Choose how you receive assistant updates.</p>
-        </div>
-      </div>
-      <label class="setting-row"
-        ><span class="icon-circle"><app-icon name="mail" /></span
-        ><span class="grow"
-          ><strong>{{ "Email Notifications" | translate }}</strong>
-          <p>Receive email updates for your assistant requests.</p></span
-        ><span class="switch-label"
-          ><input
-            type="checkbox"
-            name="aiEmail"
-            [(ngModel)]="email"
-            [disabled]="!ready() || busy()"
-            aria-label="Email updates for assistant requests" /><span
-            class="switch"
-          ></span></span
-      ></label>
-      <p class="availability-note">
-        Order and account updates are available in your notification inbox. More
-        channel and scheduling preferences are coming soon.
-      </p>
-      <div class="dialog-actions">
-        <a class="button outline" routerLink="/account/notifications">{{ "Cancel" | translate }}</a
-        ><button
-          class="primary"
-          [disabled]="!ready() || busy() || email === saved()"
-        >
-          {{ (busy() ? "Saving…" : "Save Changes") | translate }}
-        </button>
-      </div>
-    </form>`,
-})
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { Component, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { NotificationsApi } from './notifications.api';
+import { AuthService } from '../../core/auth/auth.service';
+import { Icon } from '../../shared/components/icon';
+import { PageState } from '../../shared/utils/page-state';
+import { Status } from '../../shared/components/status';
+import { SignInCard } from '../../shared/components/sign-in-card';
+@Component({imports:[TranslatePipe,RouterLink,FormsModule,Icon,Status,SignInCard],templateUrl:'./notification-settings.html',styleUrl:'./notification-settings.scss'})
 export class NotificationSettingsPage extends PageState {
-  auth = inject(AuthService);
-  api = inject(NotificationsApi);
-  ready = signal(false);
-  saved = signal(false);
-  email = false;
-  constructor() {
-    super();
-    if (this.auth.session())
-      this.run(this.api.preferences(), (p) => {
-        this.email = p.aiEmail;
-        this.saved.set(p.aiEmail);
-        this.ready.set(true);
-      });
-  }
-  save() {
-    if (!this.ready() || this.busy()) return;
-    const desired = this.email;
-    this.run(this.api.setPreferences(desired), () => {
-      this.saved.set(desired);
-      this.message.set("Notification preferences saved.");
-    });
-  }
+  auth=inject(AuthService);api=inject(NotificationsApi);ready=signal(false);saved=signal(false);email=false;
+  types=[
+    {name:'Orders',icon:'box',tone:'green',description:'Order confirmation, payment updates, shipping status, delivery notifications.',enabled:true},
+    {name:'Promotions',icon:'tag',tone:'pink',description:'Special offers, discounts, flash sales, and new product promotions.',enabled:false},
+    {name:'Returns',icon:'box',tone:'orange',description:'Return request updates, refund status, and return completion.',enabled:false},
+    {name:'Account & Security',icon:'shield',tone:'purple',description:'Password changes, login alerts, account updates, and security notifications.',enabled:false},
+    {name:'Product Updates',icon:'bell',tone:'blue',description:'Back in stock alerts, price drops, and product recommendations.',enabled:false},
+    {name:'System Notifications',icon:'settings',tone:'gray',description:'Maintenance, feature updates, and important announcements.',enabled:false}
+  ];
+  constructor(){super();if(this.auth.session())this.load();}
+  load(){if(!this.auth.session()||this.busy())return;this.run(this.api.preferences(),p=>{this.email=p.aiEmail;this.saved.set(p.aiEmail);this.ready.set(true);});}
+  save(){if(!this.auth.session()||!this.ready()||this.busy()||this.email===this.saved())return;const desired=this.email;this.run(this.api.setPreferences(desired),()=>{this.saved.set(desired);this.message.set('Notification preferences saved.');});}
 }

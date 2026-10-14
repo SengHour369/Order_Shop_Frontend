@@ -1,4 +1,4 @@
-import { PermissionService } from "../../../core/auth/permission.service";
+import { PermissionService, isImportRoute } from "../../../core/auth/permission.service";
 import { LanguageSelect } from "../../../core/i18n/language-select";
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
 import { Component, computed, inject, signal } from "@angular/core";
@@ -12,6 +12,11 @@ import {
 import { AuthService } from "../../../core/auth/auth.service";
 import { Icon } from "../../../shared/components/icon";
 const groups = [
+  { label:'Excel Imports', items:[
+    {path:'/admin/imports',label:'Upload & Analyze',icon:'upload',exact:true},
+    {path:'/admin/import-approvals',label:'Pending Excel Imports',icon:'check',exact:true},
+    {path:'/admin/import-executions',label:'Import Executions',icon:'list',exact:true},
+  ]},
   {
     label: "AI Assistant",
     items: [{ path: "/admin/assistant", label: "AI Assistant", icon: "robot", exact: false }],
@@ -333,7 +338,7 @@ export class AdminLayout {
   private router = inject(Router);
   access = inject(PermissionService);
   groups = computed(() => groups.map(group => ({...group, items: group.items.filter(item =>
-    this.access.allows(item.path) && (!["/admin/users", "/admin/activity", "/admin/promotions", "/admin/groups"].includes(item.path) || this.auth.session()?.role === "ADMIN")
+    this.access.allows(item.path) && (['ADMIN','MANAGER'].includes(this.auth.session()?.role||'') || isImportRoute(item.path)) && (!["/admin/users", "/admin/activity", "/admin/promotions", "/admin/groups"].includes(item.path) || this.auth.session()?.role === "ADMIN")
   )})).filter(group => group.items.length));
   aiExpanded = signal(true);
   aiSections = [['chat','Chat Bot'],['control','Control Center'],['conversations','Conversations'],['executions','Tool Execution'],['tools','Tools'],['permissions','Permissions'],['settings','Settings']];

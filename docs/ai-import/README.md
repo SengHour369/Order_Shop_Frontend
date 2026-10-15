@@ -66,17 +66,65 @@ Use the existing migration process and backups for each owning database. Configu
 
 Parser defaults: 5 MiB file, 10,000 total data rows, 64 columns, 16 sheets; configurable through existing `AI_IMPORT_MAX_*` settings. Formulas, encrypted workbooks, macro content, embedded objects, external links, excessive expanded ZIP data and malformed content are rejected. AI receives headers and registered validation codes, not workbook rows. Date serial values are not guessed; provide ISO values.
 
-**Two registered domain tools remain unavailable:** Branch imports need a real Branch service and authoritative branch access contract; Product imports need an approved image attachment workflow matching the multipart Product API. The registry disables both. Unknown branch fields/types fail closed. No arbitrary branch access or image requirement bypass was added. Category, SKU, inventory stock-in/adjustment and percentage-promotion imports use existing handlers; initial SKU stock must be zero and inventory changes are separate approved operations.
+All seven domain tools are now enabled. Initial SKU stock must be zero; inventory changes are separate approved operations. The user approved adding the Branch and reviewed Product image workflows described below.
 
-On 2026-10-14 a live preview check identified an older running ai-service without the summary response. The local AI container was updated with the Maven-verified JAR using the existing runtime image and Compose configuration; databases and other service containers were preserved. Local image: `e-shop-ai-service:excel-import-20261014`. Its override is `.cache/ai-import/runtime/compose.verified.yaml`. Production should rebuild from the repository's standard Dockerfile and apply all deployment prerequisites. An incompatible older API now produces a clear error instead of crashing Angular.
+## Branch and Product workflows
+
+Open `/admin/branches` to create branches and inspect those visible to your account. Branch records and access assignments belong to catalog-service. Creating a branch does not grant membership. Only an administrator with `BRANCH_ACCESS_MANAGE` can grant or revoke an active user's membership; auth-service verifies the identity. Associating existing inventory additionally requires `INVENTORY_ADJUST`. Membership and inventory associations are audited.
+
+Stock import validation and execution check the inventory's stored branch against authoritative membership. A supplied `branchId` must match that association. Scope is checked again after locking inventory. Existing inventory without a branch remains global; warehouse text never grants branch access. Existing inventory permissions remain required.
+
+For Product worksheets, confirm the mapping, then attach and review actual photos on each row before validation. Product creation requires an existing subcategory, active status and one to four attached images. PNG/JPEG content is decoded, stripped of metadata and stored as sanitized PNG. Limits: 5 MiB per image, 10 million pixels, 8192 pixels per dimension, 20 stored images per batch and 50 MiB total per batch. Sanitization concurrency is bounded.
+
+Images are immutable and owned by their batch and row. SHA-256 references are bound to the approved revision. Spreadsheet mappings and row edits cannot inject `imageIds` or `imageChecksums`. Attachment/removal invalidates validation and approval. Authenticated previews return PNG with `nosniff` and `no-store`. Detached originals remain retained under the batch access policy for audit and count toward storage limits.
+
+Product execution reuses the existing Product/image service and confirms creation only after every image upload is acknowledged and a resource ID is returned. SKU price and stock remain separate operations. Provider asset IDs derive from immutable attachment IDs and checksums; retries use the same ID with `overwrite=false`. See [Cloudinary upload API](https://cloudinary.com/documentation/image_upload_api_reference). Provider uploads and database writes are not a distributed transaction; partial failures still require reconciliation.
+
+Additional additive migrations:
+
+- catalog-service: `src/main/resources/db/upgrade/20261014_branch_import_workflow.sql`
+- ai-service: `src/main/resources/db/upgrade/20261014_product_import_images.sql`
+- auth-service: `src/main/resources/db/upgrade/20261014_branch_permissions.sql`
+
+Permission definitions are registered by migration; assign staff grants through existing user/group administration.
+
+Create a branch: `POST /api/v1/branches`:
+
+```json
+{"name":"Phnom Penh Central","address":"Street 271, Phnom Penh"}
+```
+
+Grant/revoke membership: `PUT /api/v1/branches/1/access`:
+
+```json
+{"userId":42,"active":true}
+```
+
+List branches: `GET /api/v1/branches?page=0`. Inspect membership: `GET /api/v1/branches/1/access`. Associate inventory: `PUT /api/v1/branches/1/inventory/123`.
+
+Attach image: `POST /api/ai/imports/<batchId>/rows/<rowId>/images?version=3`, multipart field `file`. The response contains the updated batch revision. Detach: `POST /api/ai/imports/<batchId>/rows/<rowId>/images/<imageId>/detach`:
+
+```json
+{"version":4}
+```
+
+Preview contains image metadata, including ID, row ID, checksum, filename and size. Fetch bytes with authenticated `GET /api/ai/imports/<batchId>/images/<imageId>`. Internal multipart execution transports the signed approved row and verified image bytes to catalog-service.
+
+## Local deployment
+
+On 2026-10-15 the additive migrations were applied to the existing AI, catalog and auth databases. AI, catalog, auth, gateway and inference services were updated with verified artifacts. Databases and unrelated service containers were preserved. Image tags end in `imports-20261015`.
+
+Local override: `.cache/ai-import/runtime/compose.expanded.yaml`. The private signing variable is in ignored `import-signing.env` beside it. Preserve the original Compose files, including `compose.ollama.yaml`, and load the backend `.env` followed by the private env file when restarting. Do not commit or print the signing file. Production should use the standard repository image build, secret manager and owning-service migration process. An incompatible older preview API now produces a clear error instead of crashing Angular.
 
 ## Verification
 
 Actual test/build logs are in `.cache/ai-import`:
-- Affected Maven reactor `verify`: 206 tests passed, zero failures/errors, 16 environment-gated tests skipped (222 discovered). This includes parser/security, workflow/versioning, domain import, inventory, auth and outbox/consumer tests.
-- Additional isolated PostgreSQL run: all 3 import integration tests passed, including concurrent stock movement deduplication, adjustment rollback and natural-key receipts. The disposable container was removed afterward. This turns three of the 16 initial skips into verified passes (209 distinct Java tests passed; 13 other optional tests remain unrun).
-- FastAPI import mapping tests: 4 passed. One existing Starlette/httpx deprecation warning.
-- Angular targeted tests: 43 passed; authorization, mapping confirmation, self-approval, stale versions/reads, uncertain outcomes, malformed content, missing preview contracts, pagination, deep links and HTTP contracts are covered.
-- Production Angular build passed. The initial bundle is 654.63 kB, 4.63 kB over the 650 kB warning threshold (not a build failure).
+- Full affected Maven reactor `verify`: 256 passed, zero failures/errors, 17 environment-gated skips (273 discovered).
+- Follow-up tests passed: three isolated PostgreSQL concurrency/idempotency/rollback tests, two provider acknowledgement/retry tests and the added protected-image mapping test. Across the affected suites, 262 distinct Java tests passed; 14 optional environment-gated tests remain unrun. The disposable database container was removed.
+- FastAPI import mapping: 5 passed, including rejection of AI-inferred image references. One existing Starlette/httpx deprecation warning.
+- Angular targeted tests: 53 passed, covering permissions, independent review, stale versions/reads, uncertain outcomes, image HTTP contracts, branch administration, mapping, pagination and chatbot workflows.
+- Production Angular build passed. Initial bundle: 655.04 kB, 5.04 kB over the existing warning threshold.
 
-Live checks use the previously authorized local admin account and inspect existing staged data only. The updated preview returned and displayed 50 rows across five worksheets; the pending-approval and execution-history routes loaded successfully. No approval or domain creation is asserted from the unit tests or UI reads. PostgreSQL concurrency/inventory tests passed in the isolated follow-up. A full two-user live execution/Kafka-delivery run remains outside these results; this is not a claim that every production rollout dependency is complete.
+Authenticated read-only checks through the updated gateway confirmed both new tools enabled, a successful Branch API response and an existing batch preview with 50 rows, summary and image metadata. The local signing keys are configured and match. Earlier UI checks verified preview, pending approval and execution routes. Browser automation was unavailable for a fresh visual check after the final update.
+
+A live two-user approval/execution run, real image-provider upload and end-to-end Kafka notification delivery were not performed. Automated tests cover these boundaries with mocks and isolated database transactions; these results do not certify every production dependency. No existing batch was approved or executed during live checks.

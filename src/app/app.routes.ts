@@ -203,6 +203,7 @@ export const routes: Routes = [
       import("./features/admin/layout/admin-layout").then((m) => m.AdminLayout),
     children: [
       {path: "access-denied", loadComponent: () => import("./features/admin/settings/access-denied.page").then(m => m.AccessDeniedPage)},
+      {path:'branches',title:'Branches · ShopAdmin',loadComponent:()=>import('./features/admin/imports/branches.page').then(m=>m.BranchesPage)},
       ...([
         ['imports', 'upload'], ['import-approvals', 'review'], ['import-executions', 'executions'],
       ] as const).map(([path, importMode]) => ({path, data:{importMode}, title:'Excel Imports · ShopAdmin', loadComponent:()=>import('./features/admin/imports/ai-imports.page').then(m=>m.AiImportsPage)})),

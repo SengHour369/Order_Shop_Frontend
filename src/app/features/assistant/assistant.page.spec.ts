@@ -24,7 +24,7 @@ describe("Assistant reference chat", () => {
     });
     http = TestBed.inject(HttpTestingController);
   });
-  afterEach(() => http.verify());
+  afterEach(() => {http.match("/api/ai/quota").forEach(r=>r.flush({dailyLimit:5,used:0,remaining:5,unlimited:true,resetAt:"2026-10-16T00:00:00+07:00"}));http.verify();});
   it("keeps the conversation ID and uses the admin chat endpoint", () => {
     const page = TestBed.createComponent(AssistantPage).componentInstance;
     page.prompt = "Find shoes";
@@ -151,3 +151,4 @@ describe("Assistant reference chat", () => {
     expect(page.attachmentError).toContain('text'); expect(input.value).toBe('');
   });
 });
+

@@ -1,4 +1,5 @@
-<section class="ai-workspace">
+<section class="ai-workspace" [class.history-open]="historyOpen()">
+  <div class="assistant-controls"><button class="history-toggle" (click)="historyOpen.set(!historyOpen())" [attr.aria-expanded]="historyOpen()"><app-icon name="list"/> Conversations</button><button (click)="closeAssistant()" [disabled]="locked() || !!draft() || stockOpen()" aria-label="Close assistant"><app-icon name="close"/></button></div>
   <header class="ai-heading"><span class="ai-logo"><app-icon name="robot" /></span><div><h2>{{ "AI Assistant" | translate }}</h2><p>{{ "Your intelligent assistant for E-Shop" | translate }}</p></div><button class="primary" (click)="newConversation()" [disabled]="locked()"><app-icon name="plus" />{{ "New Chat" | translate }}</button></header>
   <div class="ai-body">
     <aside class="conversations" [attr.aria-label]='"Conversations" | translate'>
@@ -18,6 +19,7 @@
       <div class="history-footer"><span class="online-dot"></span>{{ modelInfo()?.model || 'Ollama' }}<small>{{ modelInfo()?.configured ? 'Model configured' : modelError() || 'Checking model…' }}</small></div>
     </aside>
     <div class="chat-main">
+      <div class="quota-status" role="status"><strong>{{quota.label()}}</strong>@if(quota.exhausted()){<p>You have reached your daily AI request limit ({{quota.value()?.used}}/{{quota.value()?.dailyLimit}}). Please try again tomorrow.</p>}@if(quota.value() && !quota.value()?.unlimited){<small>Next reset: {{quota.value()?.resetAt | date:'medium':'+0700'}}</small>}@if(quota.error()){<small>{{quota.error()}}</small>}</div>
       <nav class="section-tabs" aria-label="AI sections">@for(section of sections; track section[0]) { <a routerLink="/admin/assistant" [queryParams]="{ view: section[0] }" [class.active]="view() === section[0]">{{ (section[1]) | translate }}</a> }</nav>
       <nav class="section-tabs" aria-label="Import workflows">
         @if(importAccess.has('IMPORT_UPLOAD')) { <button type="button" (click)="view.set('imports')" [disabled]="locked()">Excel upload & analysis</button> }
@@ -35,7 +37,7 @@
             <article class="turn"><span class="avatar bot"><app-icon name="robot" /></span><div class="welcome-card"><h3>{{ "How can I help you today?" | translate }}</h3><p>Ask about products, orders, inventory, promotions, or store policies. You can chat in English or Khmer.</p><div class="welcome-actions">@for(action of quickPrompts; track action) { <button (click)="shortcut(action)" [disabled]="locked()">{{ action }}</button> }</div></div></article>
           }
           @for(turn of current()?.messages || []; track $index) {
-            <article class="turn" [class.user]="turn.role === 'user'"><span class="avatar" [class.bot]="turn.role === 'assistant'"><app-icon [name]="turn.role === 'assistant' ? 'robot' : 'user'" /></span><div class="turn-content"><div class="bubble"><p>{{ turn.text }}</p>
+            <article class="turn" [class.user]="turn.role === 'user'"><span class="avatar" [class.bot]="turn.role === 'assistant'"><app-icon [name]="turn.role === 'assistant' ? 'robot' : 'user'" /></span><div class="turn-content"><div class="bubble">@if(turn.role === 'assistant'){<app-rich-message [text]="turn.text"/>}@else{<p>{{turn.text}}</p>}
               @if(turn.result; as result) {
                 <span class="status-badge" [class.success]="result.status === 'SUCCESS'" [class.failed]="result.status === 'FAILURE' || result.status === 'DENIED'">{{ (cancelled.has(turn) ? 'Cancelled' : label(result.status)) | translate }}</span>
                 @if(pending(turn)) {
@@ -47,6 +49,7 @@
                   @if(result.intent === 'PRODUCT_CREATE' && preview(result.data)?.['id']) { <a class="view-product" [routerLink]="['/admin/products/view', preview(result.data)?.['id']]">View product →</a> }@if(result.executionId) { <button class="subtle" (click)="check(turn)" [disabled]="locked()"><app-icon name="refresh" />Check status</button> }
                 }
               }
+              @if(turn.role === 'assistant'){<div class="response-actions"><button (click)="copyResponse(turn.text)" aria-label="Copy response">Copy</button><button (click)="regenerate($index)" [disabled]="locked() || quota.exhausted() || resultPending(turn.result)" aria-label="Regenerate response">Regenerate</button><button (click)="vote($index,'up')" [attr.aria-pressed]="votes()[$index] === 'up'" aria-label="Helpful response">👍</button><button (click)="vote($index,'down')" [attr.aria-pressed]="votes()[$index] === 'down'" aria-label="Unhelpful response">👎</button></div>}
               <time>{{ turn.time | date:'h:mm a' }}</time></div>
               @if(turn.suggestions?.length) { <div class="suggestions">@for(suggestion of turn.suggestions; track suggestion) { <button (click)="choose(suggestion)" [disabled]="locked()">{{ suggestion }}</button> }</div> }
             </div></article>
@@ -69,7 +72,7 @@
           @if(locked()) { <div class="processing-card" role="status"><span class="spinner"></span><div><strong>{{ processing() || (confirming() ? 'Executing confirmed action…' : 'Assistant is thinking…') }}</strong><p>Please wait. You can review the result here when processing finishes.</p></div></div> }
           @if(error()) { <p class="notice" role="alert">{{ error() }}</p> } @if(pollError()) { <p class="notice">{{ pollError() }}</p> }
         </div>
-        <footer class="composer"><form (ngSubmit)="send()"><label class="attach" title="Attach text or Excel workbook"><app-icon name="attachment" /><input type="file" accept=".txt,.md,.csv,.json,.xlsx,.xls" (change)="attachAdminFile($event)" [disabled]="locked()" aria-label="Attach text or Excel workbook" /></label><textarea #promptInput name="message" [(ngModel)]="prompt" maxlength="4000" rows="1" (keydown)="onKey($event)" placeholder="Type a message… (supports English and Khmer)" aria-label="Message AI assistant" [disabled]="locked() || !!draft() || stockOpen()"></textarea><button class="send primary" [disabled]="locked() || !!draft() || stockOpen() || !prompt.trim()" aria-label="Send message"><app-icon name="send" /></button></form>@if(attachmentName) { <small>{{ attachmentName }}</small> }@if(attachmentError) { <p class="notice">{{ attachmentError }}</p> }<div class="composer-actions">@for(action of quickPrompts; track action) { <button (click)="shortcut(action)" [disabled]="locked()">{{ action }}</button> }<span>{{ prompt.length }}/4000</span></div></footer>
+        <footer class="composer"><small role="status">{{responseNotice()}}</small><form (ngSubmit)="send()"><label class="attach" title="Attach text or Excel workbook"><app-icon name="attachment" /><input type="file" accept=".txt,.md,.csv,.json,.xlsx,.xls" (change)="attachAdminFile($event)" [disabled]="locked()" aria-label="Attach text or Excel workbook" /></label><textarea #promptInput name="message" [(ngModel)]="prompt" maxlength="4000" rows="1" (keydown)="onKey($event)" placeholder="Type a message… (supports English and Khmer)" aria-label="Message AI assistant" [disabled]="locked() || !!draft() || stockOpen()"></textarea><button class="send primary" [disabled]="locked() || quota.exhausted() || !!draft() || stockOpen() || !prompt.trim()" aria-label="Send message"><app-icon name="send" /></button></form>@if(attachmentName) { <small>{{ attachmentName }}</small> }@if(attachmentError) { <p class="notice">{{ attachmentError }}</p> }<div class="composer-actions">@for(action of quickPrompts; track action) { <button (click)="shortcut(action)" [disabled]="locked()">{{ action }}</button> }<span>{{ prompt.length }}/4000</span></div></footer>
       } @else {
         <div class="section-content"><h2>{{ (sections[view() === 'control' ? 1 : view() === 'conversations' ? 2 : view() === 'executions' ? 3 : view() === 'tools' ? 4 : view() === 'permissions' ? 5 : 6][1]) | translate }}</h2>
           @switch(view()) {
@@ -85,3 +88,4 @@
     </div>
   </div>
 </section>
+

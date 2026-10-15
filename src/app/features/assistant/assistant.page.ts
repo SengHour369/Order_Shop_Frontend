@@ -1,7 +1,8 @@
+import { AssistantQuota } from './assistant-quota';
 import { LanguageSelect } from "../../core/i18n/language-select";
 import { TranslatePipe } from "../../core/i18n/translate.pipe";
 import { conversationId } from "../../shared/utils/conversation-id";
-import { Component, DestroyRef, ElementRef, inject, OnInit, signal, viewChild } from "@angular/core";
+import { Component, DestroyRef, ElementRef, inject, OnInit, signal, viewChild, Injectable, effect } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { catchError, forkJoin, of } from "rxjs";
 import { FormsModule } from "@angular/forms";
@@ -16,7 +17,7 @@ import { PageState } from "../../shared/utils/page-state";
 import { Status } from "../../shared/components/status";
 import { Icon } from "../../shared/components/icon";
 
-interface ChatMessage {
+export interface ChatMessage {
   role: "user" | "assistant";
   text: string;
   time: Date;
@@ -24,7 +25,7 @@ interface ChatMessage {
   suggestions?: string[];
   comparison?: boolean;
 }
-interface Conversation {
+export interface Conversation {
   localId: string;
   id: string | null;
   title: string;
@@ -32,6 +33,12 @@ interface Conversation {
   messages: ChatMessage[];
 }
 
+@Injectable({providedIn:'root'})
+class AssistantSession {
+  conversations=signal<Conversation[]>([]);current=signal<Conversation|null>(null);
+  private auth=inject(AuthService);private account:number|null|undefined=this.auth.session()?.id??null;
+  constructor(){effect(()=>{const account=this.auth.session()?.id??null;if(account!==this.account){this.account=account;this.conversations.set([]);this.current.set(null);}});}
+}
 @Component({
   imports: [LanguageSelect, TranslatePipe, FormsModule, JsonPipe, DatePipe, RouterLink, Status, Icon],
   templateUrl: "./assistant.html",
@@ -46,6 +53,7 @@ export class AssistantPage extends PageState implements OnInit {
   private promptInput = viewChild<ElementRef<HTMLTextAreaElement>>("promptInput");
   private recentPanel = viewChild<ElementRef<HTMLElement>>("recentPanel");
   auth = inject(AuthService);
+  quota=inject(AssistantQuota);
   mobileMenu = false;
   sidebarCollapsed = false;
   conversationDrawer = false;
@@ -99,8 +107,9 @@ export class AssistantPage extends PageState implements OnInit {
   ];
   prompt = "";
   topic = "Product Search";
-  conversations = signal<Conversation[]>([]);
-  current = signal<Conversation | null>(null);
+  private sessionState=inject(AssistantSession);
+  conversations=this.sessionState.conversations;
+  current=this.sessionState.current;
   showTools = false;
   showSources = false;
   showAllConversations = false;
@@ -369,7 +378,7 @@ export class AssistantPage extends PageState implements OnInit {
   }
   send() {
     const prompt = this.prompt.trim();
-    if (!prompt || prompt.length > 4000 || this.busy()) return;
+    if (!prompt || prompt.length > 4000 || this.busy() || this.quota.exhausted()) return;
     this.speech?.stop();
     this.listening.set(false);
     let conversation = this.current();

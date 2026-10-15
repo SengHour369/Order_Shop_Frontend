@@ -18,3 +18,7 @@ Inspected Angular at D:/fronend_order and Spring microservices at D:/spring boot
 | Deployment | Existing migrations and shared signing-key configuration | Document prerequisites; builds do not establish live deployment |
 
 Backend Angular examples and the sibling React dashboard are not this Angular application. Adapt the examples to this app's API base URL, authentication interceptor, live RBAC and change detection. Do not create duplicate tables, arbitrary API tools or cross-service database writes.
+
+## Approved scope expansion — 2026-10-15
+
+The user approved both missing domain workflows. Catalog-service now owns Branch creation, authoritative access membership and inventory association, with active-user checks through auth-service. Product imports use immutable reviewed images bound to the approved revision and the existing Product/image service. Both tools are enabled. Angular includes Branch management and row image review. The initial gaps above are historical; README.md documents the final contracts, migrations and verification limits.

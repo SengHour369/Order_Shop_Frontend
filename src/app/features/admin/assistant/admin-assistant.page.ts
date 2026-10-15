@@ -1,4 +1,7 @@
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
+import { RichMessage } from '../../assistant/rich-message';
+import { AssistantLauncherState } from '../../assistant/floating/launcher-state';
+import { Router } from '@angular/router';
 import { conversationId } from "../../../shared/utils/conversation-id";
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { DatePipe, JsonPipe } from '@angular/common';
@@ -23,11 +26,21 @@ interface Operation { title: string; status: string; time: Date; data?: unknown;
 type Turn = NonNullable<ReturnType<AssistantPage['current']>>['messages'][number];
 
 @Component({
-  imports: [TranslatePipe, FormsModule, DatePipe, JsonPipe, RouterLink, Icon, AssistantProductCard, AiImportComponent],
+  imports: [RichMessage, TranslatePipe, FormsModule, DatePipe, JsonPipe, RouterLink, Icon, AssistantProductCard, AiImportComponent],
   templateUrl: './admin-assistant.html',
   styleUrl: './admin-assistant.css',
 })
 export class AdminAssistantPage extends AssistantPage {
+  private launcher=inject(AssistantLauncherState);
+  private assistantNavigation=inject(Router);
+  historyOpen=signal(false);
+  responseNotice=signal('');
+  votes=signal<Record<number,string>>({});
+  async copyResponse(text:string){try{await navigator.clipboard.writeText(text);this.responseNotice.set('Response copied');}catch{this.responseNotice.set('Copy unavailable. Select the response to copy it.');}}
+  vote(index:number,value:string){this.votes.update(v=>({...v,[index]:value}));this.responseNotice.set('Feedback saved for this session');}
+  resultPending(result?:AiResult){return result?.status==='NEEDS_CONFIRMATION'||result?.status==='RUNNING';}
+  regenerate(index:number){if(this.locked()||this.quota.exhausted())return;const turns=this.current()?.messages||[];const last=[...turns.slice(0,index)].reverse().find(t=>t.role==='user');if(last){this.prompt=last.text;this.send();}}
+  closeAssistant(){if(!this.locked()&&!this.draft()&&!this.stockOpen())void this.assistantNavigation.navigateByUrl(this.launcher.returnUrl.startsWith('/admin/assistant')?'/admin':this.launcher.returnUrl);}
   importAccess=inject(PermissionService);
   private importApi=inject(AiImportsApi);
   importBatchId=signal('');
@@ -294,3 +307,4 @@ export class AdminAssistantPage extends AssistantPage {
     return ({ SUCCESS:'Completed', RUNNING:'Processing', NEEDS_INPUT:'Needs details', FAILURE:'Failed', DENIED:'Not allowed', UNKNOWN:'Check result' } as Record<string,string>)[status] || status;
   }
 }
+

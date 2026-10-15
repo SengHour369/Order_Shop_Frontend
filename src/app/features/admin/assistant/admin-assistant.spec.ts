@@ -13,7 +13,7 @@ describe('Admin chatbot workflows', () => {
     ] });
     http = TestBed.inject(HttpTestingController);
   });
-  afterEach(() => http.verify());
+  afterEach(() => {http.match("/api/ai/quota").forEach(r=>r.flush({dailyLimit:5,used:0,remaining:5,unlimited:true,resetAt:"2026-10-16T00:00:00+07:00"}));http.verify();});
   function page() { return TestBed.createComponent(AdminAssistantPage).componentInstance; }
   function prepareProduct(component: AdminAssistantPage) {
     component.startProduct('Create product named Phone, price $1,200, color Black, storage 256GB, stock 20 at Phnom Penh Branch.');
@@ -107,3 +107,4 @@ describe('Admin chatbot workflows', () => {
     expect(component.error()).toBe('Model unavailable'); expect(component.locked()).toBe(false);
   });
 });
+

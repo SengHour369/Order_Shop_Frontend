@@ -1,0 +1,8 @@
+import { TestBed } from '@angular/core/testing';
+import { RichMessage, inlineMarkdown, markdownBlocks, codeTokens } from './rich-message';
+describe('Safe AI response formatting',()=>{
+ it('renders headings, nested lists, tables, quotes and fenced JSON',()=>{const blocks=markdownBlocks('# Results\n1. First\n  - Child\n> Note\n| Key | Value |\n| --- | --- |\n| A | B |\n```json\n{"ok":true}\n```');expect(blocks.map(b=>b.kind)).toEqual(['heading','list','quote','table','code']);expect(blocks[1].lines?.[1].depth).toBe(1);expect(codeTokens('return "safe" 12').map(t=>t.kind)).toContain('keyword');});
+ it('allows formatting but refuses executable links',()=>{const parts=inlineMarkdown('**Bold** *italic* `code` [safe](https://example.com) [bad](javascript:alert)');expect(parts.filter(p=>p.kind==='link').map(p=>p.href)).toEqual(['https://example.com']);expect(parts.some(p=>p.kind==='strong')).toBe(true);});
+ it('escapes AI HTML and supports Khmer without inserting HTML',()=>{const fixture=TestBed.createComponent(RichMessage);fixture.componentRef.setInput('text','<img src=x onerror=alert(1)>\n<script>alert(1)</script>\nសួស្តី **English**');fixture.detectChanges();expect(fixture.nativeElement.querySelector('script,img')).toBeNull();expect(fixture.nativeElement.textContent).toContain('សួស្តី');expect(fixture.nativeElement.querySelector('strong')?.textContent).toBe('English');});
+ it('copies raw code through the clipboard API',async()=>{const writeText=vi.fn().mockResolvedValue(undefined);Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText}});const component=TestBed.createComponent(RichMessage).componentInstance;await component.copy('{"ok":true}');expect(writeText).toHaveBeenCalledWith('{"ok":true}');});
+});

@@ -1,6 +1,8 @@
 import { inject, Injectable } from "@angular/core";
 import { ApiClient } from "../../core/api/api-client";
-import { catchError, of, throwError } from "rxjs";
+import { catchError, of, throwError, finalize } from "rxjs";
+import { conversationId as requestId } from '../../shared/utils/conversation-id';
+import { AssistantQuota } from './assistant-quota';
 export interface AiResult {
   executionId: string | null;
   status: string;
@@ -21,6 +23,7 @@ export interface AssistantInfo { provider: string; model: string; configured: bo
 @Injectable({ providedIn: "root" })
 export class AssistantApi {
   private api = inject(ApiClient);
+  private quota = inject(AssistantQuota);
   conversations() { return this.api.get<AdminChatSummary[]>('/api/ai/admin/conversations'); }
   conversation(id: string) { return this.api.get<AdminTranscript>('/api/ai/admin/conversations/' + encodeURIComponent(id)); }
   rename(id: string, title: string) { return this.api.patch<AdminTranscript>('/api/ai/admin/conversations/' + encodeURIComponent(id), { title }); }
@@ -36,19 +39,23 @@ export class AssistantApi {
     conversationId: string | null,
     administrator: boolean,
     language = "en",
+    key = requestId(),
   ) {
     return this.api.http
       .post<ChatResponse>(
         this.api.url(administrator ? "/api/ai/admin/chat" : "/api/ai/chat"),
         { message, conversationId, language },
+        {headers:{'Idempotency-Key':key}},
       )
       .pipe(
         catchError((error) => {
+          this.quota.handle(error);
           const body = error.error;
           return body?.result?.status && typeof body.result.message === "string"
             ? of(body as ChatResponse)
             : throwError(() => error);
         }),
+        finalize(()=>this.quota.refresh()),
       );
   }
   execute(message: string, key: string) {

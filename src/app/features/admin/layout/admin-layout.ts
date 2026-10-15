@@ -1,4 +1,5 @@
-import { PermissionService, isImportRoute } from "../../../core/auth/permission.service";
+import { PermissionService, isStaffWorkflowRoute } from "../../../core/auth/permission.service";
+import { FloatingAssistant } from '../../assistant/floating/floating-assistant';
 import { LanguageSelect } from "../../../core/i18n/language-select";
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
 import { Component, computed, inject, signal } from "@angular/core";
@@ -16,6 +17,7 @@ const groups = [
     {path:'/admin/imports',label:'Upload & Analyze',icon:'upload',exact:true},
     {path:'/admin/import-approvals',label:'Pending Excel Imports',icon:'check',exact:true},
     {path:'/admin/import-executions',label:'Import Executions',icon:'list',exact:true},
+    {path:'/admin/branches',label:'Branches & Access',icon:'bank',exact:true},
   ]},
   {
     label: "AI Assistant",
@@ -190,7 +192,7 @@ const groups = [
   },
 ];
 @Component({
-  imports: [LanguageSelect, TranslatePipe, RouterOutlet, RouterLink, RouterLinkActive, Icon, FormsModule],
+  imports: [FloatingAssistant, LanguageSelect, TranslatePipe, RouterOutlet, RouterLink, RouterLinkActive, Icon, FormsModule],
   styles: [`.ai-subnav{display:grid;padding:0 8px 8px 38px;gap:3px}.ai-subnav a{font-size:12px;padding:8px 12px;color:#64749a;text-decoration:none;border-radius:6px}.ai-subnav a.active{color:#0866ff;background:#eaf3ff}.adm-nav button.adm-link{width:100%;border:0;background:#eff6ff;color:#0866ff;cursor:pointer;text-align:left}`],
   template: `<div class="adm admin-refresh">
     @if (mobile()) {
@@ -330,6 +332,7 @@ const groups = [
         </div>
       </header>
       <div class="adm-body"><router-outlet /></div>
+      @if(auth.session()?.role === 'ADMIN' && access.allows('/admin/assistant')) {<app-floating-assistant/>}
     </div>
   </div>`,
 })
@@ -338,7 +341,7 @@ export class AdminLayout {
   private router = inject(Router);
   access = inject(PermissionService);
   groups = computed(() => groups.map(group => ({...group, items: group.items.filter(item =>
-    this.access.allows(item.path) && (['ADMIN','MANAGER'].includes(this.auth.session()?.role||'') || isImportRoute(item.path)) && (!["/admin/users", "/admin/activity", "/admin/promotions", "/admin/groups"].includes(item.path) || this.auth.session()?.role === "ADMIN")
+    this.access.allows(item.path) && (['ADMIN','MANAGER'].includes(this.auth.session()?.role||'') || isStaffWorkflowRoute(item.path)) && (!["/admin/users", "/admin/activity", "/admin/promotions", "/admin/groups"].includes(item.path) || this.auth.session()?.role === "ADMIN")
   )})).filter(group => group.items.length));
   aiExpanded = signal(true);
   aiSections = [['chat','Chat Bot'],['control','Control Center'],['conversations','Conversations'],['executions','Tool Execution'],['tools','Tools'],['permissions','Permissions'],['settings','Settings']];

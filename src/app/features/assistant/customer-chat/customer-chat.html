@@ -1,5 +1,6 @@
 <button
   class="ai-launcher"
+  appDragLauncher
   type="button"
   (click)="open()"
   aria-label="Open E-Shop AI assistant"
@@ -33,6 +34,7 @@
       <app-icon name="close" />
     </button>
   </header>
+  @if(auth.session()){<div class="daily-quota" role="status"><strong>{{quota.label()}}</strong>@if(quota.exhausted()){<p>You have reached your daily AI request limit ({{quota.value()?.used}}/{{quota.value()?.dailyLimit}}). Please try again tomorrow.</p><small>Resets: {{quota.value()?.resetAt}}</small>}@if(quota.error()){<small>{{quota.error()}}</small>}</div>}
   <div class="chat-toolbar">
     <button type="button" (click)="newChat()" [disabled]="busy()">
       <app-icon name="plus" />{{ "New chat" | translate }}</button
@@ -78,7 +80,7 @@
           <span class="bot-avatar small"><app-icon name="robot" /></span>
         }
         <div class="message-content">
-          <div class="message-bubble">{{ message.text }}</div>
+          <div class="message-bubble">@if(message.role === 'assistant'){<app-rich-message [text]="message.text"/>}@else{ {{message.text}} }</div>
           @for (product of message.products || []; track product.id) {
             <div class="chat-product">
               <a [routerLink]="['/shop', product.id]" (click)="close()"
@@ -221,7 +223,7 @@
     ><button
       type="submit"
       aria-label="Send message"
-      [disabled]="busy() || !prompt.trim()"
+      [disabled]="busy() || quota.exhausted() || !prompt.trim()"
     >
       <app-icon name="send" />
     </button>

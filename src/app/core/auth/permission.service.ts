@@ -6,6 +6,7 @@ import { AuthService } from './auth.service';
 
 export interface AccessSnapshot { userId: number; administrator: boolean; permissions: string[]; }
 export function isImportRoute(url:string) { return /^\/admin\/(imports|import-approvals|import-executions)(?:[?#]|$)/.test(url); }
+export function isStaffWorkflowRoute(url:string){return isImportRoute(url)||/^\/admin\/branches(?:[?#]|$)/.test(url);}
 // Codes are defined by the auth service. Unmapped areas retain their existing role guards.
 const policies: Record<string, string[]> = {
   products: ['PRODUCT_VIEW'], categories: ['CATEGORY_VIEW'], brands: ['SUBCATEGORY_VIEW'],
@@ -15,7 +16,7 @@ const policies: Record<string, string[]> = {
   'customer-groups': ['USER_GROUP_VIEW'], bakong: ['BAKONG_QR'],
   inventory: ['INVENTORY_VIEW'], 'sales-report': ['REPORT_VIEW'],
   'payment-report': ['REPORT_VIEW'], 'tax-report': ['REPORT_VIEW'], promotions: ['PROMOTION_VIEW'], activity: ['AUDIT_VIEW'],
-  imports: ['IMPORT_UPLOAD'], 'import-approvals': ['IMPORT_REVIEW'],
+  imports: ['IMPORT_UPLOAD'], 'import-approvals': ['IMPORT_REVIEW'], branches:['BRANCH_VIEW'],
 };
 export function requiredPermissions(url: string): string[] {
   const parts = url.split('?')[0].split('/').filter(Boolean);
@@ -59,6 +60,7 @@ export class PermissionService {
     const snapshot = this.snapshot();
     return !!snapshot && snapshot.token === this.auth.session()?.access_token && snapshot.value.permissions.includes(code);
   }
+  isAdministrator(){const s=this.snapshot();return !!s&&s.token===this.auth.session()?.access_token&&s.value.administrator;}
   allows(url: string) {
     if (url.split(/[?#]/)[0] === '/admin/import-executions') return this.has('IMPORT_UPLOAD') || this.has('IMPORT_REVIEW');
     return requiredPermissions(url).every(code => this.has(code));
@@ -68,6 +70,6 @@ export class PermissionService {
 export const permissionGuard: CanActivateChildFn = (_route, state) => {
   const access = inject(PermissionService), router = inject(Router),auth=inject(AuthService);
   if (state.url.startsWith('/admin/access-denied')) return true;
-  if (!['ADMIN','MANAGER'].includes(auth.session()?.role||'') && !isImportRoute(state.url)) return router.createUrlTree(['/admin/access-denied']);
+  if (!['ADMIN','MANAGER'].includes(auth.session()?.role||'') && !isStaffWorkflowRoute(state.url)) return router.createUrlTree(['/admin/access-denied']);
   return access.load(true).pipe(map(loaded => loaded && access.allows(state.url) || router.createUrlTree(['/admin/access-denied'])));
 };

@@ -1,4 +1,8 @@
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
+import { AssistantQuota } from '../assistant-quota';
+import { RichMessage } from '../rich-message';
+import { DragLauncher } from '../floating/drag-launcher';
+import { conversationId as requestId } from '../../../shared/utils/conversation-id';
 import { Component, DestroyRef, ElementRef, effect, inject, signal, viewChild, } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { CurrencyPipe } from "@angular/common";
@@ -16,12 +20,14 @@ import { ChatCheckout } from '../chat-checkout/chat-checkout';
 import { CheckoutAttempt } from '../../checkout/checkout-attempt';
 @Component({
     selector: "app-customer-chat",
-    imports: [TranslatePipe, FormsModule, RouterLink, CurrencyPipe, Icon, ProductImage, ChatCheckout],
+    imports: [RichMessage, DragLauncher, TranslatePipe, FormsModule, RouterLink, CurrencyPipe, Icon, ProductImage, ChatCheckout],
     templateUrl: "./customer-chat.html",
     styleUrl: "./customer-chat.css",
 })
 export class CustomerChat {
     readonly auth = inject(AuthService);
+    readonly quota=inject(AssistantQuota);
+    private failedKey=requestId();
     readonly router = inject(Router);
     private readonly api = inject(AssistantApi);
     private readonly cart = inject(CartApi);
@@ -131,14 +137,15 @@ export class CustomerChat {
     }
     send() {
         const value = this.prompt.trim();
-        if (!value || value.length > 4000 || this.busy())
+        if (!value || value.length > 4000 || this.busy() || this.quota.exhausted())
             return;
         this.messages.update((items) => [...items, { role: "user", text: value }]);
         this.prompt = "";
+        this.failedKey=requestId();
         this.ask(value);
     }
     retry() {
-        if (this.failedPrompt && !this.busy())
+        if (this.failedPrompt && !this.busy() && !this.quota.exhausted())
             this.ask(this.failedPrompt);
     }
     private ask(value: string) {
@@ -149,7 +156,7 @@ export class CustomerChat {
         this.scroll();
         // Always use the customer endpoint, including staff browsing the storefront.
         this.request = this.api
-            .chat(value, this.conversationId, false, this.language)
+            .chat(value, this.conversationId, false, this.language,this.failedKey)
             .pipe(timeout(210000), takeUntilDestroyed(this.destroyRef))
             .subscribe({
             next: (response) => {
@@ -170,6 +177,8 @@ export class CustomerChat {
                 this.needsSignIn.set(e.status === 401);
                 this.error.set(e.status === 401
                     ? "Please sign in to continue chatting with the assistant."
+                    : e.error?.code === 'AI_DAILY_LIMIT_EXCEEDED'
+                        ? 'You have reached your daily AI request limit. Please try again tomorrow.'
                     : e.status === 429
                         ? "The assistant is receiving too many requests. Please try again shortly."
                         : e.name === "TimeoutError"

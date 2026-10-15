@@ -5,7 +5,8 @@ export interface ImportSheet {id:string;name:string;tool:string|null;confirmed:b
 export interface ImportRow {id:string;sheetId:string;rowNumber:number;originalValues:string;valuesJson:string;status:string;edited:boolean;skipped:boolean;resourceId:string|null;affectedResourceId:string|null;}
 export interface ImportTool {name:string;permission:string;enabled:boolean;unavailableReason:string;schema:Record<string,{type:string;required:boolean}>;risk:string;confirmationRequired:boolean;handler:string;}
 export interface ImportPage<T>{content:T[];totalPages:number;totalElements:number;}
-export interface ImportPreview{batch:ImportBatch;sheets:ImportSheet[];mappings:{sheetId:string;suggestions:string;confirmedValues:string}[];rows:ImportPage<ImportRow>;errors:{rowId:string;message:string;explanation?:string}[];summary:{totalRows:number;editedRows:number;statuses:Record<string,number>};}
+export interface ImportImage{id:string;rowId:string;checksum:string;filename:string;sizeBytes:number;}
+export interface ImportPreview{batch:ImportBatch;sheets:ImportSheet[];mappings:{sheetId:string;suggestions:string;confirmedValues:string}[];rows:ImportPage<ImportRow>;errors:{rowId:string;message:string;explanation?:string}[];summary:{totalRows:number;editedRows:number;statuses:Record<string,number>};images?:ImportImage[];}
 export interface RowExecution{id:string;rowId:string;status:string;resourceId:string|null;errorCode:string|null;idempotencyKey:string;createdAt:string;}
 export interface ExecutionHistory{executions:{id:string;revision:number;status:string;completedAt:string|null}[];rows:RowExecution[];}
 export type ImportAction='analyze'|'validate'|'submit'|'approve'|'reject'|'request-changes'|'execute';
@@ -25,4 +26,7 @@ export class AiImportsApi{
  executions(id:string){return this.api.get<ExecutionHistory>(`${this.root}/${id}/executions`);}
  history(id:string){return this.api.get<{audit:unknown[];approvals:unknown[];revisions:unknown[]}>(`${this.root}/${id}/history`);}
  download(id:string,kind:'report'|'original'){return this.api.http.get(this.api.url(`${this.root}/${id}/${kind}`),{responseType:'blob'});}
+ attachImage(batch:ImportBatch,rowId:string,file:File){const body=new FormData();body.append('file',file);return this.api.post<ImportBatch>(`${this.root}/${batch.id}/rows/${rowId}/images`,body,{version:batch.revision});}
+ detachImage(batch:ImportBatch,rowId:string,imageId:string){return this.api.post<ImportBatch>(`${this.root}/${batch.id}/rows/${rowId}/images/${imageId}/detach`,{version:batch.revision});}
+ image(batchId:string,imageId:string){return this.api.http.get(this.api.url(`${this.root}/${batchId}/images/${imageId}`),{responseType:'blob'});}
 }

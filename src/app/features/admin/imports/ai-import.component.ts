@@ -8,7 +8,7 @@ import {PermissionService} from '../../../core/auth/permission.service';
 import {AuthService} from '../../../core/auth/auth.service';
 import {Icon} from '../../../shared/components/icon';
 import {TranslatePipe} from '../../../core/i18n/translate.pipe';
-import {AiImportsApi,ImportBatch,ImportPreview,ImportRow,ImportSheet,ImportTool,ImportAction,ImportMode,ExecutionHistory,stringValues} from './ai-imports.api';
+import {AiImportsApi,ImportBatch,ImportPreview,ImportRow,ImportSheet,ImportTool,ImportAction,ImportMode,ExecutionHistory,ImportImage,stringValues} from './ai-imports.api';
 @Component({selector:'app-ai-import',imports:[DatePipe,JsonPipe,KeyValuePipe,FormsModule,Icon,TranslatePipe],templateUrl:'./ai-import.html',styleUrl:'./ai-import.scss'})
 export class AiImportComponent implements OnInit,OnChanges{
  mode=input<ImportMode>('upload');initialBatchId=input('');
@@ -16,12 +16,15 @@ export class AiImportComponent implements OnInit,OnChanges{
  tools=signal<ImportTool[]>([]);batches=signal<ImportBatch[]>([]);preview=signal<ImportPreview|null>(null);
  busy=signal(false);loading=signal(false);listLoading=signal(false);error=signal('');message=signal('');fresh=signal(false);selectedId=signal('');historyLoading=signal(false);
  executionHistory=signal<ExecutionHistory|null>(null);auditHistory=signal<unknown>(null);listPage=0;listPages=0;batchCount=0;page=0;filter='';reviewerId:number|null=null;reason='';
+ imageUrls=signal<Record<string,string>>({});
+ private releaseImages(){Object.values(this.imageUrls()).forEach(url=>URL.revokeObjectURL(url));this.imageUrls.set({});}
  sheetTools:Record<string,string>={};columns:Record<string,Record<string,string>>={};rowValues:Record<string,Record<string,string>>={};
  private readRequest?:Subscription;private readTicket=0;private listTicket=0;private historyTicket=0;
  readonly filters=['','VALID','INVALID','DUPLICATE','EDITED','CREATED','FAILED','SKIPPED','UNVALIDATED'];readonly Object=Object;readonly object=stringValues;
  has(code:string){return this.access.has(code);}
  locked(){return this.busy()||this.loading();}
  ngOnInit(){
+  this.lifetime.onDestroy(()=>this.releaseImages());
   this.api.tools().pipe(takeUntilDestroyed(this.lifetime)).subscribe({next:t=>this.tools.set(t),error:()=>this.error.set('Import registry unavailable. Refresh before confirming mappings.')});
   this.refreshList();if(this.initialBatchId())this.load(this.initialBatchId());
  }
@@ -44,7 +47,7 @@ export class AiImportComponent implements OnInit,OnChanges{
  load(id:string,targetPage=0,targetFilter=''){
   if(this.busy())return;
   if(!/^[a-f0-9-]{36}$/i.test(id)){this.error.set('Invalid import identifier.');return;}
-  if(this.selectedId()!==id){this.preview.set(null);this.executionHistory.set(null);this.auditHistory.set(null);this.reason='';this.reviewerId=null;this.historyTicket++;this.historyLoading.set(false);}
+  if(this.selectedId()!==id){this.releaseImages();this.preview.set(null);this.executionHistory.set(null);this.auditHistory.set(null);this.reason='';this.reviewerId=null;this.historyTicket++;this.historyLoading.set(false);}
   this.selectedId.set(id);this.fresh.set(false);this.loading.set(true);this.error.set('');const ticket=++this.readTicket;this.readRequest?.unsubscribe();
   this.readRequest=this.api.preview(id,targetPage,targetFilter).pipe(takeUntilDestroyed(this.lifetime)).subscribe({next:p=>{
    if(ticket!==this.readTicket)return;
@@ -59,8 +62,13 @@ export class AiImportComponent implements OnInit,OnChanges{
  }
  reload(){if(this.selectedId())this.load(this.selectedId(),this.page,this.filter);}
  headers(sheet:ImportSheet):string[]{try{const h=JSON.parse(sheet.headers);return Array.isArray(h)?h.filter(x=>typeof x==='string'):[]}catch{return []}}
- fields(sheet:ImportSheet){return Object.keys(this.tools().find(t=>t.name===this.sheetTools[sheet.id])?.schema??{});}
- values(row:ImportRow){const tool=this.preview()?.sheets.find(s=>s.id===row.sheetId)?.tool;return [...new Set([...Object.keys(this.tools().find(t=>t.name===tool)?.schema??{}),...Object.keys(this.rowValues[row.id]??{})])];}
+ fields(sheet:ImportSheet){return Object.keys(this.tools().find(t=>t.name===this.sheetTools[sheet.id])?.schema??{}).filter(field=>!['imageIds','imageChecksums'].includes(field));}
+ values(row:ImportRow){const tool=this.preview()?.sheets.find(s=>s.id===row.sheetId)?.tool;return [...new Set([...Object.keys(this.tools().find(t=>t.name===tool)?.schema??{}),...Object.keys(this.rowValues[row.id]??{})])].filter(field=>!['imageIds','imageChecksums'].includes(field));}
+ productRow(row:ImportRow){return this.preview()?.sheets.find(s=>s.id===row.sheetId)?.tool==='PRODUCT_BULK_CREATE';}
+ rowImages(row:ImportRow){const ids=(this.rowValues[row.id]?.['imageIds']??'').split(',');return this.preview()?.images?.filter(image=>image.rowId===row.id&&ids.includes(image.id))??[];}
+ attachImage(row:ImportRow,event:Event){const input=event.target as HTMLInputElement;const file=input.files?.[0];input.value='';const p=this.preview();if(!p||!file||this.locked()||!this.editable()||!this.domainAllowed(row.sheetId))return;if(file.size>5242880||!['image/png','image/jpeg'].includes(file.type)){this.error.set('Choose a PNG/JPEG image up to 5 MiB.');return;}this.run(this.api.attachImage(p.batch,row.id,file),b=>this.load(b.id,this.page,this.filter));}
+ detachImage(row:ImportRow,image:ImportImage){const p=this.preview();if(p&&!this.locked()&&this.editable()&&this.domainAllowed(row.sheetId))this.run(this.api.detachImage(p.batch,row.id,image.id),b=>this.load(b.id,this.page,this.filter));}
+ viewImage(image:ImportImage){if(!this.fresh()||this.locked()||this.imageUrls()[image.id])return;this.run(this.api.image(this.selectedId(),image.id),blob=>{if(blob.type!=='image/png'){this.error.set('Image response is not a PNG.');return;}this.imageUrls.update(urls=>({...urls,[image.id]:URL.createObjectURL(blob)}));});}
  sheetName(id:string){return this.preview()?.sheets.find(s=>s.id===id)?.name??id;}
  suggestions(sheet:ImportSheet){return this.object(this.preview()?.mappings.find(m=>m.sheetId===sheet.id)?.suggestions);}
  messages(row:ImportRow){return this.preview()?.errors.filter(e=>e.rowId===row.id)??[];}

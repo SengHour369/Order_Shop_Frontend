@@ -35,7 +35,7 @@ describe("Customer floating AI chat", () => {
         });
         http = TestBed.inject(HttpTestingController);
     });
-    afterEach(() => http.verify());
+    afterEach(() => {http.match("/api/ai/quota").forEach(r=>r.flush({dailyLimit:5,used:0,remaining:5,unlimited:true,resetAt:"2026-10-16T00:00:00+07:00"}));http.verify();});
     function create() {
         const fixture = TestBed.createComponent(CustomerChat);
         fixture.detectChanges();
@@ -207,3 +207,4 @@ describe("Customer floating AI chat", () => {
         expect(chat.busy()).toBe(false);
     });
 });
+

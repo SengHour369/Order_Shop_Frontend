@@ -26,6 +26,6 @@ export class DragLauncher {
   private down(e:PointerEvent){if(this.pointer!==null||e.button!==0||e.isPrimary===false)return;this.suppress=false;this.pointer=e.pointerId;this.moved=false;const r=this.element.getBoundingClientRect();this.start={x:e.clientX,y:e.clientY,left:r.left,top:r.top};this.element.setPointerCapture?.(e.pointerId);}
   private move(e:PointerEvent){if(e.pointerId!==this.pointer)return;const dx=e.clientX-this.start.x,dy=e.clientY-this.start.y;if(!this.moved&&Math.hypot(dx,dy)<6)return;this.moved=true;e.preventDefault();this.place(this.start.left+dx,this.start.top+dy);}
   private up(e:PointerEvent){if(e.pointerId!==this.pointer)return;this.suppress=this.moved;this.pointer=null;if(this.element.hasPointerCapture?.(e.pointerId))this.element.releasePointerCapture(e.pointerId);}
-  clamp(){const r=this.element.getBoundingClientRect();this.place(r.left,r.top);}
+  clamp(){if(this.element.hidden)return;const r=this.element.getBoundingClientRect();this.place(r.left,r.top);}
   private place(x:number,y:number){const r=this.element.getBoundingClientRect(),v=window.visualViewport;const left=(v?.offsetLeft??0)+8,top=(v?.offsetTop??0)+8;const width=r.width||56,height=r.height||56;x=Math.max(left,Math.min(x,left+(v?.width??window.innerWidth)-16-width));y=Math.max(top,Math.min(y,top+(v?.height??window.innerHeight)-16-height));Object.assign(this.element.style,{position:'fixed',left:x+'px',top:y+'px',right:'auto',bottom:'auto'});this.position.set({x,y,width,height});}
 }

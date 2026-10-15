@@ -1,0 +1,75 @@
+<section class="transactions-ui">
+  <header class="transaction-heading">
+    <div>
+      <h2>{{ 'Transactions' | translate }}</h2>
+      <nav class="transaction-crumbs" aria-label="Breadcrumb"><a routerLink="/admin">{{ 'Dashboard' | translate }}</a><app-icon name="chevron" /><span>{{ 'Transactions' | translate }}</span></nav>
+      @if (customerId) { <p>Transactions for customer {{ customerId }}</p> }
+    </div>
+    <div class="heading-actions">
+      <button class="tx-button" type="button" (click)="exportRows()" [disabled]="busy() || !total()"><app-icon name="download" />{{ 'Export' | translate }}<app-icon name="down" /></button>
+      <button class="tx-button" type="button" (click)="showDates.set(!showDates())" [attr.aria-expanded]="showDates()" aria-controls="transaction-dates"><app-icon name="filter" />{{ 'Filters' | translate }}</button>
+    </div>
+  </header>
+
+  <div class="transaction-stats" [attr.aria-busy]="busy()">
+    @for (stat of summary(); track stat.label) {
+      <article class="transaction-stat">
+        <span class="stat-icon" [class]="'stat-icon ' + stat.color"><app-icon [name]="stat.icon" /></span>
+        <div><span class="stat-label">{{ stat.label | translate }}</span><strong>{{ busy() ? '—' : stat.value }}</strong><small>{{ hasFilters() ? 'Filtered transactions' : 'All transactions' }}</small></div>
+      </article>
+    }
+  </div>
+
+  <app-status [busy]="busy()" [error]="error()" />
+  @if (error()) { <button class="tx-button retry" type="button" (click)="load()" [disabled]="busy()"><app-icon name="refresh" />Retry loading</button> }
+
+  <div class="transaction-card">
+    <form class="transaction-filters" (ngSubmit)="apply()">
+      <label class="transaction-search"><input name="search" [(ngModel)]="search" (ngModelChange)="apply()" placeholder="Search by transaction ID, order ID, customer..." aria-label="Search transactions" /><app-icon name="search" /></label>
+      <button class="tx-button date-toggle" type="button" (click)="showDates.set(!showDates())" [attr.aria-expanded]="showDates()" aria-controls="transaction-dates"><app-icon name="calendar" />{{ filters().from || filters().to ? (filters().from || 'Any date') + ' – ' + (filters().to || 'Today') : 'All dates' }}<app-icon name="down" /></button>
+      <select name="method" [(ngModel)]="method" (ngModelChange)="apply()" aria-label="Payment method"><option value="">All Payment Methods</option>@for (item of methodOptions(); track item) { <option [value]="item">{{ item }}</option> }</select>
+      <select name="status" [(ngModel)]="status" (ngModelChange)="apply()" aria-label="Transaction status"><option value="">All Status</option>@for (item of statuses; track item) { <option [value]="item">{{ item }}</option> }</select>
+      <button class="tx-button" type="submit"><app-icon name="filter" />{{ 'Filters' | translate }}</button>
+      @if (hasFilters()) { <button class="reset-button" type="button" (click)="reset()">Clear filters</button> }
+      <div id="transaction-dates" class="date-fields" [hidden]="!showDates()">
+        <label>From date<input type="date" name="from" [(ngModel)]="from" [max]="to" /></label>
+        <label>To date<input type="date" name="to" [(ngModel)]="to" [min]="from" /></label>
+        <button class="tx-button" type="submit">Apply dates</button>
+      </div>
+    </form>
+
+    <div class="transaction-table-wrap">
+      <table class="transaction-table" [attr.aria-busy]="busy()">
+        <thead><tr><th>Transaction ID</th><th>Order ID</th><th>{{ 'Customer' | translate }}</th><th>Date &amp; Time</th><th>Payment Method</th><th>{{ 'Status' | translate }}</th><th class="amount">{{ 'Amount' | translate }}</th><th class="action">{{ 'Action' | translate }}</th></tr></thead>
+        <tbody>
+          @for (row of visible(); track field(row, 'id') || $index) {
+            <tr>
+              <td class="transaction-id">{{ text(field(row, 'transaction_no', 'transactionNo', 'id')) }}</td>
+              <td>{{ text(field(row, 'order_number', 'orderNumber', 'order_no', 'order_id', 'orderId')) }}</td>
+              <td><div class="transaction-customer"><span class="customer-avatar" [class.avatar-alt]="$index % 2 === 1">{{ mark(row) }}</span><div><strong>{{ customer(row).name }}</strong><small>{{ customer(row).email }}</small></div></div></td>
+              <td class="date-cell">{{ date(row) }}<small>{{ time(row) }}</small></td>
+              <td><div class="transaction-method"><span [class]="'method-logo ' + methodBrand(row)">@switch (methodBrand(row)) { @case ('visa') { VISA } @case ('mastercard') { <i></i><i></i> } @case ('paypal') { P } @case ('stripe') { S } @case ('apple') { <app-icon name="card" /> } @default { <app-icon name="card" /> } }</span><span>{{ text(methodName(row)) }}</span>@if (account(row)) { <small>{{ account(row) }}</small> }</div></td>
+              <td><span [class]="'transaction-badge ' + statusTone(row)">{{ statusLabel(row) }}</span></td>
+              <td class="amount">{{ usd(field(row, 'amount')) }}</td>
+              <td class="action">@if (field(row, 'id') !== '') { <a class="view-transaction" [routerLink]="['/admin/transactions', field(row, 'id')]" [attr.aria-label]="'View transaction ' + text(field(row, 'transaction_no', 'transactionNo', 'id'))"><app-icon name="eye" /></a> }</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="8"><div class="transaction-empty"><app-icon name="list" /><strong>{{ busy() ? 'Loading transactions...' : error() ? 'Transactions unavailable' : 'No transactions found' }}</strong><span>{{ busy() ? 'Fetching your payment records.' : error() ? 'Try loading the records again.' : 'Try changing your search or filters.' }}</span></div></td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <footer class="transaction-pager">
+      <span aria-live="polite">{{ range() }}</span>
+      <nav class="transaction-pages" aria-label="Transaction pages">
+        <button class="page-button" type="button" aria-label="Previous page" [disabled]="page() <= 1 || busy()" (click)="goto(page() - 1)"><app-icon class="previous" name="chevron" /></button>
+        @if (pageList()[0] > 1) { <button class="page-button" type="button" (click)="goto(1)">1</button>@if (pageList()[0] > 2) { <span>…</span> } }
+        @for (n of pageList(); track n) { <button class="page-button" type="button" [class.active]="n === page()" [attr.aria-current]="n === page() ? 'page' : null" [disabled]="busy()" (click)="goto(n)">{{ n }}</button> }
+        @if (pageList()[pageList().length - 1] < pages()) { @if (pageList()[pageList().length - 1] < pages() - 1) { <span>…</span> }<button class="page-button" type="button" (click)="goto(pages())">{{ pages() }}</button> }
+        <button class="page-button" type="button" aria-label="Next page" [disabled]="page() >= pages() || busy()" (click)="goto(page() + 1)"><app-icon name="chevron" /></button>
+      </nav>
+      <select [ngModel]="size()" (ngModelChange)="setSize($event)" aria-label="Rows per page">@for (option of sizes; track option) { <option [ngValue]="option">{{ option }} / page</option> }</select>
+    </footer>
+  </div>
+</section>

@@ -1,6 +1,6 @@
 import { inject, Injectable } from "@angular/core";
 import { ApiClient } from "../../core/api/api-client";
-import { catchError, of, throwError, finalize } from "rxjs";
+import { catchError, of, throwError, finalize, map } from "rxjs";
 import { conversationId as requestId } from '../../shared/utils/conversation-id';
 import { AssistantQuota } from './assistant-quota';
 export interface AiResult {
@@ -12,6 +12,7 @@ export interface AiResult {
   errorCode?: string;
 }
 export interface ChatResponse {
+  requestKey?:string;
   conversationId: string;
   cardType: string;
   suggestions: string[];
@@ -28,6 +29,7 @@ export class AssistantApi {
   conversation(id: string) { return this.api.get<AdminTranscript>('/api/ai/admin/conversations/' + encodeURIComponent(id)); }
   rename(id: string, title: string) { return this.api.patch<AdminTranscript>('/api/ai/admin/conversations/' + encodeURIComponent(id), { title }); }
   info() { return this.api.get<AssistantInfo>('/api/ai/admin/info'); }
+  feedback(requestKey:string,rating:'up'|'down'){return this.api.post('/api/ai/feedback',{requestKey,rating});}
   confirm(id: string) {
     return this.api.http.post<AiResult>(this.api.url('/api/ai/confirm/' + encodeURIComponent(id)), {}).pipe(
       catchError(error => error.error?.status && typeof error.error.message === 'string'
@@ -55,6 +57,7 @@ export class AssistantApi {
             ? of(body as ChatResponse)
             : throwError(() => error);
         }),
+        map(response=>({...response,requestKey:key})),
         finalize(()=>this.quota.refresh()),
       );
   }

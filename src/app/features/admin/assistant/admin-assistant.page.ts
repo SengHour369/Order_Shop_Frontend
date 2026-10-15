@@ -35,10 +35,12 @@ export class AdminAssistantPage extends AssistantPage {
   private assistantNavigation=inject(Router);
   historyOpen=signal(false);
   responseNotice=signal('');
-  votes=signal<Record<number,string>>({});
   async copyResponse(text:string){try{await navigator.clipboard.writeText(text);this.responseNotice.set('Response copied');}catch{this.responseNotice.set('Copy unavailable. Select the response to copy it.');}}
-  vote(index:number,value:string){this.votes.update(v=>({...v,[index]:value}));this.responseNotice.set('Feedback saved for this session');}
-  resultPending(result?:AiResult){return result?.status==='NEEDS_CONFIRMATION'||result?.status==='RUNNING';}
+  vote(turn:Turn,rating:'up'|'down'){
+    if(!turn.requestKey)return;
+    this.assistantApi.feedback(turn.requestKey,rating).pipe(takeUntilDestroyed(this.destroy)).subscribe({next:()=>{turn.feedback=rating;this.current.update(c=>c?{...c}:null);this.responseNotice.set('Feedback saved');},error:()=>this.responseNotice.set('Feedback could not be saved. Please try again.')});
+  }
+  resultPending(result?:AiResult){return result?.status==='NEEDS_CONFIRMATION'||result?.status==='RUNNING'||!!(result?.data&&typeof result.data==='object'&&'confirmationId' in result.data);}
   regenerate(index:number){if(this.locked()||this.quota.exhausted())return;const turns=this.current()?.messages||[];const last=[...turns.slice(0,index)].reverse().find(t=>t.role==='user');if(last){this.prompt=last.text;this.send();}}
   closeAssistant(){if(!this.locked()&&!this.draft()&&!this.stockOpen())void this.assistantNavigation.navigateByUrl(this.launcher.returnUrl.startsWith('/admin/assistant')?'/admin':this.launcher.returnUrl);}
   importAccess=inject(PermissionService);

@@ -1,5 +1,6 @@
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
-import { Component, inject, signal } from "@angular/core";
+import { Component, computed, inject, signal } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, RouterLink } from "@angular/router";
 import { catchError, forkJoin, of } from "rxjs";
@@ -8,272 +9,193 @@ import { PageState } from "../../../shared/utils/page-state";
 import { Icon } from "../../../shared/components/icon";
 import { Status } from "../../../shared/components/status";
 import { AdminApi, field, Row, text, tone, usd, when } from "../api/admin.api";
-const statuses = ["PENDING", "SUCCESS", "FAILED", "CANCELLED", "REFUNDED"];
-const successStatuses = ["SUCCESS", "COMPLETED", "PAID"];
-const pendingStatuses = ["PENDING"];
-const failedStatuses = ["FAILED", "CANCELLED"];
+
+const statuses = ["PENDING", "SUCCESS", "COMPLETED", "PAID", "FAILED", "CANCELLED", "REFUNDED"];
+const successStatuses = ["SUCCESS", "SUCCESSFUL", "COMPLETED", "PAID", "APPROVED"];
+const pendingStatuses = ["PENDING", "PROCESSING"];
+const failedStatuses = ["FAILED", "CANCELLED", "CANCELED", "REJECTED"];
+
+export function transactionCustomer(row: Row) {
+  const nested = field(row, "customer", "user");
+  const customer: Row = nested && typeof nested === "object" ? nested as Row : {};
+  return {
+    name: text(field(row, "customer_name", "customerName", "full_name", "fullName", "username") ||
+      field(customer, "full_name", "fullName", "name", "username") ||
+      field(row, "customer_id", "customerId", "user_id", "userId")),
+    email: String(field(row, "customer_email", "customerEmail", "email") || field(customer, "email")),
+  };
+}
+export function transactionDate(row: Row) {
+  const value = field(row, "createdAt", "created_at", "datetime", "payment_date", "paymentDate");
+  if (!value) return null;
+  const date = new Date(String(value));
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+export function transactionCsv(rows: Row[]) {
+  const cells = [
+    ["Transaction ID", "Order ID", "Customer", "Email", "Date & Time", "Payment Method", "Status", "Amount"],
+    ...rows.map(row => [
+      field(row, "transaction_no", "transactionNo", "id"),
+      field(row, "order_number", "orderNumber", "order_no", "order_id", "orderId"),
+      transactionCustomer(row).name, transactionCustomer(row).email,
+      field(row, "createdAt", "created_at", "datetime", "payment_date", "paymentDate"),
+      field(row, "payment_method", "paymentMethod", "method"), field(row, "status"), field(row, "amount"),
+    ]),
+  ];
+  return "\uFEFF" + cells.map(cols => cols.map(value => {
+    let cell = String(value ?? "");
+    if (/^[\s]*[=+@-]/.test(cell)) cell = "'" + cell;
+    return '"' + cell.replaceAll('"', '""') + '"';
+  }).join(",")).join("\r\n");
+}
+
 @Component({
   imports: [TranslatePipe, Status, FormsModule, RouterLink, Icon],
-  template: `<section class="adm-stack">
-    <div class="adm-page-head">
-      <div>
-        <div class="adm-crumbs">
-          <a routerLink="/admin">{{ "Dashboard" | translate }}</a><span>›</span
-          ><span>{{ "Transactions" | translate }}</span>
-        </div>
-        <h2>{{ "Transactions" | translate }}</h2>
-        <p>
-          {{
-            customerId
-              ? "Transactions for customer " + customerId + "."
-              : "Payment transactions. Status filters use the server values."
-          }}
-          Status counts are on this page.
-        </p>
-      </div>
-    </div>
-    <div class="adm-stats">
-      <article class="adm-card stat">
-        <span class="k">Total transactions</span><strong>{{ total() }}</strong
-        ><span class="adm-ico grad-blue"><app-icon name="list" /></span>
-      </article>
-      <article class="adm-card stat">
-        <span class="k">Successful on this page</span
-        ><strong>{{ count(successStatuses) }}</strong
-        ><span class="adm-ico grad-green"><app-icon name="check" /></span>
-      </article>
-      <article class="adm-card stat">
-        <span class="k">Pending on this page</span
-        ><strong>{{ count(pendingStatuses) }}</strong
-        ><span class="adm-ico grad-amber"><app-icon name="clock" /></span>
-      </article>
-      <article class="adm-card stat">
-        <span class="k">Failed on this page</span
-        ><strong>{{ count(failedStatuses) }}</strong
-        ><span class="adm-ico grad-red"><app-icon name="close" /></span>
-      </article>
-    </div>
-    <app-status [busy]="busy()" [error]="error()" />
-    <div class="adm-table-card">
-      <form class="adm-filter" (ngSubmit)="apply()">
-        <input
-          name="customer"
-          [(ngModel)]="customerId"
-          [placeholder]='"Customer id" | translate'
-          [attr.aria-label]='"Customer id" | translate'
-        />
-        <select name="status" [(ngModel)]="status" [attr.aria-label]='"Status" | translate'>
-          <option value="">{{ "All statuses" | translate }}</option>
-          @for (item of statuses; track item) {
-            <option [value]="item">{{ item }}</option>
-          }
-        </select>
-        <button class="adm-btn adm-primary" [disabled]="busy()">{{ "Filter" | translate }}</button>
-      </form>
-      <div class="adm-table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Transaction no</th>
-              <th>{{ "Order" | translate }}</th>
-              <th>{{ "Customer" | translate }}</th>
-              <th>Method</th>
-              <th>{{ "Amount" | translate }}</th>
-              <th>{{ "Status" | translate }}</th>
-              <th>{{ "Date" | translate }}</th>
-              <th>{{ "Action" | translate }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (row of rows(); track field(row, "id") || $index) {
-              <tr>
-                <td>
-                  {{ text(field(row, "transaction_no", "transactionNo")) }}
-                </td>
-                <td>{{ text(field(row, "order_id", "orderId")) }}</td>
-                <td>
-                  <span class="adm-who">
-                    <span class="adm-dot">{{ mark(row) }}</span>
-                    <span
-                      ><b>{{ text(field(row, "customer_id", "customerId")) }}</b
-                      ><small>{{ account(row) }}</small></span
-                    >
-                  </span>
-                </td>
-                <td>{{ text(field(row, "payment_method", "method")) }}</td>
-                <td>{{ usd(field(row, "amount")) }}</td>
-                <td>
-                  <span
-                    class="adm-badge"
-                    [class.on]="tone(field(row, 'status')) === 'on'"
-                    [class.off]="tone(field(row, 'status')) === 'off'"
-                    [class.wait]="tone(field(row, 'status')) === 'wait'"
-                    >{{ text(field(row, "status")) }}</span
-                  >
-                </td>
-                <td>
-                  {{
-                    when(
-                      field(
-                        row,
-                        "createdAt",
-                        "created_at",
-                        "datetime",
-                        "payment_date"
-                      )
-                    )
-                  }}
-                </td>
-                <td class="adm-actions">
-                  @if (field(row, "id") !== "") {
-                    <a
-                      class="adm-btn icon"
-                      [routerLink]="['/admin/transactions', field(row, 'id')]"
-                      aria-label="View transaction"
-                      ><app-icon name="eye"
-                    /></a>
-                  }
-                </td>
-              </tr>
-            } @empty {
-              <tr>
-                <td colspan="8">
-                  <div class="adm-empty">
-                    <strong>No transactions</strong
-                    ><span>No transactions on this page.</span>
-                  </div>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-      <div class="adm-pager">
-        <span>{{ range() }}</span>
-        <span class="adm-pages">
-          <button
-            class="adm-btn icon"
-            type="button"
-            aria-label="Previous page"
-            [disabled]="page <= 1 || busy()"
-            (click)="goto(page - 1)"
-          >
-            <app-icon name="chevron" style="transform:rotate(180deg)" />
-          </button>
-          @for (n of pageList(); track n) {
-            <button
-              class="adm-btn"
-              type="button"
-              [class.adm-primary]="n === page"
-              [disabled]="busy()"
-              (click)="goto(n)"
-            >
-              {{ n }}
-            </button>
-          }
-          <button
-            class="adm-btn icon"
-            type="button"
-            aria-label="Next page"
-            [disabled]="page >= pages() || busy()"
-            (click)="goto(page + 1)"
-          >
-            <app-icon name="chevron" />
-          </button>
-          <select
-            [ngModel]="size"
-            (ngModelChange)="setSize($event)"
-            aria-label="Rows per page"
-          >
-            @for (option of sizes; track option) {
-              <option [ngValue]="option">{{ option }} / page</option>
-            }
-          </select>
-        </span>
-      </div>
-    </div>
-  </section>`,
+  templateUrl: "./transactions-list.html",
+  styleUrl: "./transactions-list.css",
 })
 export class TransactionsPage extends PageState {
   private api = inject(AdminApi);
   private route = inject(ActivatedRoute);
   statuses = statuses;
-  successStatuses = successStatuses;
-  pendingStatuses = pendingStatuses;
-  failedStatuses = failedStatuses;
   rows = signal<Row[]>([]);
-  total = signal(0);
-  pages = signal(1);
-  page = 1;
-  size = 10;
+  filters = signal({ search: "", method: "", status: "", from: "", to: "" });
+  page = signal(1);
+  size = signal(10);
   sizes = [10, 20, 50];
+  search = "";
+  method = "";
   status = "";
+  from = "";
+  to = "";
   customerId = "";
+  showDates = signal(false);
   field = field;
   text = text;
   usd = usd;
-  when = when;
-  tone = tone;
+  customer = transactionCustomer;
+  filtered = computed(() => {
+    const filters = this.filters();
+    const search = filters.search.toLowerCase();
+    const start = filters.from ? new Date(filters.from + "T00:00:00").getTime() : null;
+    const end = filters.to ? new Date(filters.to + "T23:59:59.999").getTime() : null;
+    return this.rows().filter(row => {
+      const customer = transactionCustomer(row);
+      const haystack = [
+        field(row, "transaction_no", "transactionNo", "id"),
+        field(row, "order_number", "orderNumber", "order_no", "order_id", "orderId"),
+        field(row, "customer_id", "customerId", "user_id", "userId"),
+        customer.name, customer.email,
+      ].join(" ").toLowerCase();
+      const date = transactionDate(row)?.getTime();
+      return (!search || haystack.includes(search)) &&
+        (!filters.method || this.methodName(row) === filters.method) &&
+        (!filters.status || String(field(row, "status")).toUpperCase() === filters.status) &&
+        (start === null || (date !== undefined && date >= start)) &&
+        (end === null || (date !== undefined && date <= end));
+    });
+  });
+  total = computed(() => this.filtered().length);
+  pages = computed(() => Math.max(1, Math.ceil(this.total() / this.size())));
+  visible = computed(() => this.filtered().slice((this.page() - 1) * this.size(), this.page() * this.size()));
+  methodOptions = computed(() => [...new Set(this.rows().map(row => this.methodName(row)).filter(Boolean))].sort());
+  summary = computed(() => {
+    const rows = this.filtered();
+    const count = (values: string[]) => rows.filter(row => values.includes(String(field(row, "status")).toUpperCase())).length;
+    return [
+      { label: "Total Transactions", value: rows.length.toLocaleString(), icon: "wallet", color: "blue" },
+      { label: "Successful Transactions", value: count(successStatuses).toLocaleString(), icon: "card", color: "green" },
+      { label: "Pending Transactions", value: count(pendingStatuses).toLocaleString(), icon: "clock", color: "amber" },
+      { label: "Failed Transactions", value: count(failedStatuses).toLocaleString(), icon: "close", color: "red" },
+      { label: "Total Amount", value: usd(rows.reduce((sum, row) => {
+        const amount = Number(field(row, "amount"));
+        return sum + (Number.isFinite(amount) ? amount : 0);
+      }, 0)), icon: "wallet", color: "purple" },
+    ];
+  });
   constructor() {
     super();
-    this.route.queryParamMap.subscribe((params) => {
+    this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe(params => {
       this.customerId = params.get("customer") || "";
-      this.page = 1;
       this.load();
     });
   }
   load() {
-    this.run(
-      this.api.transactions(this.page, this.status, this.customerId, this.size),
-      (result) => {
-        this.rows.set(result.items);
-        this.pages.set(result.pages);
-        this.total.set(result.total);
-      },
-    );
+    this.rows.set([]);
+    this.page.set(1);
+    this.run(this.api.allTransactions(this.customerId), rows => this.rows.set(rows), true);
   }
   apply() {
-    this.page = 1;
-    this.load();
+    if (this.from && this.to && this.from > this.to) {
+      this.error.set("Choose an end date on or after the start date.");
+      return;
+    }
+    this.error.set("");
+    this.filters.set({ search: this.search.trim(), method: this.method, status: this.status, from: this.from, to: this.to });
+    this.page.set(1);
   }
-  count(statuses: string[]) {
-    const wanted = new Set(statuses);
-    return this.rows().filter((row) =>
-      wanted.has(String(field(row, "status")).toUpperCase()),
-    ).length;
+  reset() {
+    this.search = this.method = this.status = this.from = this.to = "";
+    this.apply();
   }
-  mark(row: Row) {
-    return String(field(row, "customer_id", "customerId") || "?")
-      .slice(0, 1)
-      .toUpperCase();
+  hasFilters() {
+    return Object.values(this.filters()).some(Boolean);
+  }
+  methodName(row: Row) {
+    return String(field(row, "payment_method", "paymentMethod", "method"));
+  }
+  methodBrand(row: Row) {
+    const value = this.methodName(row).toLowerCase().replaceAll(/[^a-z]/g, "");
+    if (value.includes("mastercard")) return "mastercard";
+    if (value.includes("visa")) return "visa";
+    if (value.includes("paypal")) return "paypal";
+    if (value.includes("apple")) return "apple";
+    if (value.includes("stripe")) return "stripe";
+    return "other";
   }
   account(row: Row) {
-    const masked = text(field(row, "masked_account", "maskedAccount"));
-    return masked === "—" ? "Customer id" : masked;
+    return String(field(row, "masked_account", "maskedAccount"));
+  }
+  mark(row: Row) {
+    return transactionCustomer(row).name.split(/\s+/).slice(0, 2).map(part => part[0]).join("").toUpperCase();
+  }
+  date(row: Row) {
+    return transactionDate(row)?.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) || "—";
+  }
+  time(row: Row) {
+    return transactionDate(row)?.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) || "";
+  }
+  statusTone(row: Row) {
+    const value = String(field(row, "status")).toUpperCase();
+    return successStatuses.includes(value) ? "success" : failedStatuses.includes(value) ? "failed" : "pending";
+  }
+  statusLabel(row: Row) {
+    const value = String(field(row, "status"));
+    return value.toUpperCase() === "SUCCESS" ? "Successful" : value ? value[0].toUpperCase() + value.slice(1).toLowerCase() : "—";
   }
   range() {
-    if (!this.total() || !this.rows().length) return "Showing 0 results";
-    const start = (this.page - 1) * this.size + 1;
-    const end = start + this.rows().length - 1;
-    return `Showing ${start} to ${end} of ${this.total()} results`;
+    if (!this.total()) return "Showing 0 results";
+    return `Showing ${(this.page() - 1) * this.size() + 1} to ${Math.min(this.page() * this.size(), this.total())} of ${this.total().toLocaleString()} results`;
   }
   pageList() {
-    const last = this.pages();
-    const start = Math.max(1, this.page - 2);
-    const end = Math.min(last, start + 4);
-    const numbers = [];
-    for (let n = Math.max(1, end - 4); n <= end; n++) numbers.push(n);
-    return numbers;
+    const start = Math.max(1, Math.min(this.page() - 1, this.pages() - 2));
+    return Array.from({ length: Math.min(3, this.pages()) }, (_, index) => start + index);
   }
   goto(page: number) {
-    if (page === this.page || page < 1 || page > this.pages()) return;
-    this.page = page;
-    this.load();
+    if (page >= 1 && page <= this.pages()) this.page.set(page);
   }
   setSize(size: number) {
-    this.size = Number(size);
-    this.page = 1;
-    this.load();
+    this.size.set(Number(size));
+    this.page.set(1);
+  }
+  exportRows() {
+    if (this.busy() || !this.total()) return;
+    const url = URL.createObjectURL(new Blob([transactionCsv(this.filtered())], { type: "text/csv;charset=utf-8;" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "transactions.csv";
+    link.click();
+    URL.revokeObjectURL(url);
   }
 }
 @Component({

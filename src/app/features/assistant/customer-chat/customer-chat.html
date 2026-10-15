@@ -1,17 +1,19 @@
 <button
+  #launcherButton
+  #launcher="dragLauncher"
   class="ai-launcher"
   appDragLauncher
+  [hidden]="opened()"
   type="button"
   (click)="open()"
-  aria-label="Open E-Shop AI assistant"
+  aria-label="Open E-Shop AI assistant. Drag to move, or use Alt and arrow keys."
   aria-haspopup="dialog"
   [attr.aria-expanded]="opened()"
   aria-controls="customer-ai-chat"
 >
-  <span class="bot-avatar"><app-icon name="robot" /></span
-  ><span class="launcher-label">Ask AI</span
-  ><span class="launcher-spark" aria-hidden="true">✦</span>
+  <span class="bot-avatar" aria-hidden="true"><app-icon name="robot" /></span>
 </button>
+<app-launcher-welcome [position]="launcher.position()" [dismissed]="opened()" />
 <dialog
   #chatDialog
   id="customer-ai-chat"
@@ -197,7 +199,7 @@
             >{{ "Sign in" | translate }}</a
           >
         } @else {
-          <button type="button" (click)="retry()" [disabled]="busy()">
+          <button type="button" (click)="retry()" [disabled]="busy() || quota.exhausted()">
             {{ "Try again" | translate }}
           </button>
         }

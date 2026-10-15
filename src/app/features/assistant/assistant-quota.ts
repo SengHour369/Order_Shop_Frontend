@@ -12,5 +12,5 @@ export class AssistantQuota {
  constructor(){effect(()=>{const user=this.auth.session()?.id;this.ticket++;this.value.set(null);this.error.set('');clearTimeout(this.resetTimer);if(user)this.refresh();});this.destroy.onDestroy(()=>clearTimeout(this.resetTimer));}
  refresh(){if(!this.auth.session())return;const ticket=++this.ticket;this.api.get<AiQuota>('/api/ai/quota').pipe(takeUntilDestroyed(this.destroy)).subscribe({next:q=>{if(ticket!==this.ticket)return;this.apply(q);this.error.set('');},error:()=>{if(ticket===this.ticket)this.error.set('Daily quota is unavailable. The server will still check every request.');}});}
  apply(q:AiQuota){if(!Number.isInteger(q.used)||!Number.isInteger(q.dailyLimit)||!Number.isInteger(q.remaining)||!Number.isFinite(Date.parse(q.resetAt)))return;this.value.set(q);clearTimeout(this.resetTimer);const delay=Date.parse(q.resetAt)-Date.now();if(delay>0)this.resetTimer=setTimeout(()=>this.refresh(),Math.min(delay+100,2147483647));}
- handle(error:{error?:Partial<AiQuota>&{code?:string}}){if(error.error?.code==='AI_DAILY_LIMIT_EXCEEDED'){this.apply({...error.error,unlimited:false} as AiQuota);return true;}return false;}
+ handle(error:{error?:Partial<AiQuota>&{code?:string}}){if(error.error?.code==='AI_DAILY_LIMIT_EXCEEDED'){this.ticket++;this.apply({...error.error,unlimited:false} as AiQuota);return true;}return false;}
 }

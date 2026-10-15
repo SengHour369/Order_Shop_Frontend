@@ -49,7 +49,7 @@
                   @if(result.intent === 'PRODUCT_CREATE' && preview(result.data)?.['id']) { <a class="view-product" [routerLink]="['/admin/products/view', preview(result.data)?.['id']]">View product →</a> }@if(result.executionId) { <button class="subtle" (click)="check(turn)" [disabled]="locked()"><app-icon name="refresh" />Check status</button> }
                 }
               }
-              @if(turn.role === 'assistant'){<div class="response-actions"><button (click)="copyResponse(turn.text)" aria-label="Copy response">Copy</button><button (click)="regenerate($index)" [disabled]="locked() || quota.exhausted() || resultPending(turn.result)" aria-label="Regenerate response">Regenerate</button><button (click)="vote($index,'up')" [attr.aria-pressed]="votes()[$index] === 'up'" aria-label="Helpful response">👍</button><button (click)="vote($index,'down')" [attr.aria-pressed]="votes()[$index] === 'down'" aria-label="Unhelpful response">👎</button></div>}
+              @if(turn.role === 'assistant'){<div class="response-actions"><button (click)="copyResponse(turn.text)" aria-label="Copy response">Copy</button><button (click)="regenerate($index)" [disabled]="locked() || quota.exhausted() || resultPending(turn.result)" aria-label="Regenerate response">Regenerate</button><button (click)="vote(turn,'up')" [attr.aria-pressed]="turn.feedback === 'up'" [disabled]="!turn.requestKey" aria-label="Helpful response">👍</button><button (click)="vote(turn,'down')" [attr.aria-pressed]="turn.feedback === 'down'" [disabled]="!turn.requestKey" aria-label="Unhelpful response">👎</button></div>}
               <time>{{ turn.time | date:'h:mm a' }}</time></div>
               @if(turn.suggestions?.length) { <div class="suggestions">@for(suggestion of turn.suggestions; track suggestion) { <button (click)="choose(suggestion)" [disabled]="locked()">{{ suggestion }}</button> }</div> }
             </div></article>
@@ -88,4 +88,3 @@
     </div>
   </div>
 </section>
-

@@ -41,6 +41,26 @@ describe("Customer floating AI chat", () => {
         fixture.detectChanges();
         return fixture;
     }
+    it('does not open or send a chat for the welcome hint and reuses the same dialog after closing',()=>{
+        const fixture=create(),chat=fixture.componentInstance;
+        const dialog=fixture.nativeElement.querySelector('dialog');
+        dialog.showModal=vi.fn();dialog.close=vi.fn();
+        const button=fixture.nativeElement.querySelector('.ai-launcher') as HTMLButtonElement;
+        expect(chat.opened()).toBe(false);expect(button.hidden).toBe(false);http.expectNone('/api/ai/chat');
+        button.click();fixture.detectChanges();expect(dialog.showModal).toHaveBeenCalledOnce();expect(button.hidden).toBe(true);
+        chat.messages.set([{role:'assistant',text:'Preserved conversation'}]);chat.conversationId='existing-chat';
+        chat.close();fixture.detectChanges();expect(button.hidden).toBe(false);expect(document.activeElement).toBe(button);
+        expect(chat.messages()[0].text).toBe('Preserved conversation');expect(chat.conversationId).toBe('existing-chat');
+        button.click();fixture.detectChanges();expect(dialog.showModal).toHaveBeenCalledTimes(2);http.expectNone('/api/ai/chat');
+    });
+    it('moves the customer launcher with touch without opening the chatbot',()=>{
+        const fixture=create();const button=fixture.nativeElement.querySelector('.ai-launcher') as HTMLButtonElement;
+        Object.defineProperty(button,'getBoundingClientRect',{value:()=>({left:200,top:200,width:58,height:58})});
+        const pointer=(type:string,x:number,y:number)=>{const event=new MouseEvent(type,{bubbles:true,cancelable:true,button:0,clientX:x,clientY:y});Object.defineProperties(event,{pointerId:{value:1},pointerType:{value:'touch'},isPrimary:{value:true}});button.dispatchEvent(event);};
+        pointer('pointerdown',210,210);pointer('pointermove',10000,10000);pointer('pointerup',10000,10000);button.click();fixture.detectChanges();
+        expect(fixture.componentInstance.opened()).toBe(false);expect(parseFloat(button.style.left)).toBeLessThanOrEqual(window.innerWidth-66);expect(parseFloat(button.style.top)).toBeLessThanOrEqual(window.innerHeight-66);
+        http.expectNone('/api/ai/chat');
+    });
     it("allows guests to chat, preserves conversation context and selected language, and blocks duplicate sends", () => {
         const chat = create().componentInstance;
         chat.language = "km";
@@ -184,6 +204,12 @@ describe("Customer floating AI chat", () => {
         retry.flush(response());
         expect(chat.error()).toBe("");
         expect(chat.messages().length).toBe(2);
+    });
+    it('keeps sending disabled after a new chat when the server quota is exhausted',()=>{
+        const fixture=create();const chat=fixture.componentInstance;
+        chat.quota.apply({dailyLimit:5,used:5,remaining:0,unlimited:false,resetAt:'2099-01-01T00:00:00+07:00'});
+        chat.prompt='Another question';chat.send();http.expectNone('/api/ai/chat');chat.newChat();fixture.detectChanges();
+        expect(chat.quota.exhausted()).toBe(true);expect(fixture.nativeElement.querySelector('button[type="submit"]').disabled).toBe(true);
     });
     it("clears private conversation state and cancels pending requests when the account changes", () => {
         session.set({

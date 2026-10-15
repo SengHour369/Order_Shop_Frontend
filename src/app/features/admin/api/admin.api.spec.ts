@@ -16,6 +16,17 @@ describe("Admin API contracts", () => {
     http = TestBed.inject(HttpTestingController);
   });
   afterEach(() => http.verify());
+  it('loads every transaction page with the customer criterion for complete filters and totals', () => {
+    let records: Row[] = [];
+    api.allTransactions(' 7 ').subscribe(rows => records = rows);
+    const first = http.expectOne('/api/v1/payment-transactions/get/all');
+    expect(first.request.body).toEqual({ page: 1, size: 100, criteria_type: 2, criteria_value: '7' });
+    first.flush({ code: '200', data: { payload: [{ id: 1 }], total_items: 2, total_pages: 2, current_page: 1 } });
+    const second = http.expectOne('/api/v1/payment-transactions/get/all');
+    expect(second.request.body).toEqual({ page: 2, size: 100, criteria_type: 2, criteria_value: '7' });
+    second.flush({ code: '200', data: { payload: [{ id: 2 }], total_items: 2, total_pages: 2, current_page: 2 } });
+    expect(records).toEqual([{ id: 1 }, { id: 2 }]);
+  });
   it('filters customer order history on the server with explicit pagination', () => {
     api.customerOrders(7, 2, 10).subscribe();
     const request = http.expectOne('/api/v1/orders/get/all');

@@ -2,8 +2,9 @@ import { TranslatePipe } from "../../../core/i18n/translate.pipe";
 import { AssistantQuota } from '../assistant-quota';
 import { RichMessage } from '../rich-message';
 import { DragLauncher } from '../floating/drag-launcher';
+import { LauncherWelcome } from '../floating/launcher-welcome';
 import { conversationId as requestId } from '../../../shared/utils/conversation-id';
-import { Component, DestroyRef, ElementRef, effect, inject, signal, viewChild, } from "@angular/core";
+import { afterRenderEffect, Component, DestroyRef, ElementRef, effect, inject, signal, viewChild, } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { CurrencyPipe } from "@angular/common";
 import { Router, RouterLink } from "@angular/router";
@@ -20,7 +21,7 @@ import { ChatCheckout } from '../chat-checkout/chat-checkout';
 import { CheckoutAttempt } from '../../checkout/checkout-attempt';
 @Component({
     selector: "app-customer-chat",
-    imports: [RichMessage, DragLauncher, TranslatePipe, FormsModule, RouterLink, CurrencyPipe, Icon, ProductImage, ChatCheckout],
+    imports: [LauncherWelcome, RichMessage, DragLauncher, TranslatePipe, FormsModule, RouterLink, CurrencyPipe, Icon, ProductImage, ChatCheckout],
     templateUrl: "./customer-chat.html",
     styleUrl: "./customer-chat.css",
 })
@@ -35,6 +36,8 @@ export class CustomerChat {
     private readonly store = inject(CustomerStore);
     private readonly destroyRef = inject(DestroyRef);
     readonly dialog = viewChild<ElementRef<HTMLDialogElement>>("chatDialog");
+    private readonly launcher = viewChild(DragLauncher);
+    private readonly launcherButton = viewChild<ElementRef<HTMLButtonElement>>('launcherButton');
     readonly input = viewChild<ElementRef<HTMLTextAreaElement>>("messageInput");
     readonly log = viewChild<ElementRef<HTMLElement>>("chatLog");
     readonly opened = signal(false);
@@ -87,6 +90,15 @@ export class CustomerChat {
         { label: "Order & payment", icon: "cart", tone: "purple", prompt: "How do I place an order and pay?" },
     ];
     constructor() {
+        let wasOpened = false;
+        afterRenderEffect(() => {
+            const opened = this.opened();
+            if (!opened) {
+                this.launcher()?.clamp();
+                if (wasOpened) this.launcherButton()?.nativeElement.focus();
+            }
+            wasOpened = opened;
+        });
         effect(() => {
             const id = this.auth.session()?.id ?? null;
             if (id !== this.account) {
@@ -162,6 +174,8 @@ export class CustomerChat {
             next: (response) => {
                 this.conversationId = response.conversationId || this.conversationId;
                 if (response.result.status === "FAILURE") {
+                    // A definitive provider failure is already charged. An explicit retry is new work.
+                    this.failedKey=requestId();
                     this.error.set(response.result.message || "The assistant could not respond. Please try again shortly.");
                     this.busy.set(false);
                     this.scroll();
@@ -173,6 +187,7 @@ export class CustomerChat {
                 this.scroll();
             },
             error: (e) => {
+                if(e.status>=500 && e.status!==504)this.failedKey=requestId();
                 this.busy.set(false);
                 this.needsSignIn.set(e.status === 401);
                 this.error.set(e.status === 401

@@ -392,6 +392,11 @@ export class AdminApi {
   transaction(id: number) {
     return this.one<Row>(this.api.get(`/api/v1/payment-transactions/${id}`));
   }
+  // The list API accepts one criterion. Read every page before combining
+  // search, method, status and dates so counts and exports remain complete.
+  allTransactions(customerId = "") {
+    return this.all((page) => this.transactions(page, "", customerId, 100));
+  }
   transactionStatus(
     id: number,
     newStatus: string,

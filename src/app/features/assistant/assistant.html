@@ -144,7 +144,7 @@
         }
         <app-status [error]="error()" />
       </div>
-      <form class="composer" (ngSubmit)="send()">
+      <div class="assistant-quota" role="status">{{quota.label()}} @if(quota.exhausted()){<p>You have reached your daily AI request limit. Please try again tomorrow.</p><small>{{quota.value()?.resetAt}}</small>}</div><form class="composer" (ngSubmit)="send()">
         <textarea #promptInput
           name="prompt"
           [(ngModel)]="prompt"
@@ -181,7 +181,7 @@
           </div>
           <button
             class="send"
-            [disabled]="busy() || !prompt.trim()"
+            [disabled]="busy() || quota.exhausted() || !prompt.trim()"
             aria-label="Send message"
           >
             <app-icon name="send" />

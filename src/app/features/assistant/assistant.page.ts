@@ -18,6 +18,8 @@ import { Status } from "../../shared/components/status";
 import { Icon } from "../../shared/components/icon";
 
 export interface ChatMessage {
+  requestKey?:string;
+  feedback?:'up'|'down';
   role: "user" | "assistant";
   text: string;
   time: Date;
@@ -406,6 +408,7 @@ export class AssistantPage extends PageState implements OnInit {
         active.time = new Date();
         active.messages.push({
           role: "assistant",
+          requestKey:response.requestKey,
           text: response.result.message,
           result: response.result,
           suggestions: response.suggestions,

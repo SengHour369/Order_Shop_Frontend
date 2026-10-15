@@ -1,0 +1,12 @@
+[
+  {"name":"E-Shop Wireless Headphones","description":"Sample wireless over-ear headphones.","price":59.99,"quantity":20},
+  {"name":"E-Shop Bluetooth Speaker","description":"Sample portable Bluetooth speaker.","price":39.99,"quantity":20},
+  {"name":"E-Shop USB-C Charging Cable","description":"Sample USB-C charging cable.","price":9.99,"quantity":20},
+  {"name":"E-Shop Mechanical Keyboard","description":"Sample compact mechanical keyboard.","price":49.99,"quantity":20},
+  {"name":"E-Shop Wireless Mouse","description":"Sample wireless computer mouse.","price":19.99,"quantity":20},
+  {"name":"E-Shop Portable Power Bank","description":"Sample portable power bank.","price":29.99,"quantity":20},
+  {"name":"E-Shop HD Webcam","description":"Sample HD webcam for video calls.","price":34.99,"quantity":20},
+  {"name":"E-Shop Laptop Stand","description":"Sample adjustable laptop stand.","price":24.99,"quantity":20},
+  {"name":"E-Shop Smart Watch","description":"Sample smart watch.","price":79.99,"quantity":20},
+  {"name":"E-Shop Travel Backpack","description":"Sample travel backpack.","price":29.99,"quantity":20}
+]

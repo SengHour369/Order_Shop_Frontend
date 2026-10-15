@@ -7,6 +7,15 @@ describe('Excel import API contracts',()=>{
  let http:HttpTestingController;let api:AiImportsApi;
  beforeEach(()=>{TestBed.configureTestingModule({providers:[provideHttpClient(),provideHttpClientTesting()]});http=TestBed.inject(HttpTestingController);api=TestBed.inject(AiImportsApi);});afterEach(()=>http.verify());
  it('uploads workbook bytes as multipart without serializing cells into prompts',()=>{const file=new File(['bytes'],'categories.xlsx');api.upload(file).subscribe();const r=http.expectOne('/api/ai/imports/upload');expect(r.request.method).toBe('POST');expect(r.request.body.get('file')).toBe(file);expect(r.request.headers.has('Content-Type')).toBe(false);r.flush(batch);});
+ it('creates a staged row using a stable client row ID, current version and string values',()=>{
+  api.addRow(batch,'sheet','row-uuid',{name:'New category',status:'true'}).subscribe();const request=http.expectOne('/api/ai/imports/'+batch.id+'/sheets/sheet/rows');
+  expect(request.request.method).toBe('POST');expect(request.request.body).toEqual({version:8,rowId:'row-uuid',values:{name:'New category',status:'true'}});request.flush({batch:{...batch,revision:9},row:{id:'row-uuid'}});
+ });
+ it('uses the versioned skip endpoint to exclude a staged row without deleting it',()=>{
+  const row={id:'row',sheetId:'sheet',rowNumber:2,originalValues:'{}',valuesJson:'{}',status:'VALID',edited:false,skipped:false,resourceId:null,affectedResourceId:null};
+  api.skip(batch,row).subscribe();const request=http.expectOne('/api/ai/imports/'+batch.id+'/rows/row/skip');
+  expect(request.request.method).toBe('PATCH');expect(request.request.body).toEqual({version:8,skipped:true});request.flush({...batch,revision:9});
+ });
  it('sends immutable version with approval and current values with correction',()=>{api.action(batch,'approve',{reason:'Reviewed',version:99}).subscribe();const r=http.expectOne('/api/ai/imports/'+batch.id+'/approve');expect(r.request.body).toEqual({reason:'Reviewed',version:8});r.flush(batch);api.edit(batch,'row',{name:'Correction'}).subscribe();const edit=http.expectOne('/api/ai/imports/'+batch.id+'/rows/row');expect(edit.request.method).toBe('PATCH');expect(edit.request.body).toEqual({version:8,values:{name:'Correction'}});edit.flush(batch);});
  it('uses assigned history and server-side edited filters',()=>{api.list('executions',2,true).subscribe();const r=http.expectOne(q=>q.url==='/api/ai/imports');expect(r.request.params.get('assigned')).toBe('true');expect(r.request.params.get('page')).toBe('2');r.flush({content:[],totalPages:0,totalElements:0});api.preview(batch.id,1,'EDITED').subscribe();const p=http.expectOne(q=>q.url.endsWith('/preview'));expect(p.request.params.get('status')).toBe('EDITED');expect(p.request.params.get('size')).toBe('50');p.flush({});});
  it('downloads authenticated server reports without generating unsafe client CSV',()=>{api.download(batch.id,'report').subscribe();const r=http.expectOne('/api/ai/imports/'+batch.id+'/report');expect(r.request.responseType).toBe('blob');r.flush(new Blob(['report']));});

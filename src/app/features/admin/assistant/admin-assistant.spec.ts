@@ -15,6 +15,17 @@ describe('Admin chatbot workflows', () => {
   });
   afterEach(() => {http.match("/api/ai/quota").forEach(r=>r.flush({dailyLimit:5,used:0,remaining:5,unlimited:true,resetAt:"2026-10-16T00:00:00+07:00"}));http.verify();});
   function page() { return TestBed.createComponent(AdminAssistantPage).componentInstance; }
+  it('retains the active conversation when closing and reopening the existing page',()=>{
+    const first=TestBed.createComponent(AdminAssistantPage);first.componentInstance.prompt='Hello';first.componentInstance.send();
+    http.expectOne('/api/ai/admin/chat').flush({conversationId:'saved',suggestions:[],result:{status:'SUCCESS',message:'Hello back',data:null}});
+    first.destroy();const reopened=page();expect(reopened.current()?.id).toBe('saved');expect(reopened.current()?.messages.at(-1)?.text).toBe('Hello back');
+  });
+  it('regenerates with a new request key and stores authenticated response feedback',()=>{
+    const component=page();component.prompt='Hello';component.send();const first=http.expectOne('/api/ai/admin/chat');const key=first.request.headers.get('Idempotency-Key');
+    first.flush({conversationId:'saved',suggestions:[],result:{status:'SUCCESS',message:'Hello back',data:null}});
+    const turn=component.current()!.messages[1];component.vote(turn,'up');const feedback=http.expectOne('/api/ai/feedback');expect(feedback.request.body).toEqual({requestKey:key,rating:'up'});feedback.flush({rating:'up'});expect(turn.feedback).toBe('up');
+    component.regenerate(1);const second=http.expectOne('/api/ai/admin/chat');expect(second.request.headers.get('Idempotency-Key')).not.toBe(key);second.flush({conversationId:'saved',suggestions:[],result:{status:'SUCCESS',message:'New answer',data:null}});
+  });
   function prepareProduct(component: AdminAssistantPage) {
     component.startProduct('Create product named Phone, price $1,200, color Black, storage 256GB, stock 20 at Phnom Penh Branch.');
     http.expectOne(request => request.url === '/api/v1/subcategories/get/all').flush({ data: { content:[{ id:3,name:'Phones' }] } });

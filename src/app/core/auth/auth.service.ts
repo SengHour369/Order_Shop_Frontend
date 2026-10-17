@@ -9,6 +9,10 @@ export class AuthService {
   private sso = inject(KeycloakService);
   // Keep bearer credentials in memory; re-authenticate after a full page reload.
   readonly session = signal<Session | null>(null);
+  readonly secondFactorChallenge = signal('');
+  completeSecondFactor(code: string) {
+    return this.api.post<Session>('/api/v1/public/second-factor', {challenge:this.secondFactorChallenge(),code}).pipe(tap(s=>this.accept(s)));
+  }
   login(CriteriaValue: string, Password: string) {
     return this.api
       .post<Session>("/api/v1/public/email/username/login", {
@@ -23,11 +27,14 @@ export class AuthService {
       .pipe(tap((s) => this.accept(s)));
   }
   accept(s: Session) {
+    if (s.token_type === "MFA" && s.refresh_token) { this.session.set(null); this.secondFactorChallenge.set(s.refresh_token); return; }
     if (!s.access_token || !s.id)
       throw new Error("The server did not return a valid session.");
+    this.secondFactorChallenge.set('');
     this.session.set(s);
   }
   clear() {
+    this.secondFactorChallenge.set('');
     this.session.set(null);
   }
   userId() {

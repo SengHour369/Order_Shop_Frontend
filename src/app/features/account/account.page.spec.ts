@@ -20,7 +20,7 @@ describe("Customer account forms", () => {
           provide: ActivatedRoute,
           useValue: { snapshot: { queryParamMap: convertToParamMap({}) } },
         },
-        { provide: AuthService, useValue: { session: () => null, login: vi.fn(() => of({})) } },
+        { provide: AuthService, useValue: { session: () => null, secondFactorChallenge:()=>'', login: vi.fn(() => of({})) } },
         { provide: ApiClient, useValue: { post } },
       ],
     });
@@ -82,5 +82,20 @@ describe("Customer account forms", () => {
     expect(page.error()).toBe("Reset email could not be sent");
     expect(page.message()).toBe("");
     expect(page.busy()).toBe(false);
+  });
+  it("normalizes registration email and prevents rapid verification resends", () => {
+    const page = TestBed.createComponent(AccountPage).componentInstance;
+    page.mode = "Register"; page.username = " test "; page.email = " User@Example.test ";
+    page.phone = " 12345678 "; page.fullName = " Test User "; page.password = page.confirmation = "password";
+    page.submit();
+    expect(post).toHaveBeenCalledWith("/api/v1/public/register", { username: "test", email: "user@example.test", phone: "12345678", full_name: "Test User", password: "password" });
+    expect(page.mode).toBe("Verify"); expect(page.resendSeconds()).toBe(60);
+    const calls = post.mock.calls.length; page.resend(); expect(post.mock.calls.length).toBe(calls);
+  });
+  it("does not switch to verification after an email delivery failure", () => {
+    post.mockReturnValueOnce(throwError(() => ({ error: { message: "Unable to send email" } })));
+    const page = TestBed.createComponent(AccountPage).componentInstance;
+    page.mode = "Register"; page.password = page.confirmation = "password"; page.email = "user@example.test";
+    page.submit(); expect(page.mode).toBe("Register"); expect(page.error()).toContain("Unable to send email");
   });
 });

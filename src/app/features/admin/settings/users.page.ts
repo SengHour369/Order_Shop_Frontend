@@ -45,13 +45,14 @@ import { AdminApi, field, Row, text } from "../api/admin.api";
               @for (row of rows(); track field(row, "id")) {
                 <tr>
                   <td>
-                    <a [routerLink]="['/admin/customers', field(row, 'id')]">{{
+                    <a [routerLink]="['/admin/users', field(row, 'id')]">{{
                       text(field(row, "username"))
                     }}</a>
                   </td>
                   <td>{{ text(field(row, "email")) }}</td>
                   <td>{{ text(field(row, "status")) }}</td>
                   <td>
+                    <a class="adm-btn" [routerLink]="['/admin/users/edit', field(row, 'id')]">Edit User</a>
                     <button
                       class="adm-btn"
                       [disabled]="busy()"

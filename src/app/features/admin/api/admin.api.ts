@@ -706,6 +706,21 @@ export class AdminApi {
       ),
     );
   }
+  userDetails(id: number) { return this.api.get<Row>(`/api/v1/user/${id}/details`); }
+  userDetailsActivity(id: number, page = 0) { return this.api.get<Row>(`/api/v1/user/${id}/details/activity`, {page}); }
+  userEditor(id: number) { return this.api.get<Row>(`/api/v1/user/${id}/editor`); }
+  userEditorOptions() { return this.api.get<Row>('/api/v1/user/editor-options'); }
+  updateUserEditor(id: number, body: Row) { return this.api.put<Row>(`/api/v1/user/${id}/editor`, body); }
+  uploadUserEditorPhoto(id: number, file: File) {
+    const body = new FormData(); body.append('file', file);
+    return this.api.post<Row>(`/api/v1/user/${id}/editor/photo`, body);
+  }
+  updateUser(id: number, body: Row) {
+    return this.one<Row>(this.api.post('/api/v1/user/id/update', body, { id })).pipe(map(row => this.safeUser(row)));
+  }
+  requestUserPasswordReset(email: string) {
+    return this.api.post('/api/v1/public/forgot-password', { email });
+  }
   createUser(body: Row) {
     return this.one<Row>(this.api.post("/api/v1/user/create", body));
   }

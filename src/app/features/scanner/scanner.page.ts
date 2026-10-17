@@ -15,8 +15,6 @@ import { Icon } from '../../shared/components/icon';
 import { ProductImage } from '../../shared/components/product-image';
 import { ProductCard } from '../../shared/components/product-card';
 
-interface Detector { detect(source: HTMLVideoElement): Promise<{ rawValue: string }[]>; }
-type DetectorWindow = Window & { BarcodeDetector?: new () => Detector };
 export const MAX_SCAN_IMAGE_BYTES = 4000 * 1024 * 1024;
 
 @Component({
@@ -49,7 +47,6 @@ export class ScannerPage extends PageState {
   capturing = signal(false);
   code = '';
   lookupType = 'code';
-  captureType = 'photo';
   private stream?: MediaStream;
   private facing: 'environment' | 'user' = 'environment';
   private cameraTicket = 0;
@@ -95,7 +92,7 @@ export class ScannerPage extends PageState {
       if (ticket !== this.cameraTicket || this.disposed) return;
       this.stopCamera();
       const name = (error as Error).name;
-      this.cameraError.set(name === 'NotAllowedError' ? 'Camera access was denied. Allow camera access in your browser, or choose a photo.' : name === 'NotFoundError' ? 'No camera was found. Choose a product photo or enter its code instead.' : (error as Error).message === 'UNSUPPORTED' ? 'Live camera needs HTTPS or localhost. Use Take photo, Gallery, or enter a code instead.' : 'The camera could not start. Close other camera apps, try again, or choose a photo.');
+      this.cameraError.set(name === 'NotAllowedError' ? 'Camera access was denied. Allow camera access in your browser, or choose a photo.' : name === 'NotFoundError' ? 'No camera was found. Choose a product photo instead.' : (error as Error).message === 'UNSUPPORTED' ? 'Live camera needs HTTPS or localhost. Use Take photo or Gallery instead.' : 'The camera could not start. Close other camera apps, try again, or choose a photo.');
     } finally { if (!this.disposed && ticket === this.cameraTicket) this.cameraStarting.set(false); }
   }
   stopCamera() {
@@ -121,15 +118,6 @@ export class ScannerPage extends PageState {
     this.capturing.set(true); this.error.set('');
     const ticket = this.cameraTicket;
     try {
-      if (this.captureType === 'barcode') {
-        const Detector = (window as DetectorWindow).BarcodeDetector;
-        if (!Detector) throw new Error('Barcode scanning is not supported by this browser. Enter the SKU or barcode manually.');
-        const codes = await new Detector().detect(video);
-        if (this.disposed || ticket !== this.cameraTicket) return;
-        const value = codes.find(code => code.rawValue)?.rawValue;
-        if (!value) throw new Error('No barcode found. Move closer, keep the code inside the frame, and try again.');
-        this.code = value; this.lookupType = 'code'; this.capturing.set(false); this.scan(); return;
-      }
       if (!video.videoWidth || !video.videoHeight) throw new Error('The camera is still getting ready. Try again in a moment.');
       const canvas = document.createElement('canvas');
       const scale = Math.min(1, 1280 / Math.max(video.videoWidth, video.videoHeight));
@@ -163,8 +151,8 @@ export class ScannerPage extends PageState {
     this.clearResults();
     this.run(this.api.recognize(file), response => {
       this.screen.set('results'); this.message.set(response.message); this.candidates.set(response.candidates || []);
-      if (response.matchType === 'AI_UNAVAILABLE') this.message.set('Photo recognition is temporarily unavailable. Search by product name, SKU, or barcode below.');
-      else if (!response.candidates?.length) this.message.set('No catalog match found. Try a clearer photo or search below.');
+      if (response.matchType === 'AI_UNAVAILABLE') this.message.set('Photo recognition is temporarily unavailable. Please try another product photo later.');
+      else if (!response.candidates?.length) this.message.set('No catalog match found. Try a clearer product photo.');
       else if (response.exact && !response.requiresSelection && response.candidates.length === 1) this.selectCandidate(response.candidates[0]);
     });
   }

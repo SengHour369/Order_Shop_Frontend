@@ -1,8 +1,9 @@
 import { Component, DestroyRef, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Subscription } from 'rxjs';
+import { forkJoin, Subscription } from 'rxjs';
 import { NotificationsApi } from './notifications.api';
 import { Notice } from '../../core/api/models';
 import { AuthService } from '../../core/auth/auth.service';
@@ -14,8 +15,11 @@ import { SignInCard } from '../../shared/components/sign-in-card';
 import { PageState } from '../../shared/utils/page-state';
 import { Status } from '../../shared/components/status';
 type Category='all'|'orders'|'promotions'|'account'|'system';
-@Component({imports:[TranslatePipe,DatePipe,RouterLink,Icon,SignInCard,Status],templateUrl:'./notifications.html',styleUrl:'./notifications.scss'})
+@Component({imports:[FormsModule,TranslatePipe,DatePipe,RouterLink,Icon,SignInCard,Status],templateUrl:'./notifications.html',styleUrl:'./notifications.scss'})
 export class NotificationsPage extends PageState {
+  private readonly router=inject(Router);
+  readonly admin=this.router.url.startsWith('/admin');
+  search=''; status='all'; period='all'; total=0; checked=new Set<number>();
   private readonly api=inject(NotificationsApi);
   readonly auth=inject(AuthService);
   readonly store=inject(CustomerStore);
@@ -34,7 +38,7 @@ export class NotificationsPage extends PageState {
   load(page=this.page){
     if(!this.auth.session()||this.busy()||this.actionBusy())return;
     this.run(this.api.list(page),result=>{
-      this.notices.set(result.content);this.page=page;this.pages=result.totalPages;
+      this.total=result.totalElements;this.checked.clear();this.notices.set(result.content);this.page=page;this.pages=result.totalPages;
       if(this.selected())this.selected.set(result.content.find(n=>n.id===this.selected()!.id)||null);
       this.updateCount();
     });
@@ -51,9 +55,12 @@ export class NotificationsPage extends PageState {
     if(/^(ACCOUNT|SECURITY|PASSWORD|LOGIN|USER)(_|$)/.test(type)||['ACCOUNT','USER','SECURITY'].includes(resource))return 'account';
     return 'system';
   }
-  filtered(){return this.notices().filter(n=>this.filter==='all'||this.category(n)===this.filter);}
+  filtered(){return this.notices().filter(n=>(this.filter==='all'||this.category(n)===this.filter)&&(!this.admin||((this.status==='all'||(this.status==='read')===n.read)&&`${n.title} ${n.message}`.toLowerCase().includes(this.search.toLowerCase())&&(this.period==='all'||this.clock()-Date.parse(n.createdAt)<=Number(this.period)*86400000))));}
+  toggleChecked(id:number){this.checked.has(id)?this.checked.delete(id):this.checked.add(id);}
+  pageNumbers(){return Array.from({length:Math.min(5,this.pages)},(_,i)=>Math.max(1,Math.min(this.page-2,this.pages-4))+i);}
+
   count(category:Category){return this.notices().filter(n=>category==='all'||this.category(n)===category).length;}
-  select(notice:Notice){this.selected.set(notice);this.actionError.set('');this.detailDialog().nativeElement.showModal();if(!notice.read)this.read(notice.id);}
+  select(notice:Notice){if(this.admin){void this.router.navigate(['/admin/notifications',notice.id],{state:{notificationIds:this.notices().map(n=>n.id)}});return;}this.selected.set(notice);this.actionError.set('');this.detailDialog().nativeElement.showModal();if(!notice.read)this.read(notice.id);}
   close(){this.detailDialog().nativeElement.close();this.selected.set(null);}
   read(id:number){
     if(!this.auth.session()||this.actionBusy()||this.busy())return;
@@ -61,6 +68,12 @@ export class NotificationsPage extends PageState {
       this.notices.update(rows=>rows.map(n=>n.id===id?{...n,read:true}:n));
       if(this.selected()?.id===id)this.selected.update(n=>n?{...n,read:true}:null);
     });
+  }
+  readChecked(){
+    if(!this.auth.session()||this.busy()||this.actionBusy())return;
+    const ids=this.notices().filter(n=>this.checked.has(n.id)&&!n.read).map(n=>n.id);
+    if(!ids.length)return;
+    this.mutate(()=>forkJoin(ids.map(id=>this.api.read(id))),()=>{this.notices.update(rows=>rows.map(n=>ids.includes(n.id)?{...n,read:true}:n));this.checked.clear();});
   }
   readAll(){
     if(!this.auth.session()||this.actionBusy()||this.busy()||this.store.unread()===0)return;
@@ -90,7 +103,7 @@ export class NotificationsPage extends PageState {
   }
   destination(n:Notice):string[]|null{
     const type=(n.resourceType||'').toUpperCase(),id=n.resourceId||'';
-    if(type==='ORDER'&&/^[1-9]\d*$/.test(id))return ['/account/orders',id];
+    if(type==='ORDER'&&/^[1-9]\d*$/.test(id))return [this.admin?'/admin/orders':'/account/orders',id];
     if(type==='RETURN'&&/^RET[A-Za-z0-9_-]{1,76}$/.test(id))return ['/account/returns',id];
     if(type==='PRODUCT'&&/^[1-9]\d*$/.test(id))return ['/shop',id];return null;
   }

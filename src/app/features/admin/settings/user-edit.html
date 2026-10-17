@@ -1,0 +1,41 @@
+<section class="user-editor">
+  <form #editForm="ngForm" (ngSubmit)="save()">
+    <header class="editor-toolbar"><a class="editor-button" routerLink="/admin/users"><app-icon name="arrow-left" />Back to Users</a><div><a class="editor-button" routerLink="/admin/users">{{ 'Cancel' | translate }}</a><button class="editor-button primary" [disabled]="busy() || !user() || editForm.invalid">Save Changes</button><input #photoInput type="file" hidden accept="image/jpeg,image/png" (change)="choosePhoto($event)" /></div></header>
+    <app-status [busy]="busy()" [error]="error()" [message]="message()" />
+    @if (user(); as current) {
+      <fieldset class="editor-form-fields" [disabled]="busy()"><div class="editor-columns">
+        <div class="editor-column">
+          <article class="editor-card user-information">
+            <header class="information-heading"><div><h3>User Information</h3><p>Update the user's personal and contact information.</p></div><div class="profile-picture">@if (photoPreview || field(current, 'image')) {<img [src]="photoPreview || field(current, 'image')" alt="User profile" />} @else {<span>{{ initials() || '?' }}</span>}<button type="button" [disabled]="busy()" aria-label="Change profile photo" (click)="photoInput.click()"><app-icon name="camera" /></button><input #photoInput type="file" hidden accept="image/jpeg,image/png" (change)="choosePhoto($event)" /></div></header>
+            <div class="editor-fields">
+              <label>First Name <em>*</em><input name="firstName" [(ngModel)]="firstName" required maxlength="100" autocomplete="given-name" /></label>
+              <label>Last Name <em>*</em><input required name="lastName" [(ngModel)]="lastName" maxlength="100" autocomplete="family-name" /></label>
+              <label>Email Address <em>*</em><input name="email" [(ngModel)]="email" type="email" required email maxlength="254" autocomplete="email" /></label>
+              <label>Phone Number <em>*</em><div class="phone-input"><select aria-label="Phone country code" name="phoneCountry" [ngModel]="phoneCountry" (ngModelChange)="changePhoneCountry($event)"><option value="">🌐</option><option value="+855">🇰🇭</option><option value="+1">🇺🇸</option><option value="+44">🇬🇧</option><option value="+66">🇹🇭</option><option value="+84">🇻🇳</option><option value="+65">🇸🇬</option></select><input required name="phone" [(ngModel)]="phone" type="tel" maxlength="30" autocomplete="tel" /></div></label>
+              <label>Username <em>*</em><input name="username" [(ngModel)]="username" required maxlength="100" autocomplete="username" /></label>
+              <label>Job Title<input name="jobTitle" [(ngModel)]="jobTitle" maxlength="100" /></label>
+              <label>Department<select name="department" [(ngModel)]="department" aria-label="Department"><option value="">Select department</option>@for (item of departments(); track item) {<option [value]="item">{{ item }}</option>}</select></label>
+              <label>Manager<select name="managerId" [(ngModel)]="managerId" aria-label="Manager"><option [ngValue]="null">No manager</option>@for (item of rows('managers'); track item['id']) {@if(item['id'] !== id){<option [ngValue]="item['id']">{{ item['name'] }}</option>}}</select></label>
+              <label>Date of Birth<input name="birthdate" [(ngModel)]="birthdate" type="date" autocomplete="bday" /></label>
+              <fieldset class="gender-field"><legend>Gender</legend><label><input type="radio" name="gender" [(ngModel)]="gender" value="MALE" />Male</label><label><input type="radio" name="gender" [(ngModel)]="gender" value="FEMALE" />Female</label><label><input type="radio" name="gender" [(ngModel)]="gender" value="OTHER" />Other</label></fieldset>
+              <label class="full-width">Address<textarea name="address" [(ngModel)]="address" rows="2" maxlength="255" autocomplete="street-address"></textarea><small class="address-count">{{ address.length }}/255</small></label>
+            </div>
+
+          </article>
+          <article class="editor-card security-card"><h3>Security &amp; Authentication</h3><p>Manage user authentication and security settings.</p><label class="security-label">Password</label><div class="reset-password"><button type="button" class="editor-button blue" (click)="resetPassword()" [disabled]="busy()"><app-icon name="refresh" />Reset Password</button><small>Send a password reset link to the user's saved email</small></div><div class="two-factor"><div><strong>Two-Factor Authentication</strong><p>Require an email verification code when this user signs in.</p></div><button type="button" role="switch" aria-label="Require two-factor authentication" [attr.aria-checked]="twoFactorRequired" class="switch" [class.enabled]="twoFactorRequired" [disabled]="busy()" (click)="twoFactorRequired = !twoFactorRequired"><span></span></button></div></article>
+        </div>
+        <div class="editor-column">
+          <article class="editor-card account-card"><h3>Account Status</h3><p>Manage the user's account status and role.</p><label class="section-label" for="user-active">Status <em>*</em></label><div class="account-switch"><button id="user-active" type="button" role="switch" [attr.aria-checked]="active" [attr.aria-label]="active ? 'Deactivate user' : 'Activate user'" class="switch" [class.enabled]="active" [disabled]="busy()" (click)="active = !active"><span></span></button><div><strong>{{ active ? 'Active' : 'Inactive' }}</strong><small>{{ active ? 'Active users can access the system' : 'This user is not active' }}</small></div></div><label class="account-field">Role <em>*</em><select name="roleId" [(ngModel)]="roleId" (ngModelChange)="chooseRole()" required><option [ngValue]="0" disabled>Select role</option>@for (role of rows('roles'); track role['id']) {<option [ngValue]="role['id']">{{ role['name'] }}</option>}</select><small>Define user role and system access level</small></label><label class="account-field">Language<select name="language" [(ngModel)]="language"><option value="en-US">English (US)</option><option value="km-KH">ខ្មែរ (Cambodia)</option></select><small>Select the preferred language</small></label></article>
+          <article id="groups" class="editor-card groups-card"><h3>User Groups</h3><p>Assign user to one or more groups to manage permissions.</p>
+            <div class="account-field"><label id="groups-label">Groups <em>*</em></label><div class="group-picker" [class.open]="groupsOpen">
+              <div class="group-select" aria-labelledby="groups-label"><div class="group-chips">@for(group of selectedGroups();track group['id']) {<span class="group-chip">{{ group['name'] }}<button type="button" [disabled]="busy()" [attr.aria-label]="'Remove '+group['name']" (click)="toggleGroup(number(group['id']))">×</button></span>}@empty{<span class="group-placeholder">Select groups</span>}</div><button type="button" class="group-expand" aria-label="Choose user groups" [attr.aria-expanded]="groupsOpen" (click)="groupsOpen = !groupsOpen"><app-icon name="down" /></button></div>
+              @if(groupsOpen){<div class="group-options"><label class="group-search"><app-icon name="search"/><input name="groupSearch" [(ngModel)]="groupSearch" placeholder="Search groups..." aria-label="Search groups" /></label>
+                @for(group of groups();track group['id'];let index=$index){<label class="group-option"><input type="checkbox" [checked]="groupIds.includes(number(group['id']))" [disabled]="busy()" (change)="toggleGroup(number(group['id']))"/><span class="group-avatar" [class]="'group-avatar tone-'+index%5"><app-icon name="user" /></span><span><strong>{{group['name']}}</strong><small>{{group['description'] || 'Access managed by this group’s permissions'}}</small></span></label>}@empty{<p class="no-groups">No groups found.</p>}
+              </div>}
+            </div></div>
+          </article>
+        </div>
+      </div></fieldset>
+    }
+  </form>
+</section>

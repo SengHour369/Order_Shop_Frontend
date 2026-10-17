@@ -349,13 +349,18 @@ export const routes: Routes = [
         canActivate: [adminGuard],
         title: "Add Customer Group · ShopAdmin",
         loadComponent: () =>
-          import("./features/admin/settings/access-groups.page").then((m) => m.AccessGroupsPage),
+          import("./features/admin/customers/customer-group.page").then((m) => m.CustomerGroupPage),
       },
       {
         path: "customer-groups/edit/:id",
+        canActivate: [adminGuard],
         title: "Edit Customer Group · ShopAdmin",
-        loadComponent: () =>
-          import("./features/admin/customers/groups.page").then((m) => m.GroupsPage),
+        loadComponent: () => import("./features/admin/customers/customer-group.page").then(m => m.CustomerGroupPage),
+      },
+      {
+        path: "customer-groups/:id",
+        title: "Group Details · ShopAdmin",
+        loadComponent: () => import("./features/admin/customers/customer-group.page").then(m => m.CustomerGroupPage),
       },
       {
         path: "products",
@@ -553,6 +558,18 @@ export const routes: Routes = [
           ),
       },
       {
+        path: "notifications/:id",
+        canActivate: [adminGuard],
+        title: "Notification Details · ShopAdmin",
+        loadComponent: () => import("./features/notifications/notification-detail.page").then(m => m.NotificationDetailPage),
+      },
+      {
+        path: "notifications",
+        canActivate: [adminGuard],
+        title: "Notifications · ShopAdmin",
+        loadComponent: () => import("./features/notifications/notifications.page").then(m => m.NotificationsPage),
+      },
+      {
         path: "groups",
         canActivate: [adminGuard],
         loadComponent: () =>
@@ -564,9 +581,33 @@ export const routes: Routes = [
         path: "groups/add",
         canActivate: [adminGuard],
         loadComponent: () =>
-          import("./features/admin/settings/access-groups.page").then(
-            (m) => m.AccessGroupsPage,
+          import("./features/admin/customers/customer-group.page").then(
+            (m) => m.CustomerGroupPage,
           ),
+      },
+      {
+        path: "groups/edit/:id",
+        canActivate: [adminGuard],
+        title: "Edit Group · ShopAdmin",
+        loadComponent: () => import("./features/admin/customers/customer-group.page").then(m => m.CustomerGroupPage),
+      },
+      {
+        path: "groups/:id",
+        canActivate: [adminGuard],
+        title: "Group Details · ShopAdmin",
+        loadComponent: () => import("./features/admin/customers/customer-group.page").then(m => m.CustomerGroupPage),
+      },
+      {
+        path: "users/edit/:id",
+        canActivate: [adminGuard],
+        title: "Edit User · ShopAdmin",
+        loadComponent: () => import("./features/admin/settings/user-edit.page").then(m => m.UserEditPage),
+      },
+      {
+        path: "users/:id",
+        canActivate: [adminGuard],
+        title: "User Details · ShopAdmin",
+        loadComponent: () => import("./features/admin/settings/user-detail.page").then(m => m.UserDetailPage),
       },
       {
         path: "users",

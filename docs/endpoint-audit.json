@@ -36,6 +36,65 @@
     "status": "Adapter present; live verification required"
   },
   {
+    "method": "GET",
+    "path": "/api/ai/admin/info",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiAdminInfoController.java",
+    "clients": [
+      "src/app/features/assistant/assistant.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/ai/admin/conversations",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiAdminWorkspaceController.java",
+    "clients": [
+      "src/app/features/assistant/assistant.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/ai/admin/conversations/{id}",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiAdminWorkspaceController.java",
+    "clients": [
+      "src/app/features/assistant/assistant.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/ai/admin/conversations/{id}",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiAdminWorkspaceController.java",
+    "clients": [
+      "src/app/features/assistant/assistant.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/ai/confirm/{id}",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiController.java",
+    "clients": [
+      "src/app/features/assistant/assistant.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/ai/chat",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/ai/admin/chat",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
     "method": "POST",
     "path": "/api/ai/execute",
     "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiController.java",
@@ -50,6 +109,185 @@
     "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiController.java",
     "clients": [
       "src/app/features/assistant/assistant.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/ai/imports/tools",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiImportController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/ai/imports",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiImportController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/ai/imports/upload",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiImportController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/ai/imports/{id}/rows/{rowId}/images",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiImportController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/ai/imports/{id}/rows/{rowId}/images/{imageId}/detach",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiImportController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/ai/imports/{id}/images/{imageId}",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiImportController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/ai/imports/{id}/analyze",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiImportController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/ai/imports/{id}/preview",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiImportController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/ai/imports/{id}/sheets/{sheetId}",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiImportController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/ai/imports/{id}/sheets/{sheetId}/rows",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiImportController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/ai/imports/{id}/rows/{rowId}",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiImportController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/ai/imports/{id}/rows/{rowId}/skip",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiImportController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/ai/imports/{id}/validate",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiImportController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/ai/imports/{id}/submit",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiImportController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/ai/imports/{id}/approve",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiImportController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/ai/imports/{id}/reject",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiImportController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/ai/imports/{id}/request-changes",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiImportController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/ai/imports/{id}/execute",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiImportController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/ai/imports/{id}/executions",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiImportController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/ai/imports/{id}/history",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiImportController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/ai/imports/{id}/original",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiImportController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/ai/imports/{id}/report",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiImportController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/ai/knowledge",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiKnowledgeController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/ai/feedback",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiQuotaController.java",
+    "clients": [
+      "src/app/features/assistant/assistant.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/ai/quota",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiQuotaController.java",
+    "clients": [
+      "src/app/features/assistant/assistant-quota.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -111,7 +349,8 @@
     "path": "/api/v1/addresses/{id}",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/AddressController.java",
     "clients": [
-      "src/app/features/addresses/addresses.api.ts"
+      "src/app/features/addresses/addresses.api.ts",
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -139,6 +378,31 @@
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/AddressController.java",
     "clients": [
       "src/app/features/addresses/addresses.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/commerce/addresses/{id}/owner/{userId}",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/CommerceAddressController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/user/me/profile",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/CustomerProfileController.java",
+    "clients": [
+      "src/app/features/account/profile.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/user/me/profile",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/CustomerProfileController.java",
+    "clients": [
+      "src/app/features/account/profile.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -287,6 +551,43 @@
     "status": "Adapter present; live verification required"
   },
   {
+    "method": "GET",
+    "path": "/internal/authorization/import-reviewers/{id}",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/ImportReviewerController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/authorization/me",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/InternalAuthorizationController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/user/access",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/InternalAuthorizationController.java",
+    "clients": [
+      "src/app/core/auth/permission.service.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/authorization/users/{id}/active",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/InternalAuthorizationController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/ai/users",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/InternalAuthorizationController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
     "method": "POST",
     "path": "/internal/notifications/email",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/InternalNotificationController.java",
@@ -353,7 +654,8 @@
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/LoginController.java",
     "clients": [
       "src/app/features/account/account.page.ts",
-      "src/app/features/account/security.page.ts"
+      "src/app/features/account/security.page.ts",
+      "src/app/features/admin/api/admin.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -469,7 +771,9 @@
     "method": "POST",
     "path": "/api/v1/user/id/update",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserController.java",
-    "clients": [],
+    "clients": [
+      "src/app/features/admin/api/admin.api.ts"
+    ],
     "status": "Blocked: backend @PathVariable id is missing from mapping"
   },
   {
@@ -582,6 +886,59 @@
   },
   {
     "method": "GET",
+    "path": "/api/v1/public/keycloak/config",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/keycloak/KeycloakController.java",
+    "clients": [
+      "src/app/core/auth/keycloak.service.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/public/keycloak/exchange",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/keycloak/KeycloakController.java",
+    "clients": [
+      "src/app/core/auth/keycloak.service.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/ai/inventory/{skuId}",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/AiCatalogController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/ai/inventory/low-stock",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/AiCatalogController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/ai/promotions/{id}",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/AiCatalogController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "POST",
+    "path": "/internal/ai/promotions/{id}/disable",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/AiCatalogController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/ai/products",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/AiCatalogController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "GET",
     "path": "/internal/ai/products/{id}",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/AiCatalogController.java",
     "clients": [],
@@ -600,6 +957,51 @@
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/AiCatalogController.java",
     "clients": [],
     "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/branches",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/BranchController.java",
+    "clients": [
+      "src/app/features/admin/imports/branches.page.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/branches",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/BranchController.java",
+    "clients": [
+      "src/app/features/admin/imports/branches.page.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/branches/{id}/access",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/BranchController.java",
+    "clients": [
+      "src/app/features/admin/imports/branches.page.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/branches/{id}/access",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/BranchController.java",
+    "clients": [
+      "src/app/features/admin/imports/branches.page.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/branches/{id}/inventory/{inventoryId}",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/BranchController.java",
+    "clients": [
+      "src/app/features/admin/imports/branches.page.ts"
+    ],
+    "status": "Adapter present; live verification required"
   },
   {
     "method": "GET",
@@ -629,6 +1031,13 @@
     "status": "Adapter present; live verification required"
   },
   {
+    "method": "GET",
+    "path": "/internal/catalog/checkouts/{orderId}",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/CatalogCheckoutController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
     "method": "POST",
     "path": "/internal/catalog/checkouts/quote",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/CatalogCheckoutController.java",
@@ -653,6 +1062,34 @@
     "method": "POST",
     "path": "/internal/catalog/checkouts/{orderId}/release",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/CatalogCheckoutController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "POST",
+    "path": "/internal/ai/imports/validate",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/CatalogImportController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "POST",
+    "path": "/internal/ai/imports/validate-bulk",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/CatalogImportController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "POST",
+    "path": "/internal/ai/imports/execute-product",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/CatalogImportController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "POST",
+    "path": "/internal/ai/imports/execute",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/CatalogImportController.java",
     "clients": [],
     "status": "Excluded: service-to-service API"
   },
@@ -1178,6 +1615,50 @@
   },
   {
     "method": "GET",
+    "path": "/${automation.api-path:/api/v1/orders/automation}/events",
+    "source": "common-lib/src/main/java/com/example/eshop/common/automation/AutomationController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "GET",
+    "path": "/${automation.api-path:/api/v1/orders/automation}/events/{id}/logs",
+    "source": "common-lib/src/main/java/com/example/eshop/common/automation/AutomationController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "GET",
+    "path": "/${automation.api-path:/api/v1/orders/automation}/reviews",
+    "source": "common-lib/src/main/java/com/example/eshop/common/automation/AutomationController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "POST",
+    "path": "/${automation.api-path:/api/v1/orders/automation}/events/{id}/retry",
+    "source": "common-lib/src/main/java/com/example/eshop/common/automation/AutomationController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/notifications/admin/delivery",
+    "source": "notification-service/src/main/java/com/example/eshop/notification/controller/NotificationAutomationController.java",
+    "clients": [
+      "src/app/features/admin/automation/automation.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/commerce/notifications/{orderId}",
+    "source": "notification-service/src/main/java/com/example/eshop/notification/controller/NotificationAutomationController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "GET",
     "path": "/api/notifications",
     "source": "notification-service/src/main/java/com/example/eshop/notification/controller/NotificationController.java",
     "clients": [
@@ -1240,9 +1721,81 @@
     "status": "Adapter present; live verification required"
   },
   {
+    "method": "POST",
+    "path": "/api/v1/orders/automation/orders/{id}/review",
+    "source": "order-service/src/main/java/com/example/eshop/order/automation/CommerceOrderController.java",
+    "clients": [
+      "src/app/features/admin/automation/automation.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/ai/orders/automation/{id}",
+    "source": "order-service/src/main/java/com/example/eshop/order/automation/CommerceOrderController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/commerce/orders/{id}",
+    "source": "order-service/src/main/java/com/example/eshop/order/automation/CommerceOrderController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/ai/orders/{number}/cancel-preview",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/AiOrderController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
     "method": "GET",
     "path": "/internal/ai/orders/{number}",
     "source": "order-service/src/main/java/com/example/eshop/order/controller/AiOrderController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/ai/orders",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/AiOrderController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/ai/orders/latest",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/AiOrderController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/ai/orders/admin",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/AiOrderController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/ai/orders/summary",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/AiOrderController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/ai/returns",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/AiReturnController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/ai/returns/admin",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/AiReturnController.java",
     "clients": [],
     "status": "Excluded: service-to-service API"
   },
@@ -1324,6 +1877,26 @@
     "source": "order-service/src/main/java/com/example/eshop/order/controller/CartController.java",
     "clients": [
       "src/app/features/cart/cart.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/returns/user",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/CustomerReturnController.java",
+    "clients": [
+      "src/app/features/admin/api/admin.api.ts",
+      "src/app/features/after-sales/after-sales.api.ts",
+      "src/app/features/orders/returns/customer-returns.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/returns/user/{returnId}",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/CustomerReturnController.java",
+    "clients": [
+      "src/app/features/orders/returns/customer-returns.api.ts"
     ],
     "status": "Adapter present; live verification required"
   },
@@ -1614,6 +2187,34 @@
     "status": "Adapter present; live verification required"
   },
   {
+    "method": "GET",
+    "path": "/api/v1/payments/orders/{id}/qr/image",
+    "source": "payment-service/src/main/java/com/example/eshop/payment/automation/PaymentAutomationController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/payments/orders/{id}/qr",
+    "source": "payment-service/src/main/java/com/example/eshop/payment/automation/PaymentAutomationController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/payments/orders/{id}/verify",
+    "source": "payment-service/src/main/java/com/example/eshop/payment/automation/PaymentAutomationController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/commerce/payments/{id}",
+    "source": "payment-service/src/main/java/com/example/eshop/payment/automation/PaymentAutomationController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
     "method": "POST",
     "path": "/api/v1/bakong/get-qr-image",
     "source": "payment-service/src/main/java/com/example/eshop/payment/bakong/controller/BakongController.java",
@@ -1632,6 +2233,27 @@
       "src/app/features/payments/payments.api.ts"
     ],
     "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/ai/payments/revenue",
+    "source": "payment-service/src/main/java/com/example/eshop/payment/controller/AiPaymentController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/ai/payments/{id}",
+    "source": "payment-service/src/main/java/com/example/eshop/payment/controller/AiPaymentController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/ai/payments/admin",
+    "source": "payment-service/src/main/java/com/example/eshop/payment/controller/AiPaymentController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
   },
   {
     "method": "POST",

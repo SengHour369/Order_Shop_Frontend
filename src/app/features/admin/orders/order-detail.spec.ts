@@ -44,4 +44,25 @@ describe('Order detail service composition', () => {
     expect(page.paidAmount({ payment: { status: 'SUCCESS', amount: 120 } })).toBe(120);
     expect(page.paymentField({ id: 42 }, 'id', 'payment_id')).toBe('');
   });
+  it('calculates pricing from per-unit discounts and quantities', () => {
+    const { page } = create();
+    page.items.set([{ baseUnitPrice: 30, unit_price: 25, discountAmount: 5, quantity: 3, total_price: 75 }]);
+    expect(page.subtotal()).toBe(90);
+    expect(page.discount()).toBe(15);
+    expect(page.optionalDiscount(page.items()[0])).toBe('-$15.00');
+    expect(page.optionalMoney('')).toBe('—');
+    expect(page.optionalMoney(0)).toBe('$0.00');
+  });
+
+  it('uses real payment and status history events without inventing shipping events', () => {
+    const { page } = create();
+    const pending = page.timeline({ status: 'PENDING', order_date: '2026-10-16T10:00:00' });
+    expect(pending.map(event => event.label)).toEqual(['Order Placed']);
+    const events = page.timeline({ order_date: '2026-10-16T10:00:00', status: 'SHIPPED', payment: { status: 'PAID', payment_date: '2026-10-16T10:01:00' }, status_history: [{ new_status: 'SHIPPED', changed_at: '2026-10-16T11:00:00' }] });
+    expect(events.map(event => event.label)).toEqual(['Order Placed', 'Payment Successful', 'Shipped']);
+    expect(events[2].shipping).toBe(true);
+    expect(page.seller({})).toBeNull();
+    expect(page.mapUrl({})).toBe('');
+    expect(page.mapUrl(page.order()!)).toContain('Street%201');
+  });
 });

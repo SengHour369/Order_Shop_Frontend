@@ -1,10 +1,14 @@
 export interface ChatProduct {
     id: number;
     name: string;
+    description?: string;
+    images?: string[];
+    attributes?: {name: string; values: string[]}[];
     skuId?: number;
     price?: number;
     originalPrice?: number;
     available?: number;
+    promotion?: string;
     image: string;
     quantity: number;
     variants: {
@@ -13,6 +17,8 @@ export interface ChatProduct {
         price?: number;
         originalPrice?: number;
         available?: number;
+        promotion?: string;
+        attributes?: {name: string; values: string[]}[];
     }[];
 }
 export interface ChatMessage {
@@ -21,9 +27,14 @@ export interface ChatMessage {
     products?: ChatProduct[];
     suggestions?: string[];
     cardType?: string;
+    confirmationId?: string;
+    confirmationParameters?: string;
+    paymentOrderId?: number;
+    visualCandidates?: {productId: number; name: string; confidence: number}[];
     rows?: {
         title: string;
         detail: string;
+        orderId?: number;
     }[];
 }
 export function toChatProduct(value: unknown): ChatProduct | null {
@@ -35,21 +46,27 @@ export function toChatProduct(value: unknown): ChatProduct | null {
     const skus = Array.isArray(row["skus"])
         ? (row["skus"] as Record<string, unknown>[])
         : [];
-    const sku = skus.find((s) => s["is_default"] === true) || skus[0];
+    const isDefault = (s: Record<string, unknown>) => s["is_default"] === true || s["isDefault"] === true;
+    const inStock = (s: Record<string, unknown>) => (stock(s) ?? 0) > 0;
+    const sku = skus.find(s => isDefault(s) && inStock(s)) || skus.find(inStock) || skus.find(isDefault) || skus[0];
     const price = sku?.["effectivePrice"] ??
         sku?.["finalPrice"] ??
         sku?.["basePrice"] ??
         sku?.["price"];
     const base = sku?.["basePrice"] ?? sku?.["price"];
-    const available = sku?.["available"] ?? sku?.["quantity"];
-    const images = row["main_image"];
+    const available = stock(sku);
+    const images = row["images"] ?? row["main_image"];
     return {
         id: row["id"],
         name: row["name"],
+        description: typeof row["description"] === "string" ? row["description"] : undefined,
+        images: Array.isArray(images) ? images.filter((image): image is string => typeof image === "string") : [],
+        attributes: attributes(sku),
         skuId: typeof sku?.["id"] === "number" ? sku["id"] : undefined,
-        price: typeof price === "number" ? price : undefined,
-        originalPrice: typeof base === "number" ? base : undefined,
-        available: typeof available === "number" ? available : undefined,
+        price: finiteNumber(price),
+        originalPrice: finiteNumber(base),
+        available: finiteNumber(available),
+        promotion: promotionName(sku),
         image: Array.isArray(images) && typeof images[0] === "string"
             ? images[0]
             : "/images/product-placeholder.svg",
@@ -57,8 +74,24 @@ export function toChatProduct(value: unknown): ChatProduct | null {
         variants: skus.filter(s => typeof s['id'] === 'number').map(s => ({
             id: s['id'] as number, label: typeof s['sku'] === 'string' ? s['sku'] : 'SKU #' + s['id'],
             price: finiteNumber(s['effectivePrice'] ?? s['finalPrice'] ?? s['basePrice'] ?? s['price']),
-            originalPrice: finiteNumber(s['basePrice'] ?? s['price']), available: finiteNumber(s['available'] ?? s['quantity']),
+            promotion: promotionName(s), originalPrice: finiteNumber(s['basePrice'] ?? s['price']), available: stock(s), attributes: attributes(s),
         })),
     };
 }
 function finiteNumber(value: unknown) { return typeof value === 'number' && Number.isFinite(value) ? value : undefined; }
+
+function promotionName(sku: Record<string, unknown> | undefined): string | undefined {
+    return sku?.['hasPromotion'] === true && typeof sku['promotionName'] === 'string' ? sku['promotionName'] : undefined;
+}
+
+function stock(sku: Record<string, unknown> | undefined) {
+    const inventory = sku?.['inventory'];
+    const available = inventory && typeof inventory === 'object' ? (inventory as Record<string, unknown>)['availableQuantity'] : undefined;
+    return finiteNumber(sku?.['available'] ?? available ?? sku?.['quantity']);
+}
+function attributes(sku: Record<string, unknown> | undefined): {name: string; values: string[]}[] {
+    const rows = sku?.['attributes'];
+    if (!Array.isArray(rows)) return [];
+    return rows.filter(row => row && typeof row.name === 'string' && Array.isArray(row.attributes))
+        .map(row => ({name: row.name, values: row.attributes.filter((v: Record<string, unknown>) => typeof v['value'] === 'string').map((v: Record<string, unknown>) => v['value'] as string)}));
+}

@@ -8,6 +8,7 @@ import { Envelope, Transaction } from "../../core/api/models";
 export class PaymentsApi {
   private api = inject(ApiClient);
   private auth = inject(AuthService);
+  methods() { return this.api.get<string[]>("/api/v1/payments/methods"); }
   list() {
     return this.api
       .get<Envelope<Transaction[]>>(

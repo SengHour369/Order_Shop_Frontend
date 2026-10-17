@@ -93,12 +93,14 @@ describe('Product scanner', () => {
     http.expectOne(recognizeUrl).flush({data:{matchType:'AI_IMAGE',exact:true,requiresSelection:false,message:'Found',candidates:[{productId:7,name:'Headphones',sku:'HEADPHONE-BLACK',confidence:.99}]}});
     http.expectOne(scanUrl).flush({data:found}); expect(component.sku()?.finalPrice).toBe(129.99);
   });
-  it('offers manual search when photo recognition is unavailable', () => {
+  it('offers another photo when recognition is unavailable without barcode controls', () => {
     const fixture=page(); const component=fixture.componentInstance;
     component.recognizeFile(new File(['x'],'p.png',{type:'image/png'}));
     http.expectOne(recognizeUrl).flush({data:{matchType:'AI_UNAVAILABLE',exact:false,requiresSelection:false,candidates:[]}});
     fixture.detectChanges(); expect(fixture.nativeElement.textContent).toContain('temporarily unavailable');
-    expect(fixture.nativeElement.querySelector('[aria-label="Find product"]')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('[aria-label="Find product"]')).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Try another photo');
+    expect(fixture.nativeElement.textContent).not.toContain('Barcode');
   });
   it('unlocks lookup after a server or business error', () => {
     const component=page().componentInstance; component.code='code'; component.scan();

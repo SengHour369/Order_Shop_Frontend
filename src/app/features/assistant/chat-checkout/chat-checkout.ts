@@ -1,5 +1,6 @@
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
 import { Component, DestroyRef, inject, input, output, signal } from '@angular/core';
+import { ChatOrder } from "../chat-order";
 import { PaymentQr } from "../../payments/payment-qr";
 import { CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -18,10 +19,12 @@ import { Icon } from '../../../shared/components/icon';
 import { ProductImage } from '../../../shared/components/product-image';
 @Component({
     selector: 'app-chat-checkout',
-    imports: [TranslatePipe, PaymentQr, CurrencyPipe, FormsModule, RouterLink, Icon, ProductImage],
+    imports: [TranslatePipe, PaymentQr, ChatOrder, CurrencyPipe, FormsModule, RouterLink, Icon, ProductImage],
     templateUrl: './chat-checkout.html', styleUrl: './chat-checkout.css',
 })
 export class ChatCheckout {
+    language=input('en');
+    text(en:string,km:string){return this.language()==='km'?km:en;}
     labels = input<Record<number, {
         name: string;
         image: string;
@@ -45,9 +48,23 @@ export class ChatCheckout {
     reviewing = signal(false);
     pending = signal(false);
     paymentsLoaded = signal(false);
+    trackingVisible = signal(false);
     addressId = 0;
-    method = 'BAKONG';
-    readonly methods = ['BAKONG', 'ABA', 'CASH_ON_DELIVERY'];
+    addingAddress=signal(false);
+    addressDraft:Omit<Address,'id'>={address_line1:'',city:'',zip_code:'',country:'',is_default:false};
+    saveAddress(){
+        if(!this.auth.session()||this.loading()||this.checkoutLocked()||this.reviewing())return;
+        const body={...this.addressDraft,address_line1:this.addressDraft.address_line1.trim(),city:this.addressDraft.city.trim(),zip_code:this.addressDraft.zip_code.trim(),country:this.addressDraft.country.trim(),is_default:this.addresses().length===0};
+        if(!body.address_line1||!body.city||!body.zip_code||!body.country){this.error.set(this.text('Fill all delivery address fields.','សូមបំពេញព័ត៌មានអាសយដ្ឋានទាំងអស់។'));return;}
+        this.loading.set(true);this.error.set('');
+        this.addressApi.create(body).pipe(takeUntilDestroyed(this.destroy)).subscribe({
+            next:address=>{this.loading.set(false);if(!Number.isSafeInteger(address.id)||address.id<1){this.error.set('Address was not confirmed. Reload addresses before trying again.');return;}
+                this.addresses.update(items=>[...items,address]);this.addressId=address.id;this.addingAddress.set(false);this.notice.set(this.text('Delivery address saved.','អាសយដ្ឋានដឹកជញ្ជូនត្រូវបានរក្សាទុក។'));},
+            error:()=>{this.loading.set(false);this.error.set('Address could not be saved. Reload addresses before trying again.');}
+        });
+    }
+    method = 'CASH_ON_DELIVERY';
+    methods: string[] = [];
     constructor() {
         if (this.auth.session()) {
             const saved = this.attempt.read(this.auth.userId());
@@ -65,11 +82,13 @@ export class ChatCheckout {
         this.loading.set(true);
         this.error.set('');
         this.reviewing.set(false);
-        forkJoin({ cart: this.cartApi.current(), addresses: this.addressApi.list() })
+        forkJoin({ cart: this.cartApi.current(), addresses: this.addressApi.list(), methods: this.payments.methods() })
             .pipe(takeUntilDestroyed(this.destroy)).subscribe({
             next: data => {
                 this.applyCart(data.cart);
                 this.addresses.set(data.addresses);
+                this.methods = data.methods.filter(method => ['BAKONG','KHQR','ABA','CASH_ON_DELIVERY'].includes(method));
+                if (!this.pending() && !this.methods.includes(this.method)) this.method = this.methods[0] || '';
                 if (!this.pending() && !data.addresses.some(a => a.id === this.addressId))
                     this.addressId = data.addresses.find(a => a.is_default)?.id || data.addresses[0]?.id || 0;
                 this.loading.set(false);
@@ -157,7 +176,7 @@ export class ChatCheckout {
                     this.notice.set('Your cart changed. Review the updated items and total before confirming.');
                     return;
                 }
-                const body = this.attempt.begin(this.auth.userId(), Number(this.addressId), this.method, 'USD');
+                const body = this.attempt.begin(this.auth.userId(), Number(this.addressId), this.method, 'USD', {expected_total:cart.total_price,reviewed_items:cart.items.map(item=>({skuId:item.product_sku_id,quantity:item.quantity}))});
                 this.pending.set(true);
                 this.place(body);
             },
@@ -176,6 +195,11 @@ export class ChatCheckout {
                 if (order.status === 'CHECKOUT_PENDING') {
                     this.notice.set('Stock confirmation is pending. Use Check order again to resolve this same checkout.');
                     return;
+                }
+                if (order.status === 'FAILED' || order.status === 'CANCELLED') {
+                    this.pending.set(false); this.reviewing.set(false); this.attempt.clear(this.auth.userId());
+                    this.notice.set('Order could not be completed. Prices or stock changed; review your cart again.');
+                    this.load(); return;
                 }
                 this.order.set(order);
                 this.pending.set(false);

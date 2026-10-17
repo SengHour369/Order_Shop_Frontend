@@ -41,7 +41,7 @@
         </div>
       </article>
     </div>
-    <div class="ops-work">
+    <div>
       <section class="adm-panel reference-table">
         <div class="reference-filters">
           <input
@@ -59,8 +59,7 @@
                 <th>Group Code</th>
                 <th>Display</th>
                 <th>{{ "Status" | translate }}</th>
-                <th>{{ "Created Date" | translate }}</th>
-                <th>{{ "Action" | translate }}</th>
+                <th>{{ "Created Date" | translate }}</th><th>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -80,16 +79,7 @@
                       >{{ row["is_active"] ? "Active" : "Inactive" }}</span
                     >
                   </td>
-                  <td>{{ when(row["created_at"]) }}</td>
-                  <td>
-                    <button
-                      class="adm-btn"
-                      (click)="inspect(row)"
-                      [disabled]="busy()"
-                    >
-                      View
-                    </button>
-                  </td>
+                  <td>{{ when(row["created_at"]) }}</td><td><a class="adm-btn" [routerLink]="['/admin/groups', row['group_id']]">View</a></td>
                 </tr>
               } @empty {
                 <tr>
@@ -101,35 +91,7 @@
         </div>
         <div class="adm-pager">Showing {{ visible().length }} groups</div>
       </section>
-      <aside class="adm-panel">
-        <h3>Group Details</h3>
-        @if (selected(); as row) {
-          <h3>{{ row["group_name"] }}</h3>
-          <p>{{ row["group_code"] }}</p>
-          <nav class="reference-tabs">
-            <button class="active">{{ "Overview" | translate }}</button>
-          </nav>
-          <h3>{{ "Basic Information" | translate }}</h3>
-          <dl>
-            <dt>Display</dt>
-            <dd>{{ row["description"] || "—" }}</dd>
-            <dt>{{ "Created Date" | translate }}</dt>
-            <dd>{{ when(row["created_at"]) }}</dd>
-          </dl>
-          <h3>Group Permissions</h3>
-          @for (
-            permission of permissions();
-            track permission["group_permission_id"]
-          ) {
-            <p>{{ functionName(permission["func_id"]) }}</p>
-          } @empty {
-            <p>No active permissions.</p>
-          }
-          <a class="adm-btn" routerLink="/admin/users">Manage Access Records</a>
-        } @else {
-          <p>Select a group to inspect its permissions.</p>
-        }
-      </aside>
+
     </div>
   } @else {
     <form (ngSubmit)="save()">

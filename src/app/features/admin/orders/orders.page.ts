@@ -1,5 +1,6 @@
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
 import { Component, inject, signal } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { forkJoin, switchMap, map, catchError, of } from "rxjs";
@@ -489,11 +490,51 @@ export class OrdersPage extends PageState {
   }
 }
 @Component({
-  imports: [TranslatePipe, Status, RouterLink, Icon],
+  imports: [TranslatePipe, Status, RouterLink, Icon, FormsModule],
   templateUrl: "./order-detail.html",
-  styleUrl: "../styles/details.css",
+  styleUrl: "./order-detail.css",
 })
 export class OrderDetailPage extends PageState {
+  editing = signal(false);
+  customerField(row: Row, ...keys: string[]) {
+    const customer = row['customer'];
+    return customer && typeof customer === 'object' ? field(customer as Row, ...keys) : field(row, ...keys);
+  }
+  addressField(row: Row, ...keys: string[]) {
+    const address = field(row, 'shipping_address', 'shippingAddress');
+    return address && typeof address === 'object' ? field(address as Row, ...keys) : '';
+  }
+  customerLocation(row: Row) { return [this.addressField(row, 'city', 'province'), this.addressField(row, 'country')].filter(Boolean).join(', ') || '—'; }
+  mapUrl(row: Row) {
+    const address = field(row, 'shipping_address', 'shippingAddress');
+    return address ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(this.shippingAddress(row)) : '';
+  }
+  optionalMoney(value: unknown) { return value === '' || value == null ? '—' : usd(value); }
+  subtotal() { return this.items().reduce((sum, item) => sum + Number(field(item, 'baseUnitPrice', 'unit_price', 'unitPrice') || 0) * Number(field(item, 'quantity', 'qty') || 0), 0); }
+  discount() { return this.items().reduce((sum, item) => sum + Number(field(item, 'discountAmount', 'discount_amount') || 0) * Number(field(item, 'quantity', 'qty') || 0), 0); }
+  optionalDiscount(item: Row) { const value = field(item, 'discountAmount', 'discount_amount'); return value === '' ? '—' : '-' + usd(Number(value) * Number(field(item, 'quantity', 'qty') || 0)); }
+  isVisa(row: Row) { return String(this.paymentMethodOf(row)).toLowerCase().includes('visa'); }
+  seller(row: Row): Row | null { const value = field(row, 'seller', 'store'); return value && typeof value === 'object' ? value as Row : null; }
+  async copy(value: unknown) {
+    if (!value) return;
+    try { await navigator.clipboard.writeText(String(value)); this.message.set('Copied to clipboard.'); }
+    catch { this.error.set('Could not copy. Select and copy the value manually.'); }
+  }
+  timeline(row: Row) {
+    const events = [{ label: 'Order Placed', at: this.placed(row), shipping: false }];
+    const paidAt = this.paymentField(row, 'payment_date', 'paymentDate', 'paid_at');
+    if (paidAt && ['SUCCESS', 'PAID', 'COMPLETED', 'APPROVED'].includes(String(this.paymentStatusOf(row)).toUpperCase())) events.push({ label: 'Payment Successful', at: paidAt, shipping: false });
+    const history = field(row, 'status_history', 'statusHistory');
+    if (Array.isArray(history) && history.length) {
+      for (const event of history as Row[]) {
+        const status = field(event, 'new_status', 'newStatus', 'status');
+        events.push({ label: this.pretty(status), at: field(event, 'changed_at', 'changedAt', 'created_at'), shipping: String(status).toUpperCase().includes('SHIP') });
+      }
+    } else if (field(row, 'status') && String(field(row, 'status')).toUpperCase() !== 'PENDING') {
+      events.push({ label: this.pretty(field(row, 'status')), at: field(row, 'updated_at', 'updatedAt'), shipping: String(field(row, 'status')).toUpperCase().includes('SHIP') });
+    }
+    return events;
+  }
   printInvoice() { window.print(); }
   downloadInvoice() {
     const order = this.order();
@@ -536,7 +577,7 @@ export class OrderDetailPage extends PageState {
   tone = tone;
   constructor() {
     super();
-    this.route.paramMap.subscribe((params) =>
+    this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) =>
       this.load(Number(params.get("id"))),
     );
   }
@@ -575,7 +616,8 @@ export class OrderDetailPage extends PageState {
   save() {
     const id = Number(field(this.order() || {}, "id"));
     this.run(this.api.orderStatus(id, this.next), (order) => {
-      this.order.set(order);
+      this.order.update(current => ({ ...current, ...order }));
+      this.editing.set(false);
       this.message.set("Order status updated.");
     });
   }

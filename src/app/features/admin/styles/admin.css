@@ -1608,3 +1608,52 @@ a.adm-btn.adm-primary {
   .adm-side, .adm-top, .adm-overlay { display: none !important; }
   .adm-body { padding: 0; }
 }
+
+/* Transaction detail reference layout. */
+@media(min-width:1100px){
+  .transaction-detail-layout .adm-side:not(.collapsed){width:254px}
+  .transaction-detail-layout .adm-top{height:78px;min-height:78px;padding:12px 22px}
+  .transaction-detail-layout .adm-body{padding:0 18px 24px 22px;background:#fbfcfe}
+  .transaction-detail-layout .adm-top h1{font-size:22px}
+  .transaction-detail-layout .adm-crumbs{font-size:12px}
+  .transaction-detail-layout .adm-search{max-width:370px;height:40px}
+  .transaction-detail-layout .adm-brand{height:68px;font-size:20px}
+}
+@media(min-width:1100px){
+  .order-detail-layout .adm-side:not(.collapsed){width:254px}
+  .order-detail-layout .adm-top{height:60px;min-height:60px;padding:12px 22px}
+  .order-detail-layout .adm-top h1{font-size:19px}
+  .order-detail-layout .adm-body{padding:20px;background:#fff}
+  .order-detail-layout .adm-crumbs{font-size:12px}
+}
+
+@media(min-width:1100px){
+  .user-edit-layout .adm-side:not(.collapsed){width:254px}
+  .user-edit-layout .adm-top{height:78px;min-height:78px;padding:12px 22px}
+  .user-edit-layout .adm-top h1{font-size:22px}
+  .user-edit-layout .adm-crumbs{font-size:12px}
+  .user-edit-layout .adm-body{padding:17px 22px;background:#fbfcfe}
+}
+
+@media(min-width:1100px){
+  .user-detail-layout .adm-side:not(.collapsed){width:254px}
+  .user-detail-layout .adm-top{height:78px;min-height:78px;padding:12px 22px}
+  .user-detail-layout .adm-top h1{font-size:22px}
+  .user-detail-layout .adm-crumbs{font-size:12px}
+  .user-detail-layout .adm-body{padding:12px 20px 24px;background:#fbfcfe}
+}
+
+@media(min-width:1100px){
+ .customer-group-layout .adm-side:not(.collapsed){width:258px}
+ .customer-group-layout .adm-top{height:68px;min-height:68px;padding:10px 20px}
+ .customer-group-layout .adm-top h1{font-size:21px}
+ .customer-group-layout .adm-crumbs{font-size:12px}
+ .customer-group-layout .adm-body{padding:12px 18px 30px;background:#fbfcfe}
+}
+
+.user-editor-menu{margin-left:auto;border:0;background:none;color:#102051;padding:0;display:grid;place-items:center;cursor:pointer}.user-editor-menu app-icon{width:19px;height:19px}.user-edit-layout .adm-brand{padding:0 23px;gap:10px}.user-edit-layout .adm-brand strong{font-size:22px}.user-edit-layout .adm-top .adm-hide-sm.adm-icon-btn{display:none}.user-edit-layout app-language-select,.user-edit-layout .adm-shop,.user-edit-layout app-floating-assistant{display:none}.user-edit-layout .adm-nav{padding:8px 15px}.user-edit-layout .adm-group{margin-top:23px;margin-bottom:9px}.user-edit-layout .adm-link{min-height:33px;padding:7px 10px;font-size:14px}.user-edit-layout .adm-search{max-width:350px}.user-edit-layout .adm-side:not(.collapsed){width:254px}@media(max-width:900px){.user-edit-layout .adm-side:not(.collapsed){width:240px}}
+.user-edit-layout .user-editor-menu{min-height:0}.user-edit-layout .adm-link{height:33px;box-sizing:border-box}.user-edit-layout .adm-brand{min-height:60px}
+
+
+.user-editor-menu{margin-left:auto;border:0;background:none;color:#102051;padding:0;display:grid;place-items:center;cursor:pointer}.user-editor-menu app-icon{width:19px;height:19px}.user-detail-layout .adm-brand{padding:0 23px;gap:10px}.user-detail-layout .adm-brand strong{font-size:22px}.user-detail-layout .adm-top .adm-hide-sm.adm-icon-btn{display:none}.user-detail-layout app-language-select,.user-detail-layout .adm-shop,.user-detail-layout app-floating-assistant{display:none}.user-detail-layout .adm-nav{padding:8px 15px}.user-detail-layout .adm-group{margin-top:23px;margin-bottom:9px}.user-detail-layout .adm-link{min-height:33px;padding:7px 10px;font-size:14px}.user-detail-layout .adm-search{max-width:350px}.user-detail-layout .adm-side:not(.collapsed){width:254px}@media(max-width:900px){.user-detail-layout .adm-side:not(.collapsed){width:240px}}
+.user-detail-layout .user-editor-menu{min-height:0}.user-detail-layout .adm-link{height:33px;box-sizing:border-box}.user-detail-layout .adm-brand{min-height:60px}

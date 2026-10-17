@@ -25,6 +25,7 @@ export class CheckoutAttempt {
     address_id: number,
     payment_method: string,
     currency: string,
+    review?: Pick<Checkout, "expected_total" | "reviewed_items">,
   ): Checkout {
     const previous = this.read(userId);
     if (previous) return previous;
@@ -33,6 +34,7 @@ export class CheckoutAttempt {
       payment_method,
       currency,
       checkout_key: crypto.randomUUID(),
+      ...review,
     };
     sessionStorage.setItem(this.key(userId), JSON.stringify(body));
     return body;

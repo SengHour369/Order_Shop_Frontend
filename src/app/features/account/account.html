@@ -78,8 +78,8 @@
               ? "Forgot Password?"
               : mode === "Reset password"
                 ? "Reset Your Password"
-                : mode === "Verify"
-                  ? "Verify Your Email"
+                : (mode === "Verify" || mode === "Two-factor")
+                  ? (mode === "Two-factor" ? "Two-Factor Authentication" : "Verify Your Email")
                   : "Sign In") | translate }}
       </h2>
       @if (mode === "Sign in") { <h2 class="mobile-welcome">{{ "Welcome Back" | translate }}</h2><p class="mobile-intro">{{ "Sign in to continue shopping your favorite products." | translate }}</p> }
@@ -90,7 +90,7 @@
               ? "Fill in your details to get started."
               : mode === "Forgot password"
                 ? "Enter your email and we’ll send you a link to reset your password."
-                : mode === "Verify"
+                : (mode === "Verify" || mode === "Two-factor")
                   ? "Enter the verification code sent to your email."
                   : "Enter and confirm your new password.") | translate }}
       </p>
@@ -193,7 +193,7 @@
             password with letters, numbers, and symbols is recommended.
           </p>
         }
-        @if (mode === "Verify") {
+        @if ((mode === "Verify" || mode === "Two-factor")) {
           <label
             >Verification Code <b>*</b
             ><input
@@ -237,8 +237,8 @@
                   ? "Send Reset Link"
                   : mode === "Reset password"
                     ? "Reset Password"
-                    : mode === "Verify"
-                      ? "Verify Email"
+                    : (mode === "Verify" || mode === "Two-factor")
+                      ? (mode === "Two-factor" ? "Verify Sign-In" : "Verify Email")
                       : "Sign In") | translate }}
         </button>
       </form>
@@ -272,9 +272,9 @@
         <button
           class="text-button"
           (click)="resend()"
-          [disabled]="!email || busy()"
+          [disabled]="!email || busy() || resendSeconds() > 0"
         >
-          Resend verification code
+          {{ resendSeconds() ? "Resend available in " + resendSeconds() + "s" : "Resend verification code" }}
         </button>
       }
     }

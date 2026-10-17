@@ -120,7 +120,7 @@ export class AdminAssistantPage extends AssistantPage {
       this.inventoryId = Number(this.prompt.match(/inventory(?: record)?\s*#?\s*(\d+)/i)?.[1]) || null;
       this.stockOpen.set(true); this.stockReview.set(false); this.prompt = ''; return;
     }
-    if (/^\s*(?:create|add)(?: a| new| a new)? product\b/i.test(this.prompt)) {
+    if (/^\s*(?:create|add)(?: a| new| a new)? product\s*[.!]?\s*$/i.test(this.prompt)) {
       const prompt = this.prompt;
       this.startProduct(prompt); this.prompt = ''; return;
     }
@@ -156,6 +156,7 @@ export class AdminAssistantPage extends AssistantPage {
       next: result => {
         this.confirming.set(false); turn.result = result; turn.text = result.message;
         this.updateOperation(operation, result.status, result.data);
+        if(result.status==='SUCCESS'&&result.intent==='ADMIN_IMPORT_DRAFT')this.openImportDraft(result);
         this.current.update(value => value ? { ...value } : null);
         if (result.status === 'RUNNING' && result.executionId) this.poll(turn, operation);
       },
@@ -164,6 +165,10 @@ export class AdminAssistantPage extends AssistantPage {
         this.error.set('The confirmation response was lost. Check the affected record before retrying; the action may have completed.');
       },
     });
+  }
+  openImportDraft(result:AiResult){
+    const data=result.data as Row|null;
+    if(data&&typeof data['batchId']==='string'){this.importBatchId.set(data['batchId']);this.view.set('imports');}
   }
   private poll(turn: Turn, operation: Operation) {
     const id = turn.result!.executionId!;

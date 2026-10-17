@@ -18,6 +18,7 @@ import { CustomerChat } from "./features/assistant/customer-chat/customer-chat";
     "[class.customer-experience]": "!isAdmin() && !isAssistant()",
     "[class.customer-welcome-page]": "router.url.split('?')[0] === '/'",
     "[class.customer-auth-page]": "router.url.split('?')[0] === '/auth'",
+    "[class.customer-checkout-page]": "router.url.split('?')[0] === '/checkout'",
     "[class.customer-scanner-page]": "router.url.split('?')[0] === '/scanner'",
   },
   imports: [TranslatePipe, 

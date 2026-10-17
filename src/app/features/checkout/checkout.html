@@ -1,208 +1,41 @@
-<div class="breadcrumbs">
-  <a routerLink="/">{{ "Home" | translate }}</a><span>›</span><a routerLink="/cart">{{ "Cart" | translate }}</a
-  ><span>›</span><span>{{ "Checkout" | translate }}</span>
-</div>
-<div class="page-heading">
-  <h1>{{ "Checkout" | translate }}</h1>
-  <ol class="checkout-steps" aria-label="Checkout progress">
-    @for (
-      label of ["Shipping Address", "Payment Method", "Review Order"];
-      track label;
-      let i = $index
-    ) {
-      <li [class.active]="step === i + 1" [class.complete]="step > i + 1">
-        <button
-          type="button"
-          [disabled]="i + 1 > step || locked()"
-          (click)="step = i + 1"
-          [attr.aria-current]="step === i + 1 ? 'step' : null"
-        >
-          <b>{{ i + 1 }}</b
-          ><span>{{ label }}</span>
-        </button>
-      </li>
-    }
-  </ol>
-</div>
+<div class="breadcrumbs"><a routerLink="/">{{"Home"|translate}}</a><span>›</span><a routerLink="/cart">{{"Cart"|translate}}</a><span>›</span><span>{{"Checkout"|translate}}</span></div>
+<header class="checkout-heading"><h1>{{"Checkout"|translate}}</h1><p>{{"Complete your order securely"|translate}}</p></header>
 <app-status [busy]="busy()" [error]="error()" [message]="message()" />
-<div class="checkout-grid customer-checkout">
-  <form class="panel" #f="ngForm" (ngSubmit)="submit()">
-    @if (locked()) {
-      <p class="alert">
-        Your earlier checkout is awaiting confirmation. Retry to recover the
-        same order.
-      </p>
-    }
-    @if (step === 1) {
-      <div class="section-heading">
-        <div>
-          <h2>{{ "Shipping Address" | translate }}</h2>
-          <p>Choose where you want to receive your order.</p>
-        </div>
-        <a class="button primary small" routerLink="/account/addresses"
-          >+ Add Address</a
-        >
-      </div>
-      <div class="shipping-choices">
-        @for (a of addresses(); track a.id) {
-          <label class="shipping-choice" [class.selected]="addressId === a.id"
-            ><input
-              type="radio"
-              name="address"
-              [value]="a.id"
-              [(ngModel)]="addressId"
-              [disabled]="locked()"
-            /><span
-              ><strong
-                >{{ auth.session()?.username }}
-                @if (a.is_default) {
-                  <span class="badge">{{ "Default" | translate }}</span>
-                }</strong
-              ><span>{{ a.address_line1 }}</span
-              ><span>{{ a.city }}, {{ a.country }} {{ a.zip_code }}</span></span
-            ></label
-          >
-        } @empty {
-          <div class="empty">
-            <h3>Add a delivery address</h3>
-            <p>Save an address before continuing to payment.</p>
-            <a class="button outline" routerLink="/account/addresses"
-              >Manage Addresses</a
-            >
+@if(locked()){<p class="alert">Your earlier checkout is awaiting confirmation. Retry to recover the same order.</p>}
+@if(needsRefresh()||(!ready()&&error())){<button type="button" (click)="load()" [disabled]="busy()">Refresh checkout</button>}
+<form class="single-checkout" (ngSubmit)="submit()">
+  <div class="checkout-details">
+    <section class="checkout-card" aria-labelledby="address-title">
+      <div class="card-heading"><h2 id="address-title"><app-icon name="pin"/>{{"Shipping Address"|translate}}</h2><button type="button" class="text-button" (click)="openAddress()" [disabled]="locked()||busy()">+ {{"Add New"|translate}}</button></div>
+      <div class="address-list">
+        @for(a of addresses();track a.id){
+          <div class="address-option" [class.selected]="addressId===a.id">
+            <label><input type="radio" name="address" [value]="a.id" [(ngModel)]="addressId" [disabled]="locked()||busy()"/><span class="address-copy"><strong>{{a.recipient_name||a.label||auth.session()?.username}} @if(a.is_default){<span class="default-badge">{{"Default"|translate}}</span>}</strong>@if(a.phone_number){<span>{{a.phone_number}}</span>}<span>{{a.address_line1}}</span><span>{{a.commune}} {{a.district}} {{a.city}}, {{a.country}} {{a.zip_code}}</span></span></label>
+            <div class="address-actions"><button type="button" (click)="openAddress(a)" [disabled]="locked()||busy()"><app-icon name="edit"/>{{"Edit"|translate}}</button><button type="button" (click)="deleteId.set(a.id)" [disabled]="locked()||busy()"><app-icon name="trash"/>{{"Delete"|translate}}</button></div>
+            @if(deleteId()===a.id){<div class="delete-confirm"><span>Delete this address?</span><button type="button" (click)="removeAddress(a.id)" [disabled]="busy()">Delete</button><button type="button" (click)="deleteId.set(null)">Cancel</button></div>}
           </div>
-        }
+        }@empty{<p class="muted">Add a delivery address to place your order.</p>}
       </div>
-      <button
-        class="primary checkout-next"
-        type="button"
-        (click)="next()"
-        [disabled]="!addressId || busy()"
-      >
-        {{ "Continue to Payment →" | translate }}
-      </button>
-    }
-    @if (step === 2) {
-      <h2>{{ "Payment Method" | translate }}</h2>
-      <p>Choose a payment provider for your order.</p>
-      <div class="payment-choices">
-        @for (
-          provider of ["BAKONG", "ABA", "CASH_ON_DELIVERY"];
-          track provider
-        ) {
-          <label class="payment-choice" [class.selected]="method === provider"
-            ><input
-              type="radio"
-              name="method"
-              [value]="provider"
-              [(ngModel)]="method"
-              [disabled]="locked()"
-            /><strong>{{ provider }}</strong></label
-          >
-        }
-      </div>
-      <p class="availability-note">
-        Payment is completed separately after placing your order. No payment
-        will be taken here.
-      </p>
-      <div class="dialog-actions">
-        <button type="button" (click)="step = 1">← Shipping</button
-        ><button class="primary" type="button" (click)="next()">
-          {{ "Review Order →" | translate }}
-        </button>
-      </div>
-    }
-    @if (step === 3) {
-      <h2>{{ "Review Your Order" | translate }}</h2>
-      <div class="review-section">
-        <div class="section-heading">
-          <h3>{{ "Shipping Address" | translate }}</h3>
-          <button
-            class="text-button"
-            type="button"
-            (click)="step = 1"
-            [disabled]="locked()"
-          >
-            {{ "Edit" | translate }}
-          </button>
+      @if(addressForm()){
+        <div class="inline-address"><h3>{{editingAddress()?"Edit address":"Add new address"}}</h3>
+          <div class="address-fields"><label>Recipient name<input name="recipient" [(ngModel)]="addressDraft.recipient_name" maxlength="100"/></label><label>Phone number<input name="phone" [(ngModel)]="addressDraft.phone_number" type="tel" maxlength="30"/></label><label class="wide">Street address<input name="street" [(ngModel)]="addressDraft.address_line1" maxlength="255"/></label><label>City<input name="city" [(ngModel)]="addressDraft.city" maxlength="100"/></label><label>Country<input name="country" [(ngModel)]="addressDraft.country" maxlength="100"/></label><label>Postal code<input name="zip" [(ngModel)]="addressDraft.zip_code" maxlength="20"/></label></div>
+          <div class="form-actions"><button type="button" class="primary" (click)="saveAddress()" [disabled]="busy()">Save address</button><button type="button" (click)="addressForm.set(false)" [disabled]="busy()">Cancel</button></div>
         </div>
-        @if (selectedAddress(); as a) {
-          <p>
-            {{ a.address_line1 }}<br />{{ a.city }}, {{ a.country }}
-            {{ a.zip_code }}
-          </p>
-        } @else {
-          <p>Saved address #{{ addressId }}</p>
-        }
-      </div>
-      <div class="review-section">
-        <div class="section-heading">
-          <h3>{{ "Payment Method" | translate }}</h3>
-          <button
-            class="text-button"
-            type="button"
-            (click)="step = 2"
-            [disabled]="locked()"
-          >
-            {{ "Edit" | translate }}
-          </button>
-        </div>
-        <p>{{ method }} · {{ currency }}</p>
-      </div>
-      <div class="review-section">
-        <div class="section-heading">
-          <h3>{{ "Order Items" | translate }}</h3>
-          <a routerLink="/cart">{{ "Edit Cart" | translate }}</a>
-        </div>
-        @for (item of cart()?.items || []; track item.id) {
-          <div class="line-item">
-            <span class="grow"
-              >Product SKU #{{ item.product_sku_id
-              }}<small>Quantity: {{ item.quantity }}</small></span
-            ><strong>{{ item.total_price | currency: "USD" }}</strong>
-          </div>
-        }
-      </div>
-      @if (cart(); as c) {
-        <div class="total">
-          <span>Cart Total</span
-          ><strong>{{ c.total_price | currency: "USD" }}</strong>
-        </div>
-      }
-      <button
-        class="primary full"
-        [disabled]="
-          busy() || !addressId || (!locked() && !cart()?.items?.length)
-        "
-      >
-        {{
-          busy() ? "Confirming…" : locked() ? "Retry Checkout" : "Place Order →"
-        }}
-      </button>
-      @if (!locked()) {
-        <button class="text-button" type="button" (click)="step = 2">
-          {{ "← Back to Payment Method" | translate }}
-        </button>
-      }
-    }
-  </form>
-  <aside class="panel checkout-summary">
-    <div class="section-heading">
-      <h2>{{ "Order Summary" | translate }}</h2>
-      <a routerLink="/cart">{{ "Edit Cart" | translate }}</a>
-    </div>
-    @if (cart(); as c) {
-      <div class="summary-row">
-        <span>Items</span><strong>{{ c.total_items }}</strong>
-      </div>
-      <div class="total">
-        <span>Cart Total</span
-        ><strong>{{ c.total_price | currency: "USD" }}</strong>
-      </div>
-    }
-    <div class="checkout-reassurance">
-      <h3>Review with confidence</h3>
-      <p>Current prices and stock are confirmed when you place your order.</p>
-    </div>
-    <p class="small muted">Placing an order does not charge your account.</p>
+      }@else{<button type="button" class="add-address" (click)="openAddress()" [disabled]="locked()||busy()">+ {{"Add New Address"|translate}}</button>}
+    </section>
+    <section class="checkout-card" aria-labelledby="shipping-title"><div class="card-heading"><h2 id="shipping-title"><app-icon name="truck"/>{{"Shipping Method"|translate}}</h2></div><div class="delivery-note"><app-icon name="truck"/><div><strong>Delivery to your selected address</strong><p>The shop will confirm delivery arrangements. No additional shipping rate has been quoted.</p></div></div></section>
+    <section class="checkout-card" aria-labelledby="payment-title"><div class="card-heading"><h2 id="payment-title"><app-icon name="card"/>{{"Payment Method"|translate}}</h2></div><div class="payment-options">
+      @for(provider of methods;track provider){<label class="payment-option" [class.selected]="method===provider"><input type="radio" name="method" [value]="provider" [(ngModel)]="method" [disabled]="locked()||busy()"/><span class="provider-mark" [class.cash]="provider==='CASH_ON_DELIVERY'">{{provider==='CASH_ON_DELIVERY'?'COD':provider==='ABA'?'ABA':'KHQR'}}</span><span><strong>{{paymentName(provider)}}</strong><small>{{paymentHint(provider)}}</small></span></label>}@empty{<p class="muted">Payment methods are unavailable. Reload checkout before placing your order.</p>}
+    </div></section>
+  </div>
+  <aside class="checkout-card checkout-order" aria-labelledby="summary-title"><div class="card-heading"><h2 id="summary-title"><app-icon name="bag"/>{{"Order Summary"|translate}} <small>({{cart()?.total_items||0}} items)</small></h2><a routerLink="/cart" [attr.aria-disabled]="locked()">{{"Edit Cart"|translate}}</a></div>
+    <div class="summary-items">@for(item of cart()?.items||[];track item.id){<div class="summary-item"><img appProductImage [src]="labels()[item.product_sku_id]?.image||'/images/product-placeholder.svg'" [alt]="labels()[item.product_sku_id]?.name||'Product image'" width="64" height="64"/><div class="item-copy"><strong>{{labels()[item.product_sku_id]?.name||'Product SKU #'+item.product_sku_id}}</strong><small>{{labels()[item.product_sku_id]?.variant}}</small><small>×{{item.quantity}}</small></div><strong class="line-price">{{item.total_price|currency:currency}}</strong></div>}@empty{<p class="muted">Your cart is empty.</p>}</div>
+    <div class="summary-row"><span>Items ({{cart()?.total_items||0}})</span><span>{{(cart()?.total_price||0)|currency:currency}}</span></div>
+    <p class="price-note">Current prices and applicable promotions are included in your cart total.</p>
+    <div class="checkout-total"><strong>{{"Total"|translate}}</strong><strong>{{(cart()?.total_price||0)|currency:currency}}</strong></div>
+    <button class="place-order primary" type="submit" [disabled]="!canSubmit()"><app-icon name="lock"/>{{busy()?"Confirming…":locked()?"Retry Checkout":"Place Order"}}</button>
+    <div class="checkout-trust"><div><app-icon name="shield"/><span>Verified payment<small>Confirmed by Bakong</small></span></div><div><app-icon name="truck"/><span>Delivery address<small>Selected by you</small></span></div><div><app-icon name="bag"/><span>Order review<small>See items above</small></span></div></div>
+    <p class="checkout-footnote">For KHQR, scan your order's payment code after placing your order. Payment success is confirmed by the bank.</p>
   </aside>
-</div>
+  <div class="mobile-place-order"><div><span>{{"Total"|translate}}</span><strong>{{(cart()?.total_price||0)|currency:currency}}</strong></div><button type="submit" class="primary" [disabled]="!canSubmit()"><app-icon name="lock"/>{{busy()?"Confirming…":locked()?"Retry Checkout":"Place Order"}}</button></div>
+</form>

@@ -602,3 +602,5 @@ button:disabled {
   }
 }
 .daily-quota{padding:9px 18px;border-bottom:1px solid #dce6ef;font-size:12px;color:#405273}.daily-quota p{color:#b43a26;margin:5px 0}.daily-quota small{display:block;margin-top:4px}.message-bubble app-rich-message{max-width:100%}
+
+.chat-detail{border:0;background:transparent;padding:0;text-align:left;color:inherit;cursor:pointer}.chat-gallery{display:flex;gap:4px;flex-wrap:wrap}.chat-gallery button{padding:0;border:1px solid #e3eaf6;background:white;border-radius:4px}.chat-gallery img{width:36px;height:36px;object-fit:contain}.chat-photo{position:relative;font-size:11px;cursor:pointer;border:1px solid #dce5f5;border-radius:5px;padding:6px}.chat-photo input{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer}.confirmation-note{overflow-wrap:anywhere;font-size:12px}.chat-toolbar{flex-wrap:wrap}

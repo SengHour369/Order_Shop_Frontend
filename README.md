@@ -4,7 +4,10 @@ Angular 22 standalone shop for the E-Shop microservice backend. Admin-EShop was 
 
 ## Run
 
-Requires Node 24.15 or newer (developed with Node 24.21).
+Requires a supported Node version from `package.json` (developed with Node 24.21).
+
+Run `bash run-local.sh` to select the version in `.nvmrc` from nvm or a local installation and start the frontend. With nvm, run `nvm install` first.
+Production builds leave Google Fonts as browser requests so building does not require access to Google's font servers.
 
 ```sh
 npm ci

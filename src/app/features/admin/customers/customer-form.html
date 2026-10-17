@@ -1,148 +1,41 @@
-<section class="reference-page">
-  <header class="adm-page-head">
-    <div>
-      <h2>Add Customer</h2>
-      <div class="adm-crumbs">
-        <a routerLink="/admin">{{ "Dashboard" | translate }}</a><span>›</span
-        ><a routerLink="/admin/customers">{{ "Customers" | translate }}</a><span>›</span>Add
-        Customer
-      </div>
-    </div>
-  </header>
-  <app-status [busy]="busy()" [error]="error()" />
-  <form (ngSubmit)="save()">
-    <div class="ops-work">
-      <div>
-        <section class="adm-panel">
-          <h3>{{ "Basic Information" | translate }}</h3>
-          <p>Enter the customer's basic information.</p>
-          <div class="ops-form-grid">
-            <label
-              >{{ "First Name *" | translate }}<input
-                name="firstName"
-                [(ngModel)]="firstName"
-                required
-                autocomplete="given-name"
-                placeholder="e.g. Sophea"
-            /></label>
-            <label
-              >{{ "Last Name *" | translate }}<input
-                name="lastName"
-                [(ngModel)]="lastName"
-                required
-                autocomplete="family-name"
-                placeholder="e.g. Chhun"
-            /></label>
-            <label
-              >{{ "Phone Number *" | translate }}<input
-                name="phone"
-                [(ngModel)]="phone"
-                required
-                type="tel"
-                autocomplete="tel"
-                placeholder="+855 12 345 678"
-            /></label>
-            <label
-              >{{ "Email *" | translate }}<input
-                name="email"
-                [(ngModel)]="email"
-                required
-                type="email"
-                autocomplete="email"
-                placeholder="Customer email address"
-            /></label>
-          </div>
-        </section>
-        <section class="adm-panel">
-          <h3>{{ "Default Address" | translate }}</h3>
-          <p>
-            Address creation for another customer's account is not available
-            from this service.
-          </p>
-          <div class="ops-form-grid">
-            <label
-              >{{ "Country" | translate }}<select disabled>
-                <option>Cambodia</option>
-              </select></label
-            ><label
-              >Province / City<select disabled>
-                <option>Phnom Penh</option>
-              </select></label
-            ><label
-              >Address Detail<input
-                disabled
-                placeholder="Address support is unavailable" /></label
-            ><label>Postal Code<input disabled /></label>
-          </div>
-        </section>
-        <section class="adm-panel">
-          <h3>{{ "Customer Group" | translate }}</h3>
-          <p>Choose active groups. This user inherits all permissions granted to those groups.</p>
-          @for (group of groups(); track group['group_id']) {
-            <label style="display:flex;align-items:center;gap:12px;padding:14px;margin-top:8px;border:1px solid #dce7f6;border-radius:10px;background:#f8fbff">
-              <input type="checkbox" [checked]="chosenGroups.has(+group['group_id']!)" (change)="toggleGroup(group['group_id'])" [disabled]="busy()" />
-              <span><strong>{{ group['group_name'] }}</strong><small style="display:block;color:#64748b">{{ group['description'] }}</small></span>
-            </label>
-          } @empty { <p>No active groups available.</p> }
-        </section>
-        <app-permission-picker [rows]="functions()" [(selected)]="chosenPermissions" [disabled]="busy()" />
-      </div>
-      <div>
-        <section class="adm-panel">
-          <h3>Profile Image</h3>
-          <div class="ops-upload">
-            <p>Profile image uploads are not currently saved by the service.</p>
-            <input
-              type="file"
-              accept="image/*"
-              disabled
-              aria-label="Profile image unavailable"
-            />
-          </div>
-        </section>
-        <section class="adm-panel">
-          <h3>Account Information</h3>
-          <div class="ops-form-grid">
-            <label
-              >{{ "Username *" | translate }}<input
-                name="username"
-                [(ngModel)]="username"
-                required
-                autocomplete="off" /></label
-            ><label
-              >{{ "Password *" | translate }}<input
-                name="password"
-                [(ngModel)]="password"
-                required
-                type="password"
-                autocomplete="new-password" /></label
-            ><label
-              >Customer Role ID *<input
-                name="roleId"
-                [(ngModel)]="roleId"
-                required
-                type="number"
-                min="1"
-                step="1"
-            /></label>
-          </div>
-          <p>
-            Use the existing customer role ID configured for your service. The
-            service requires a role but does not provide a role list.
-          </p>
-        </section>
-        <section class="adm-panel">
-          <h3>{{ "Preferences" | translate }}</h3>
-          <label><input type="checkbox" disabled /> Send Welcome Email</label>
-          <p>Welcome email and notification preferences are unavailable.</p>
-        </section>
-      </div>
-    </div>
-    <footer class="ops-footer">
-      <a class="adm-btn" routerLink="/admin/customers">← Cancel</a
-      ><button class="adm-btn adm-primary" [disabled]="busy()">
-        Create Customer
-      </button>
-    </footer>
+<section class="user-editor">
+  <form #editForm="ngForm" (ngSubmit)="save()">
+    <header class="editor-toolbar"><a class="editor-button" routerLink="/admin/customers"><app-icon name="arrow-left" />Back to Customers</a><div><a class="editor-button" routerLink="/admin/customers">{{ 'Cancel' | translate }}</a><button class="editor-button primary" [disabled]="busy() || !user() || editForm.invalid">{{ createdId ? 'Retry Save' : 'Create Customer' }}</button><input #photoInput type="file" hidden accept="image/jpeg,image/png" (change)="choosePhoto($event)" /></div></header>
+    <app-status [busy]="busy()" [error]="error()" [message]="message()" />
+    @if (user(); as current) {
+      <fieldset class="editor-form-fields" [disabled]="busy()"><div class="editor-columns">
+        <div class="editor-column">
+          <article class="editor-card user-information">
+            <header class="information-heading"><div><h3>Customer Information</h3><p>Enter the customer’s personal and contact information.</p></div><div class="profile-picture">@if (photoPreview || field(current, 'image')) {<img [src]="photoPreview || field(current, 'image')" alt="User profile" />} @else {<span>{{ initials() || '?' }}</span>}<button type="button" [disabled]="busy()" aria-label="Change profile photo" (click)="photoInput.click()"><app-icon name="camera" /></button><input #photoInput type="file" hidden accept="image/jpeg,image/png" (change)="choosePhoto($event)" /></div></header>
+            <div class="editor-fields">
+              <label>First Name <em>*</em><input name="firstName" [(ngModel)]="firstName" required maxlength="100" autocomplete="given-name" /></label>
+              <label>Last Name <em>*</em><input required name="lastName" [(ngModel)]="lastName" maxlength="100" autocomplete="family-name" /></label>
+              <label>Email Address <em>*</em><input name="email" [(ngModel)]="email" type="email" required email maxlength="254" autocomplete="email" /></label>
+              <label>Phone Number <em>*</em><div class="phone-input"><select aria-label="Phone country code" name="phoneCountry" [ngModel]="phoneCountry" (ngModelChange)="changePhoneCountry($event)"><option value="">🌐</option><option value="+855">🇰🇭</option><option value="+1">🇺🇸</option><option value="+44">🇬🇧</option><option value="+66">🇹🇭</option><option value="+84">🇻🇳</option><option value="+65">🇸🇬</option></select><input required name="phone" [(ngModel)]="phone" type="tel" maxlength="30" autocomplete="tel" /></div></label>
+              <label>Username <em>*</em><input name="username" [(ngModel)]="username" required maxlength="100" autocomplete="username" /></label>
+              <label>Job Title<input name="jobTitle" [(ngModel)]="jobTitle" maxlength="100" /></label>
+              <label>Department<select name="department" [(ngModel)]="department" aria-label="Department"><option value="">Select department</option>@for (item of departments(); track item) {<option [value]="item">{{ item }}</option>}</select></label>
+              <label>Manager<select name="managerId" [(ngModel)]="managerId" aria-label="Manager"><option [ngValue]="null">No manager</option>@for (item of rows('managers'); track item['id']) {@if(item['id'] !== id){<option [ngValue]="item['id']">{{ item['name'] }}</option>}}</select></label>
+              <label>Date of Birth<input name="birthdate" [(ngModel)]="birthdate" type="date" autocomplete="bday" /></label>
+              <fieldset class="gender-field"><legend>Gender</legend><label><input type="radio" name="gender" [(ngModel)]="gender" value="MALE" />Male</label><label><input type="radio" name="gender" [(ngModel)]="gender" value="FEMALE" />Female</label><label><input type="radio" name="gender" [(ngModel)]="gender" value="OTHER" />Other</label></fieldset>
+              <label class="full-width">Address<textarea name="address" [(ngModel)]="address" rows="2" maxlength="255" autocomplete="street-address"></textarea><small class="address-count">{{ address.length }}/255</small></label>
+            </div>
+
+          </article>
+          <article class="editor-card security-card"><h3>Security &amp; Authentication</h3><p>Set the customer’s sign-in credentials and security settings.</p><label class="account-field">Password <em>*</em><input name="password" type="password" [(ngModel)]="password" [required]="!createdId" [disabled]="!!createdId" autocomplete="new-password" maxlength="128" /></label>@if(createdId){<p>Customer account created. Retry to finish saving its profile and photo.</p>}<div class="two-factor"><div><strong>Two-Factor Authentication</strong><p>Require an email verification code when this user signs in.</p></div><button type="button" role="switch" aria-label="Require two-factor authentication" [attr.aria-checked]="twoFactorRequired" class="switch" [class.enabled]="twoFactorRequired" [disabled]="busy()" (click)="twoFactorRequired = !twoFactorRequired"><span></span></button></div></article>
+        </div>
+        <div class="editor-column">
+          <article class="editor-card account-card"><h3>Account Status</h3><p>Manage the customer’s account status and role.</p><label class="section-label" for="user-active">Status <em>*</em></label><div class="account-switch"><button id="user-active" type="button" role="switch" [attr.aria-checked]="active" [attr.aria-label]="active ? 'Deactivate user' : 'Activate user'" class="switch" [class.enabled]="active" [disabled]="busy()" (click)="active = !active"><span></span></button><div><strong>{{ active ? 'Active' : 'Inactive' }}</strong><small>{{ active ? 'Active users can access the system' : 'This user is not active' }}</small></div></div><label class="account-field">Role <em>*</em><select name="roleId" [(ngModel)]="roleId" (ngModelChange)="chooseRole()" required><option [ngValue]="0" disabled>Select role</option>@for (role of rows('roles'); track role['id']) {<option [ngValue]="role['id']">{{ role['name'] }}</option>}</select><small>Define user role and system access level</small></label><label class="account-field">Language<select name="language" [(ngModel)]="language"><option value="en-US">English (US)</option><option value="km-KH">ខ្មែរ (Cambodia)</option></select><small>Select the preferred language</small></label></article>
+          <article id="groups" class="editor-card groups-card"><h3>Customer Groups</h3><p>Assign the customer to one or more groups.</p>
+            <div class="account-field"><label id="groups-label">Groups <em>*</em></label><div class="group-picker" [class.open]="groupsOpen">
+              <div class="group-select" aria-labelledby="groups-label"><div class="group-chips">@for(group of selectedGroups();track group['id']) {<span class="group-chip">{{ group['name'] }}<button type="button" [disabled]="busy()" [attr.aria-label]="'Remove '+group['name']" (click)="toggleGroup(number(group['id']))">×</button></span>}@empty{<span class="group-placeholder">Select groups</span>}</div><button type="button" class="group-expand" aria-label="Choose user groups" [attr.aria-expanded]="groupsOpen" (click)="groupsOpen = !groupsOpen"><app-icon name="down" /></button></div>
+              @if(groupsOpen){<div class="group-options"><label class="group-search"><app-icon name="search"/><input name="groupSearch" [(ngModel)]="groupSearch" placeholder="Search groups..." aria-label="Search groups" /></label>
+                @for(group of groups();track group['id'];let index=$index){<label class="group-option"><input type="checkbox" [checked]="groupIds.includes(number(group['id']))" [disabled]="busy()" (change)="toggleGroup(number(group['id']))"/><span class="group-avatar" [class]="'group-avatar tone-'+index%5"><app-icon name="user" /></span><span><strong>{{group['name']}}</strong><small>{{group['description'] || 'Access managed by this group’s permissions'}}</small></span></label>}@empty{<p class="no-groups">No groups found.</p>}
+              </div>}
+            </div></div>
+          </article>
+        </div>
+      </div></fieldset>
+    }
   </form>
 </section>

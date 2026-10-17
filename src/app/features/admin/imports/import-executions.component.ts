@@ -12,7 +12,7 @@ import { AiImportsApi, ExecutionHistory, ImportBatch, ImportPreview, stringValue
 
 export interface ExecutionRecord { batch: ImportBatch; preview: ImportPreview|null; history: ExecutionHistory|null; }
 export const importTypeLabels: Record<string,string> = {
-  PRODUCT_BULK_CREATE:'Products', PRODUCT_SKU_BULK_CREATE:'Product SKUs', CATEGORY_BULK_CREATE:'Categories',
+  CATEGORY_BULK_UPDATE:'Category updates',BRANCH_BULK_UPDATE:'Branch updates',PRODUCT_BULK_UPDATE:'Product updates',PRODUCT_BULK_CREATE:'Products', PRODUCT_SKU_BULK_CREATE:'Product SKUs', CATEGORY_BULK_CREATE:'Categories',
   BRANCH_BULK_CREATE:'Branches', INVENTORY_STOCK_IN_BULK:'Stock in', INVENTORY_STOCK_ADJUST_BULK:'Stock adjustments', PROMOTION_BULK_CREATE:'Promotions',
 };
 export function executionTypes(record: ExecutionRecord) {

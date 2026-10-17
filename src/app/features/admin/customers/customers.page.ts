@@ -16,7 +16,6 @@ import { AdminApi, field, Row, text, tone, usd, when } from "../api/admin.api";
 export class CustomersPage extends PageState {
   private api = inject(AdminApi);
   private route = inject(ActivatedRoute);
-  selected = signal<Row | null>(null);
   page = 1;
   rows = signal<Row[]>([]);
   query = signal("");
@@ -37,10 +36,8 @@ export class CustomersPage extends PageState {
   blockedCount = computed(
     () => this.rows().filter((row) => this.blocked(row)).length,
   );
-  when = when;
   field = field;
   text = text;
-  tone = tone;
   constructor() {
     super();
     this.route.queryParamMap.subscribe((params) =>
@@ -48,16 +45,9 @@ export class CustomersPage extends PageState {
     );
     this.load();
   }
-  load(done?: string) {
+  load() {
     this.run(this.api.customers(), (result) => {
       this.rows.set(result.items);
-      const selectedId = this.selected()?.["id"];
-      if (selectedId !== undefined) {
-        this.selected.set(
-          result.items.find((row) => row["id"] === selectedId) || null,
-        );
-      }
-      if (done) this.message.set(done);
     }, true);
   }
   initial(row: Row) {
@@ -72,18 +62,7 @@ export class CustomersPage extends PageState {
     const status = String(field(row, "status") ?? "").toUpperCase();
     return status === "BLK" || tone(field(row, "status")) === "off";
   }
-  set(row: Row, status: string) {
-    if (
-      status === "BLK" &&
-      !confirm("Block this account? They will not be able to sign in.")
-    )
-      return;
-    this.run(this.api.customerStatus(Number(field(row, "id")), status), () => {
-      this.load(
-        status === "ACT" ? "Account is active." : "Account is blocked.",
-      );
-    });
-  }
+
 }
 @Component({
   imports: [TranslatePipe, Status, RouterLink, Icon],

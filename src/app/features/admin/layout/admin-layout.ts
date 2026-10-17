@@ -1,3 +1,6 @@
+import { toSignal } from '@angular/core/rxjs-interop';
+import { filter, map } from 'rxjs';
+import { NavigationEnd } from '@angular/router';
 import { PermissionService, isStaffWorkflowRoute } from "../../../core/auth/permission.service";
 import { FloatingAssistant } from '../../assistant/floating/floating-assistant';
 import { LanguageSelect } from "../../../core/i18n/language-select";
@@ -156,6 +159,10 @@ const groups = [
     ],
   },
   {
+    label: "Communication",
+    items: [{path:"/admin/notifications",label:"Notifications",icon:"bell",exact:false}],
+  },
+  {
     label: "Settings",
     items: [
       {
@@ -194,7 +201,7 @@ const groups = [
 @Component({
   imports: [FloatingAssistant, LanguageSelect, TranslatePipe, RouterOutlet, RouterLink, RouterLinkActive, Icon, FormsModule],
   styles: [`.ai-subnav{display:grid;padding:0 8px 8px 38px;gap:3px}.ai-subnav a{font-size:12px;padding:8px 12px;color:#64749a;text-decoration:none;border-radius:6px}.ai-subnav a.active{color:#0866ff;background:#eaf3ff}.adm-nav button.adm-link{width:100%;border:0;background:#eff6ff;color:#0866ff;cursor:pointer;text-align:left}`],
-  template: `<div class="adm admin-refresh">
+  template: `<div class="adm admin-refresh" [class.transaction-detail-layout]="isTransactionDetail()" [class.order-detail-layout]="isOrderDetail()" [class.user-edit-layout]="isUserEdit() || isCustomerCreate()" [class.user-detail-layout]="isUserDetail()" [class.customer-group-layout]="isCustomerGroupScreen()">
     @if (mobile()) {
       <button
         class="adm-overlay"
@@ -208,8 +215,8 @@ const groups = [
       [class.open]="mobile()"
     >
       <div class="adm-brand">
-        <span class="adm-mark"><app-icon name="cart" /></span>
-        <strong>ShopAdmin</strong>
+        <span class="adm-mark"><app-icon [name]="isUserReference() ? 'bag' : 'cart'" /></span>
+        <strong>ShopAdmin</strong>@if(isUserReference()){<button class="user-editor-menu" type="button" aria-label="Toggle sidebar" (click)="collapsed.set(!collapsed())"><app-icon name="menu" /></button>}
       </div>
       <nav class="adm-nav">
         @for (group of groups(); track group.label) {
@@ -272,7 +279,7 @@ const groups = [
             <div class="adm-crumbs">
               <span>{{ "Dashboard" | translate }}</span>
               @if (title() !== "Dashboard") {
-                <span>›</span><span>{{ (title()) | translate }}</span>
+                <span>›</span>@if (title() === 'Notification Details') {<a routerLink="/admin/notifications">Notifications</a><span>›</span>}@if (isCustomerGroupScreen() && !isAccessGroupCreate()) {<a routerLink="/admin/customers">Customers</a><span>›</span><a routerLink="/admin/customer-groups">Customer Groups</a><span>›</span>}@if (isCustomerGroupsList()) {<a routerLink="/admin/customers">Customers</a><span>›</span>}@if (isCustomerCreate()) {<a routerLink="/admin/customers">Customers</a><span>›</span>}@if (isUserEdit() || isUserDetail()) {<a routerLink="/admin/users">{{ "Users & Roles" | translate }}</a><span>›</span>}@if (isOrderDetail()) {<a routerLink="/admin/orders">{{ "Orders" | translate }}</a><span>›</span>}@if (isTransactionDetail()) {<a routerLink="/admin/transactions">{{ "Transactions" | translate }}</a><span>›</span>}<span>{{ (title()) | translate }}</span>
               }
             </div>
           </div>
@@ -284,7 +291,7 @@ const groups = [
             [attr.aria-label]='"Search orders, customers, or products" | translate'
             [(ngModel)]="query"
             [placeholder]="
-              (isRefund()
+              (isTransactionDetail() ? 'Search by order ID, transaction ID, customer...' : isRefund()
                 ? 'Search orders, customers, products, refunds...'
                 : 'Search orders, customers, products...'
             ) | translate"
@@ -294,7 +301,7 @@ const groups = [
           <app-language-select />
           <a
             class="adm-icon-btn"
-            routerLink="/account/notifications"
+            routerLink="/admin/notifications"
             [attr.aria-label]='"Notifications" | translate'
             ><app-icon name="bell"
           /></a>
@@ -340,8 +347,9 @@ export class AdminLayout {
   auth = inject(AuthService);
   private router = inject(Router);
   access = inject(PermissionService);
+  private currentUrl = toSignal(this.router.events.pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd), map(event => event.urlAfterRedirects)), {initialValue:this.router.url});
   groups = computed(() => groups.map(group => ({...group, items: group.items.filter(item =>
-    this.access.allows(item.path) && (['ADMIN','MANAGER'].includes(this.auth.session()?.role||'') || isStaffWorkflowRoute(item.path)) && (!["/admin/users", "/admin/activity", "/admin/promotions", "/admin/groups"].includes(item.path) || this.auth.session()?.role === "ADMIN")
+    (!this.isUserReference() || ['/admin','/admin/orders','/admin/returns','/admin/cancellations','/admin/payments','/admin/refunds','/admin/transactions','/admin/customers','/admin/customer-groups','/admin/products','/admin/categories','/admin/brands','/admin/sales-report','/admin/payment-report','/admin/tax-report','/admin/settings','/admin/users','/admin/notifications'].includes(item.path)) && this.access.allows(item.path) && (['ADMIN','MANAGER'].includes(this.auth.session()?.role||'') || isStaffWorkflowRoute(item.path)) && (!["/admin/users", "/admin/activity", "/admin/promotions", "/admin/groups"].includes(item.path) || this.auth.session()?.role === "ADMIN")
   )})).filter(group => group.items.length));
   aiExpanded = signal(true);
   aiSections = [['chat','Chat Bot'],['control','Control Center'],['conversations','Conversations'],['executions','Tool Execution'],['tools','Tools'],['permissions','Permissions'],['settings','Settings']];
@@ -349,12 +357,25 @@ export class AdminLayout {
   mobile = signal(false);
   menu = signal(false);
   query = "";
+  isAccessGroupCreate() { return this.router.url.startsWith('/admin/groups/'); }
+  isCustomerGroupScreen() { return this.router.url.startsWith("/admin/customer-groups/") || this.router.url.startsWith("/admin/groups/"); }
+  isUserDetail() { return /^\/admin\/users\/\d+\/?(?:\?|$)/.test(this.currentUrl()); }
+  isCustomerGroupsList() { return this.currentUrl().split('?')[0] === "/admin/customer-groups"; }
+  isUserReference() { return this.currentUrl().split('?')[0] === "/admin/customer-groups" || this.isUserEdit() || this.isUserDetail() || this.isCustomerCreate(); }
+  isCustomerCreate() { return this.currentUrl().startsWith("/admin/customers/add"); }
+  isUserEdit() { return this.currentUrl().startsWith("/admin/users/edit/"); }
+  isOrderDetail() { return /^\/admin\/orders\/\d+\/?(?:\?|$)/.test(this.router.url); }
+  isTransactionDetail() { return /^\/admin\/transactions\/[^/?]+/.test(this.router.url); }
   isRefund() {
     return this.router.url.startsWith("/admin/refunds");
   }
   search() {
     const q = this.query.trim();
     if (!q) return;
+    if (this.isTransactionDetail() || /^txn|^tx-/i.test(q)) {
+      void this.router.navigate(["/admin/transactions"], { queryParams: { q } });
+      return;
+    }
     if (this.isRefund() || /^ref/i.test(q)) {
       void this.router.navigate(["/admin/refunds"], { queryParams: { q } });
       return;
@@ -370,6 +391,14 @@ export class AdminLayout {
     void this.router.navigate(["/admin/products"], { queryParams: { q } });
   }
   title() {
+    if (this.isCustomerCreate()) return "Add Customer";
+    if (this.router.url.startsWith('/admin/notifications/')) return 'Notification Details';
+    if (this.router.url.startsWith('/admin/groups/')) return this.router.url.includes('/add') ? 'Create Group' : this.router.url.includes('/edit/') ? 'Edit Group' : 'Group Details';
+    if (this.isCustomerGroupScreen()) return this.router.url.includes('/add') ? 'Create Customer Group' : this.router.url.includes('/edit/') ? 'Edit Customer Group' : 'Group Details';
+    if (this.isUserDetail()) return "User Details";
+    if (this.isUserEdit()) return "Edit User";
+    if (this.isOrderDetail()) return "Order Details";
+    if (this.isTransactionDetail()) return "Transaction Details";
     const path = this.router.url.split("?")[0];
     const item = groups
       .flatMap((group) => group.items)

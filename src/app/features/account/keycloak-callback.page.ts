@@ -19,7 +19,9 @@ export class KeycloakCallbackPage {
   private async finish() {
     try {
       this.auth.accept(await this.sso.complete());
-      await this.router.navigateByUrl(this.sso.takeReturnUrl(), { replaceUrl: true });
+      const returnUrl=this.sso.takeReturnUrl();
+      if(this.auth.secondFactorChallenge()) await this.router.navigate(['/auth'], {queryParams:{mode:'Two-factor',returnUrl},replaceUrl:true});
+      else await this.router.navigateByUrl(returnUrl, { replaceUrl: true });
     } catch {
       this.error.set("Sign-in failed. Your Keycloak identity must be linked to an active E-Shop account by an administrator.");
     }

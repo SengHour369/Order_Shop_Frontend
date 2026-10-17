@@ -16,6 +16,7 @@ export interface SpringPage<T> {
   totalElements: number;
 }
 export interface Session {
+  token_type?: string;
   id: number;
   access_token: string;
   refresh_token: string;
@@ -87,6 +88,8 @@ export interface Checkout {
   payment_method: string;
   currency: string;
   checkout_key: string;
+  expected_total?: number;
+  reviewed_items?: {skuId:number;quantity:number}[];
 }
 export interface Transaction {
   id: number;

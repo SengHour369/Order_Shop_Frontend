@@ -1,5 +1,10 @@
 import { Component, input } from "@angular/core";
 const icons: Record<string, string> = {
+  alert: "M12 3L1 21h22L12 3 M12 9v5 M12 17h.01",
+  menu: "M4 6h16 M4 12h16 M4 18h16",
+  crown: "M3 6l4 4 5-7 5 7 4-4-3 15H6L3 6 M6 18h12",
+  print: "M6 9V3h12v6 M6 18H3V9h18v9h-3 M6 14h12v8H6V14 M17 12h1",
+  copy: "M9 9h12v12H9V9 M5 15H3V3h12v2",
   barcode: 'M3 4v16 M6 4v16 M9 4v16 M13 4v16 M16 4v16 M18 4v16 M21 4v16',
   image: 'M3 3h18v18H3V3 M3 17l6-6 4 4 3-3 5 5 M9 7h.01',
   flash: 'M13 2L4 14h7l-1 8 10-13h-7l0-7',

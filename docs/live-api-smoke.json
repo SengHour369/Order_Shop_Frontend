@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-10-05T11:37:10.025Z",
+  "checkedAt": "2026-10-16T11:48:52.058Z",
   "baseUrl": "http://localhost:8080",
   "authenticated": false,
   "note": "Availability checks only. A 401 proves authentication is required; it does not validate an authenticated flow.",
@@ -22,35 +22,37 @@
     {
       "method": "GET",
       "route": "/api/v1/admin/session",
-      "status": 404
+      "status": 401
     },
     {
       "method": "GET",
       "route": "/openapi/auth-service",
       "status": 200,
-      "documentedPaths": 55
+      "documentedPaths": 64
     },
     {
       "method": "GET",
       "route": "/openapi/catalog-service",
-      "status": 504
+      "status": 200,
+      "documentedPaths": 73
     },
     {
       "method": "GET",
       "route": "/openapi/order-service",
       "status": 200,
-      "documentedPaths": 40
+      "documentedPaths": 51
     },
     {
       "method": "GET",
       "route": "/openapi/payment-service",
       "status": 200,
-      "documentedPaths": 17
+      "documentedPaths": 21
     },
     {
       "method": "GET",
       "route": "/openapi/admin-service",
-      "status": 404
+      "status": 200,
+      "documentedPaths": 4
     }
   ]
 }

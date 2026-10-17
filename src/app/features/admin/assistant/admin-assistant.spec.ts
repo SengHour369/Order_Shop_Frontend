@@ -106,6 +106,16 @@ describe('Admin chatbot workflows', () => {
     expect(component.pending(turn)).toBeNull();
     expect(component.operations()[0].status).toBe('SUCCESS');
   });
+  it('routes detailed product requests through orchestration and opens only the confirmed review draft',()=>{
+    const component=page();component.prompt='Create product named Phone in category 3';component.send();
+    http.expectOne('/api/ai/admin/chat').flush({conversationId:'draft-chat',suggestions:[],result:{status:'NEEDS_INPUT',intent:'ADMIN_IMPORT_DRAFT',message:'Review draft',data:{confirmationId:'draft-confirmation'}}});
+    http.expectNone('/api/v1/products/create/');
+    const turn=component.current()!.messages.at(-1)!;
+    component.confirm(turn);
+    http.expectOne('/api/ai/confirm/draft-confirmation').flush({status:'SUCCESS',intent:'ADMIN_IMPORT_DRAFT',message:'Draft staged for review',data:{batchId:'actual-batch',revision:2,status:'DRAFT'}});
+    expect(component.importBatchId()).toBe('actual-batch');expect(component.view()).toBe('imports');
+    http.expectNone('/api/v1/products/create/');
+  });
   it('cancels a preview without sending a mutation', () => {
     const component = page();
     const turn = { role:'assistant' as const,text:'Review',time:new Date(),result:{ executionId:null,status:'NEEDS_INPUT',message:'Review',data:{ confirmationId:'confirmation-1' } } };

@@ -11,8 +11,8 @@
       <div class="purchase-record"><strong>{{ transaction.payment_method }} · {{ transaction.transaction_no }}</strong><span>{{ transaction.status }} · {{ transaction.amount | currency:transaction.currency }}</span></div>
     }
     @if (paymentsLoaded() && !transactions().length) { <p>No payment records yet. This order has not been verified as paid.</p> }
-    <a (click)="navigate.emit()" class="purchase-secondary" [routerLink]="['/orders',placed.id]">View order details</a>
-    <a (click)="navigate.emit()" class="purchase-secondary" routerLink="/account/payments" [queryParams]="{order:placed.id}">{{ "Payment Information" | translate }}</a>
+    <button type="button" class="purchase-secondary" (click)="trackingVisible.set(true)">{{text('View order details here','មើលព័ត៌មានការបញ្ជាទិញនៅទីនេះ')}}</button>
+    @if(trackingVisible()){<app-chat-order [orderId]="placed.id" [language]="language()" />}
     <button class="purchase-secondary" [disabled]="loading()" (click)="anotherOrder()">Start another order</button>
   } @else {
     @if (pending()) {
@@ -31,14 +31,24 @@
         @if (addresses().length) {
           <select id="chat-delivery-address" [(ngModel)]="addressId" [disabled]="loading() || reviewing()"><option [ngValue]="0" disabled>Choose an address</option>@for (address of addresses(); track address.id) { <option [ngValue]="address.id">{{ address.address_line1 }}, {{ address.city }}{{ address.is_default ? ' · Default' : '' }}</option> }</select>
           @if (selectedAddress(); as address) { <p class="selected-address">{{ address.address_line1 }}<br />{{ address.city }}, {{ address.country }} {{ address.zip_code }}</p> }
-        } @else { <a (click)="navigate.emit()" class="purchase-secondary" routerLink="/account/addresses">Add a delivery address</a><button class="purchase-secondary" [disabled]="loading()" (click)="load()">Reload addresses</button> }
+        } @else { <button type="button" class="purchase-secondary" (click)="addingAddress.set(true)">{{text('Add a delivery address','បន្ថែមអាសយដ្ឋានដឹកជញ្ជូន')}}</button><button class="purchase-secondary" [disabled]="loading()" (click)="load()">Reload addresses</button> }
+        @if(addingAddress()){
+          <fieldset [disabled]="loading() || reviewing()"><legend>{{text('New delivery address','អាសយដ្ឋានដឹកជញ្ជូនថ្មី')}}</legend>
+            <label>{{text('Street address','អាសយដ្ឋាន')}}<input [(ngModel)]="addressDraft.address_line1" maxlength="255" /></label>
+            <label>{{text('City','ទីក្រុង')}}<input [(ngModel)]="addressDraft.city" maxlength="100" /></label>
+            <label>{{text('Postal code','លេខកូដប្រៃសណីយ៍')}}<input [(ngModel)]="addressDraft.zip_code" maxlength="30" /></label>
+            <label>{{text('Country','ប្រទេស')}}<input [(ngModel)]="addressDraft.country" maxlength="100" /></label>
+            <button type="button" class="purchase-primary" (click)="saveAddress()">{{text('Save delivery address','រក្សាទុកអាសយដ្ឋាន')}}</button>
+            <button type="button" class="purchase-secondary" (click)="addingAddress.set(false)">{{text('Cancel','បោះបង់')}}</button>
+          </fieldset>
+        }
         <fieldset [disabled]="loading() || reviewing()"><legend>Payment provider</legend><div class="payment-options">@for (provider of methods; track provider) { <label [class.chosen]="method===provider"><input type="radio" name="chat-payment" [value]="provider" [(ngModel)]="method" />{{ provider }}</label> }</div></fieldset>
         <p class="payment-note"><app-icon name="lock" /> KHQR payment requires a separate transfer in your banking app. Confirming this order does not charge you.</p>
         @if (reviewing()) {
           <div class="confirmation-note">Please confirm the items, quantities, delivery address and total above.</div>
-          <button class="purchase-primary" [disabled]="loading()" (click)="confirm()">{{ loading() ? 'Confirming…' : 'Confirm & Place Order' }}</button>
-          <button class="purchase-secondary" [disabled]="loading()" (click)="edit()">Edit order</button>
-        } @else { <button class="purchase-primary" [disabled]="loading() || !selectedAddress()" (click)="review()">Review order</button> }
+          <button class="purchase-primary" [disabled]="loading()" (click)="confirm()">{{ loading() ? 'Confirming…' : text('Confirm & Place Order','បញ្ជាក់ និងបញ្ជាទិញ') }}</button>
+          <button class="purchase-secondary" [disabled]="loading()" (click)="edit()">{{text('Edit order','កែសម្រួលការបញ្ជាទិញ')}}</button>
+        } @else { <button class="purchase-primary" [disabled]="loading() || !selectedAddress()" (click)="review()">{{text('Review order','ពិនិត្យការបញ្ជាទិញ')}}</button> }
       }
     } @else if (!loading()) { <button class="purchase-secondary" (click)="load()">Retry loading cart</button> }
   }

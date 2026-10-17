@@ -31,12 +31,21 @@ describe('Checkout inside customer chat', () => {
         const fixture = TestBed.createComponent(ChatCheckout);
         if (session()) {
             http.expectOne(cartUrl).flush({ data: cart });
+            http.expectOne("/api/v1/payments/methods").flush(["CASH_ON_DELIVERY","BAKONG","ABA"]);
             http.expectOne('/api/v1/addresses/user/7').flush([{ data: { id: 5, address_line1: 'Street 271', city: 'Phnom Penh', country: 'Cambodia', zip_code: '12000', is_default: true } }]);
         }
         fixture.detectChanges();
         return fixture;
     }
     function review(component: ChatCheckout) { component.review(); http.expectOne(cartUrl).flush({ data: cart }); }
+    it('saves a real delivery address inside chat without navigation',()=>{
+        const component=create().componentInstance;
+        component.addingAddress.set(true);component.addressDraft={address_line1:'Street 271',city:'Phnom Penh',zip_code:'12000',country:'Cambodia',is_default:false};
+        component.saveAddress();const request=http.expectOne('/api/v1/addresses/user/7');
+        expect(request.request.body.address_line1).toBe('Street 271');
+        request.flush({data:{id:6,...component.addressDraft}});
+        expect(component.addressId).toBe(6);expect(component.addingAddress()).toBe(false);
+    });
     it('requires review and a confirmation click before submitting an order', () => {
         const fixture = create();
         const component = fixture.componentInstance;
@@ -51,7 +60,7 @@ describe('Checkout inside customer chat', () => {
         component.confirm();
         http.expectOne(cartUrl).flush({ data: cart });
         const request = http.expectOne(checkoutUrl);
-        expect(request.request.body).toEqual({ address_id: 5, payment_method: 'ABA', currency: 'USD', checkout_key: expect.any(String) });
+        expect(request.request.body).toEqual({ address_id: 5, payment_method: 'ABA', currency: 'USD', checkout_key: expect.any(String), expected_total:39, reviewed_items:[{skuId:88,quantity:1}] });
         component.confirm();
         http.expectNone(checkoutUrl);
         request.flush({ data: { id: 30, order_number: 'ORD-30', status: 'PENDING', total_amount: 39 } });

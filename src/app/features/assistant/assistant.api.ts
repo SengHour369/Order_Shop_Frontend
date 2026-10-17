@@ -30,6 +30,16 @@ export class AssistantApi {
   rename(id: string, title: string) { return this.api.patch<AdminTranscript>('/api/ai/admin/conversations/' + encodeURIComponent(id), { title }); }
   info() { return this.api.get<AssistantInfo>('/api/ai/admin/info'); }
   feedback(requestKey:string,rating:'up'|'down'){return this.api.post('/api/ai/feedback',{requestKey,rating});}
+  visual(image:File,key=requestId()) {
+    const body=new FormData();body.append('image',image);
+    return this.api.http.post<AiResult>(this.api.url('/api/ai/visual-search'),body,{headers:{'Idempotency-Key':key}}).pipe(
+      catchError(error => {this.quota.handle(error);return error.error?.status ? of(error.error as AiResult) : throwError(()=>error);}),
+      finalize(()=>this.quota.refresh()));
+  }
+  tool(name: string, parameters: Record<string,unknown>, key=requestId(), conversationId:string|null=null) {
+    return this.api.http.post<AiResult>(this.api.url('/api/ai/tools/'+encodeURIComponent(name)),parameters,{headers:conversationId ? {'Idempotency-Key':key,'X-Conversation-ID':conversationId} : {'Idempotency-Key':key}}).pipe(
+      catchError(error => error.error?.status && typeof error.error.message === 'string' ? of(error.error as AiResult) : throwError(()=>error)));
+  }
   confirm(id: string) {
     return this.api.http.post<AiResult>(this.api.url('/api/ai/confirm/' + encodeURIComponent(id)), {}).pipe(
       catchError(error => error.error?.status && typeof error.error.message === 'string'

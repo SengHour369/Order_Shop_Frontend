@@ -1,7 +1,8 @@
 import { LanguageSelect } from "../../core/i18n/language-select";
 import { TranslatePipe } from "../../core/i18n/translate.pipe";
-import { ChangeDetectorRef, Component, inject } from "@angular/core";
+import { ChangeDetectorRef, Component, inject, signal } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { interval } from "rxjs";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { AuthService } from "../../core/auth/auth.service";
@@ -32,6 +33,7 @@ export class AccountPage extends PageState {
     "Sign in",
     "Register",
     "Verify",
+    "Two-factor",
     "Forgot password",
     "Reset password",
   ];
@@ -44,13 +46,16 @@ export class AccountPage extends PageState {
       : "Sign in";
   username = "";
   rememberMe = false;
+  resendSeconds = signal(0);
   constructor() {
     super();
+    interval(1000).pipe(takeUntilDestroyed()).subscribe(() => this.resendSeconds.update(seconds => Math.max(0, seconds - 1)));
     try { this.username = localStorage.getItem("eshop.rememberedUsername") || ""; this.rememberMe = !!this.username; } catch { /* Storage is optional. */ }
     this.route.queryParamMap?.pipe(takeUntilDestroyed()).subscribe(params => {
       const requested = params.get("mode");
       this.changeMode(requested && this.modes.includes(requested) ? requested : params.has("token") ? "Reset password" : "Sign in");
       this.token = params.get("token") || "";
+      if (params.get("email")) this.email = params.get("email")!.trim().toLowerCase();
     });
   }
   socialSignIn() {
@@ -80,6 +85,7 @@ export class AccountPage extends PageState {
     this.changeDetector.markForCheck();
   }
   submit() {
+    if (this.busy()) return;
     if (
       (this.mode === "Register" || this.mode === "Reset password") &&
       this.password !== this.confirmation
@@ -87,31 +93,39 @@ export class AccountPage extends PageState {
       this.error.set("Your passwords do not match.");
       return;
     }
+    if (this.mode === "Two-factor") {
+      this.run(this.auth.completeSecondFactor(this.code.trim()), () => this.done());
+      return;
+    }
     if (this.mode === "Sign in") {
       try {
         if (this.rememberMe) localStorage.setItem("eshop.rememberedUsername", this.username);
         else localStorage.removeItem("eshop.rememberedUsername");
       } catch { /* Never store credentials; username preference is optional. */ }
-      this.run(this.auth.login(this.username, this.password), () =>
-        this.done(),
-      );
+      this.run(this.auth.login(this.username, this.password), () => {
+        if (this.auth.secondFactorChallenge()) { this.mode = 'Two-factor'; this.password = ''; this.code = ''; this.message.set('Enter the six-digit sign-in code sent to your email.'); }
+        else this.done();
+      });
     } else if (this.mode === "Register")
       this.run(
         this.api.post("/api/v1/public/register", {
-          username: this.username,
+          username: this.username.trim(),
           password: this.password,
-          email: this.email,
-          phone: this.phone,
-          full_name: this.fullName,
+          email: this.email.trim().toLowerCase(),
+          phone: this.phone.trim(),
+          full_name: this.fullName.trim(),
         }),
         () => {
           this.mode = "Verify";
+          this.email = this.email.trim().toLowerCase();
+          this.resendSeconds.set(60);
           this.password = "";
+          this.confirmation = "";
           this.message.set("Check your email for a verification code.");
         },
       );
     else if (this.mode === "Verify")
-      this.run(this.auth.verify(this.email, this.code), () => this.done());
+      this.run(this.auth.verify(this.email.trim(), this.code.trim()), () => this.done());
     else if (this.mode === "Forgot password")
       this.run(
         this.api.post("/api/v1/public/forgot-password", { email: this.email.trim() }),
@@ -132,9 +146,10 @@ export class AccountPage extends PageState {
       );
   }
   resend() {
+    if (this.busy() || this.resendSeconds() || !this.email.trim()) return;
     this.run(
-      this.api.post("/api/v1/public/resend", {}, { email: this.email }),
-      () => this.message.set("A new code has been requested."),
+      this.api.post("/api/v1/public/resend", {}, { email: this.email.trim().toLowerCase() }),
+      () => { this.resendSeconds.set(60); this.message.set("A new code has been requested. Use the latest email."); },
     );
   }
   logout() {

@@ -122,6 +122,74 @@ describe("Customer floating AI chat", () => {
         });
         expect(chat.cartFeedback()).toContain("added to cart");
     });
+    it('renders live images, promotion and bilingual product actions', () => {
+        const fixture = create(), chat = fixture.componentInstance;
+        chat.language = 'km'; chat.opened.set(true); chat.prompt = 'រកទូរស័ព្ទ'; chat.send();
+        http.expectOne('/api/ai/chat').flush(response([{id: 24, name: 'Phone Pro', images: ['https://example.test/phone.png'],
+          skus: [{id: 88, effectivePrice: 240, basePrice: 600, available: 5, hasPromotion: true, promotionName: 'Phone sale'}]}], 'ProductList'));
+        fixture.detectChanges();
+        const card = fixture.nativeElement.querySelector('.chat-product') as HTMLElement;
+        expect(card.querySelector('img')!.getAttribute('src')).toBe('https://example.test/phone.png');
+        expect(card.textContent).toContain('Phone sale'); expect(card.textContent).toContain('មើលព័ត៌មានលម្អិត');
+        expect(card.textContent).toContain('បន្ថែមទៅកន្ត្រក');
+        expect(card.querySelector('a')).toBeNull();
+        expect(card.querySelector('button.chat-detail')).not.toBeNull();
+        http.expectNone(r => r.url.includes('/items'));
+    });
+    it('never offers add to cart for unavailable stock', () => {
+        const fixture = create(), chat = fixture.componentInstance;
+        chat.opened.set(true); chat.prompt = 'Find phone'; chat.send();
+        http.expectOne('/api/ai/chat').flush(response([{id: 24, name: 'Phone', skus: [{id: 88, effectivePrice: 240, available: 0}]}], 'ProductList'));
+        fixture.detectChanges();
+        expect(fixture.nativeElement.querySelector('button.chat-add')).toBeNull();
+        expect(fixture.nativeElement.textContent).toContain('Out of stock');
+        chat.add(chat.messages()[1].products![0]);
+        http.expectNone(r => r.url.includes('/items'));
+    });
+    it('loads actual details and SKU attributes inside the conversation', () => {
+        const fixture = create(), chat = fixture.componentInstance;
+        chat.details({id:24});
+        const request = http.expectOne('/api/v1/products/get/all');
+        expect(request.request.body.criteria_value).toBe('24');
+        request.flush({data:{id:24,name:'Phone',description:'Catalog description',main_image:['/phone.png','/back.png'],skus:[{id:88,price:300,finalPrice:240,inventory:{availableQuantity:2},quantity:8,attributes:[{name:'Color',attributes:[{value:'Blue'}]}]}]}});
+        fixture.detectChanges();
+        expect(chat.messages()[0].products![0].available).toBe(2);
+        expect(fixture.nativeElement.textContent).toContain('Color: Blue');
+        expect(fixture.nativeElement.querySelectorAll('.chat-gallery img').length).toBe(2);
+    });
+    it('does not execute a cancellation until its confirmation button is used', () => {
+        session.set({id:7,username:'Buyer',email:'buyer@example.test',role:'CUSTOMER',access_token:'test',refresh_token:'test'});
+        const fixture=create(),chat=fixture.componentInstance;
+        chat.prompt='Cancel order ORD-1';chat.send();
+        http.expectOne('/api/ai/chat').flush({...response({confirmationId:'review-1',parameters:{orderNumber:'ORD-1'}},'ConfirmationCard'), result:{executionId:'run-1',status:'NEEDS_INPUT',message:'Review cancellation',intent:'ORDER_CANCEL',data:{confirmationId:'review-1',parameters:{orderNumber:'ORD-1'}}}});
+        http.expectNone('/api/ai/confirm/review-1');
+        chat.confirmAction(chat.messages()[1]);
+        http.expectOne('/api/ai/confirm/review-1').flush({executionId:'review-1',status:'SUCCESS',intent:'ORDER_CANCEL',message:'Cancelled',data:{id:1,orderNumber:'ORD-1',status:'CANCELLED'}});
+        expect(chat.messages().at(-1)?.text).toBe('Cancelled');
+        expect(chat.messages()[1].confirmationId).toBeUndefined();
+    });
+    it('uses visual recognition and asks for catalog candidate selection without scanning codes', () => {
+        session.set({id:7,username:'Buyer',email:'buyer@example.test',role:'CUSTOMER',access_token:'test',refresh_token:'test'});
+        const fixture=create(),chat=fixture.componentInstance;
+        const file=new File(['photo'],'photo.png',{type:'image/png'});
+        chat.photo({target:{files:[file],value:'photo.png'}} as unknown as Event);
+        const request=http.expectOne('/api/ai/visual-search');
+        expect((request.request.body as FormData).get('image')).toBe(file);
+        request.flush({status:'SUCCESS',data:{matchType:'AI_IMAGE',exact:false,requiresSelection:true,message:'Select product',candidates:[{productId:24,name:'Catalog phone',confidence:0.55}]}});
+        expect(chat.messages()[0].visualCandidates![0].productId).toBe(24);
+        http.expectNone('/api/v1/product-scanner/scan');
+        http.expectNone('/api/v1/products/get/all');
+    });
+    it('reuses the cart addition key after an uncertain server result',()=>{
+        session.set({id:7,username:'Buyer',email:'buyer@example.test',role:'CUSTOMER',access_token:'test',refresh_token:'test'});
+        const chat=create().componentInstance;
+        const product={id:24,name:'Phone',skuId:88,available:5,image:'/phone.png',quantity:1,variants:[]};
+        chat.add(product);const first=http.expectOne('/api/v1/cart/user/id/items?userId=7');const key=first.request.headers.get('Idempotency-Key');
+        first.flush({}, {status:503,statusText:'Unavailable'});
+        chat.add(product);const second=http.expectOne('/api/v1/cart/user/id/items?userId=7');
+        expect(second.request.headers.get('Idempotency-Key')).toBe(key);
+        second.flush({data:{id:1,total_items:1,total_price:39,items:[]}});
+    });
     it("shows checkout guidance without placing an order or taking payment", () => {
         const fixture = create();
         const chat = fixture.componentInstance;

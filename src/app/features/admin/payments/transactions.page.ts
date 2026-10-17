@@ -1,9 +1,9 @@
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
-import { Component, computed, inject, signal } from "@angular/core";
+import { Component, computed, DestroyRef, inject, signal } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, RouterLink } from "@angular/router";
-import { catchError, forkJoin, of } from "rxjs";
+import { catchError, forkJoin, of, switchMap, map } from "rxjs";
 import { AuthService } from "../../../core/auth/auth.service";
 import { PageState } from "../../../shared/utils/page-state";
 import { Icon } from "../../../shared/components/icon";
@@ -117,6 +117,8 @@ export class TransactionsPage extends PageState {
     super();
     this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe(params => {
       this.customerId = params.get("customer") || "";
+      this.search = params.get("q") || "";
+      this.apply();
       this.load();
     });
   }
@@ -199,108 +201,67 @@ export class TransactionsPage extends PageState {
   }
 }
 @Component({
-  imports: [TranslatePipe, Status, RouterLink, FormsModule],
-  template: `<section class="adm-stack">
-    <div class="adm-page-head">
-      <div>
-        <div class="adm-crumbs">
-          <a routerLink="/admin">{{ "Dashboard" | translate }}</a><span>›</span
-          ><a routerLink="/admin/transactions">{{ "Transactions" | translate }}</a><span>›</span
-          ><span>{{ text(field(row() || {}, "transaction_no")) }}</span>
-        </div>
-        <h2>Transaction {{ text(field(row() || {}, "transaction_no")) }}</h2>
-        <p><a routerLink="/admin/transactions">Back to transactions</a></p>
-      </div>
-    </div>
-    <app-status [busy]="busy()" [error]="error()" [message]="message()" />
-    @if (row(); as current) {
-      <div class="adm-split">
-        <article class="adm-panel">
-          <div class="adm-section-title">
-            <div>
-              <h3>{{ usd(field(current, "amount")) }}</h3>
-              <p>
-                <span
-                  class="adm-badge"
-                  [class.on]="tone(field(current, 'status')) === 'on'"
-                  [class.off]="tone(field(current, 'status')) === 'off'"
-                  [class.wait]="tone(field(current, 'status')) === 'wait'"
-                  >{{ text(field(current, "status")) }}</span
-                >
-              </p>
-            </div>
-          </div>
-          <div class="adm-kv">
-            <span>Number</span
-            ><strong>{{ text(field(current, "transaction_no")) }}</strong>
-            <span>{{ "Order" | translate }}</span
-            ><strong>{{ text(field(current, "order_id")) }}</strong>
-            <span>{{ "Customer" | translate }}</span
-            ><strong>{{ text(field(current, "customer_id")) }}</strong>
-            <span>Method</span
-            ><strong>{{ text(field(current, "payment_method")) }}</strong>
-            <span>{{ "Account" | translate }}</span
-            ><strong>{{
-              text(field(current, "masked_account", "maskedAccount"))
-            }}</strong>
-            <span>Created</span
-            ><strong>{{
-              when(field(current, "createdAt", "created_at"))
-            }}</strong>
-            <span>Updated</span
-            ><strong>{{
-              when(field(current, "updatedAt", "updated_at"))
-            }}</strong>
-            <span>{{ "Remarks" | translate }}</span
-            ><strong>{{ text(field(current, "remarks")) }}</strong>
-          </div>
-        </article>
-        <form class="adm-form adm-panel" (ngSubmit)="save()">
-          <div class="adm-section-title">
-            <h3>Update status</h3>
-            <p>The reason is stored with the status change.</p>
-          </div>
-          <label
-            >New status<select name="next" [(ngModel)]="next">
-              @for (item of statuses; track item) {
-                <option [value]="item">{{ item }}</option>
-              }
-            </select></label
-          >
-          <label
-            >{{ "Reason" | translate }}<input name="reason" [(ngModel)]="reason" required
-          /></label>
-          <button class="adm-btn adm-primary" [disabled]="busy()">
-            Update status
-          </button>
-        </form>
-      </div>
-      @if (history().length) {
-        <article class="adm-panel">
-          <h3>Status history</h3>
-          <div class="adm-kv">
-            @for (item of history(); track $index) {
-              <span>{{ text(field(item, "new_status", "newStatus")) }}</span>
-              <strong
-                >{{ when(field(item, "changed_at", "changedAt")) }} ·
-                {{
-                  text(field(item, "changed_by", "changedBy", "reason"))
-                }}</strong
-              >
-            }
-          </div>
-        </article>
-      }
-    }
-  </section>`,
+  imports: [TranslatePipe, Status, RouterLink, FormsModule, Icon],
+  templateUrl: "./transaction-detail.html",
+  styleUrl: "./transaction-detail.css",
 })
 export class TransactionDetailPage extends PageState {
   private api = inject(AdminApi);
   private route = inject(ActivatedRoute);
   private auth = inject(AuthService);
+  private destroyRefForHistory = inject(DestroyRef);
   statuses = statuses;
   row = signal<Row | null>(null);
   history = signal<Row[]>([]);
+  order = signal<Row>({});
+  customerRecord = signal<Row>({});
+  address = signal<Row>({});
+  showActions = signal(false);
+  successStatuses = successStatuses;
+  String = String;
+  recordId = 0;
+  historyUnavailable = signal(false);
+  items = computed(() => {
+    const value = field(this.order(), "items");
+    return Array.isArray(value) ? value as Row[] : [];
+  });
+  customerId() { return field(this.row() || {}, "customer_id", "customerId"); }
+  orderId() { return field(this.row() || {}, "order_id", "orderId"); }
+  transactionNumber() { return field(this.row() || {}, "transaction_no", "transactionNo", "id"); }
+  orderNumber() { return field(this.order(), "order_number", "orderNumber") || this.orderId(); }
+  customerName() {
+    return text(field(this.customerRecord(), "full_name", "fullName", "name", "username") || transactionCustomer(this.row() || {}).name);
+  }
+  initials() { return this.customerName().split(/\s+/).slice(0, 2).map(part => part[0]).join(""); }
+  customerEmail() { return field(this.customerRecord(), "email") || field(this.row() || {}, "customer_email", "customerEmail"); }
+  addressText() {
+    const address = this.address();
+    return [field(address, "address_line1", "address_line", "addressLine", "street", "address"), field(address, "city"), field(address, "state", "province"), field(address, "zip_code", "postal_code", "postalCode"), field(address, "country")].filter(Boolean).join(", ") || "—";
+  }
+  money(value: unknown) {
+    if (value === "" || value === null || value === undefined) return "—";
+    const currency = String(field(this.row() || {}, "currency") || "USD");
+    try { return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(Number(value)); }
+    catch { return `${value} ${currency}`; }
+  }
+  statusLabel() {
+    const value = String(field(this.row() || {}, "status"));
+    return successStatuses.includes(value.toUpperCase()) ? "Successful" : value ? value[0].toUpperCase() + value.slice(1).toLowerCase() : "—";
+  }
+  date() { return transactionDate(this.row() || {})?.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) || "—"; }
+  time() { return transactionDate(this.row() || {})?.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) || ""; }
+  subtotal() { return this.items().reduce((sum, item) => sum + Number(field(item, "total_price", "totalPrice") || 0), 0); }
+  brand() { return String(field(this.row() || {}, "payment_method", "paymentMethod")).toLowerCase().includes("visa"); }
+  async copy(value: unknown) {
+    if (!value) return;
+    try { await navigator.clipboard.writeText(String(value)); this.message.set("Copied to clipboard."); }
+    catch { this.error.set("Could not copy. Select and copy the value manually."); }
+  }
+  downloadReceipt() {
+    const lines = ["Transaction receipt", `Transaction: ${this.transactionNumber()}`, `Order: ${this.orderNumber()}`, `Customer: ${this.customerName()}`, `Amount: ${this.money(field(this.row() || {}, "amount"))}`, `Status: ${this.statusLabel()}`, ...this.items().map(item => `SKU ${field(item, "product_sku_id")}: ${field(item, "quantity")} × ${this.money(field(item, "unit_price"))}`)];
+    const url = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" }));
+    const link = document.createElement("a"); link.href = url; link.download = "transaction-receipt.txt"; link.click(); URL.revokeObjectURL(url);
+  }
   next = "PENDING";
   reason = "";
   field = field;
@@ -310,26 +271,32 @@ export class TransactionDetailPage extends PageState {
   tone = tone;
   constructor() {
     super();
-    this.route.paramMap.subscribe((params) =>
+    this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) =>
       this.open(Number(params.get("id"))),
     );
   }
   open(id: number) {
-    this.run(
-      forkJoin({
-        row: this.api.transaction(id),
-        history: this.api
-          .transactionStatusHistory(id)
-          .pipe(catchError(() => of([] as Row[]))),
-      }),
-      (result) => {
-        this.row.set(result.row);
-        this.history.set(result.history);
-        this.next = String(field(result.row, "status") || "PENDING");
-      },
-    );
+    this.recordId = id;
+    this.row.set(null); this.order.set({}); this.customerRecord.set({}); this.address.set({}); this.history.set([]); this.historyUnavailable.set(false);
+    this.run(this.api.transaction(id).pipe(switchMap(row => {
+      const orderId = Number(field(row, "order_id", "orderId"));
+      const customerId = Number(field(row, "customer_id", "customerId"));
+      return forkJoin({
+        row: of(row),
+        order: orderId ? this.api.order(orderId).pipe(catchError(() => of({} as Row))) : of({} as Row),
+        customer: customerId ? this.api.customer(customerId).pipe(catchError(() => of({} as Row))) : of({} as Row),
+        history: this.api.transactionStatusHistory(id).pipe(catchError(() => { this.historyUnavailable.set(true); return of([] as Row[]); })),
+      });
+    }), switchMap(result => {
+      const addressId = Number(field(result.order, "shipping_address_id", "shippingAddressId"));
+      return (addressId ? this.api.address(addressId).pipe(catchError(() => of({} as Row))) : of({} as Row)).pipe(map(address => ({ ...result, address })));
+    })), result => {
+      this.row.set(result.row); this.order.set(result.order); this.customerRecord.set(result.customer); this.address.set(result.address); this.history.set(result.history);
+      this.next = String(field(result.row, "status") || "PENDING");
+    }, true);
   }
   save() {
+    if (!this.reason.trim()) { this.error.set("Enter a reason for this status change."); return; }
     const id = Number(field(this.row() || {}, "id"));
     this.run(
       this.api.transactionStatus(
@@ -341,8 +308,8 @@ export class TransactionDetailPage extends PageState {
       (row) => {
         this.row.set(row);
         this.message.set("Transaction status updated.");
-        this.api.transactionStatusHistory(id).subscribe({
-          next: (history) => this.history.set(history),
+        this.api.transactionStatusHistory(id).pipe(takeUntilDestroyed(this.destroyRefForHistory)).subscribe({
+          next: (history) => { if (this.recordId === id) { this.history.set(history); this.historyUnavailable.set(false); } },
           error: () => undefined,
         });
       },

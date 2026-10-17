@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { NotificationsPage } from './notifications.page';
 import { NotificationsApi } from './notifications.api';
@@ -55,4 +55,23 @@ describe('Notifications reference screen',()=>{
  it('uses an unknown count if the unread-count endpoint fails',()=>{
   count.mockReturnValueOnce(throwError(()=>new Error('Unavailable')));const {page}=setup();expect(unread()).toBe(null);expect(page.notices()).toHaveLength(3);
  });
+ it('renders the admin screen and combines search, status, and category filters',()=>{
+  vi.spyOn(TestBed.inject(Router),'url','get').mockReturnValue('/admin/notifications');
+  const {page,fixture}=setup();
+  expect(fixture.nativeElement.querySelector('.admin-notifications')).not.toBe(null);
+  expect(page.total).toBe(23);
+  page.search='payment';page.status='unread';page.filter='orders';
+  expect(page.filtered().map(n=>n.id)).toEqual([2]);
+  page.status='read';expect(page.filtered()).toEqual([]);
+  expect(page.destination(notices[0])).toEqual(['/admin/orders','12']);
+ });
+ it('marks only selected unread notifications read after successful API updates',()=>{
+  const {page}=setup();page.toggleChecked(2);page.readChecked();
+  expect(read).toHaveBeenCalledWith(2);
+  expect(read).toHaveBeenCalledTimes(1);
+  expect(page.notices().find(n=>n.id===1)?.read).toBe(false);
+  expect(page.notices().find(n=>n.id===2)?.read).toBe(true);
+  expect(page.checked.size).toBe(0);
+ });
+
 });

@@ -40,7 +40,9 @@
   <div class="chat-toolbar">
     <button type="button" (click)="newChat()" [disabled]="busy()">
       <app-icon name="plus" />{{ "New chat" | translate }}</button
-    ><button type="button" (click)="openCheckout()"><app-icon name="cart" />Cart & checkout</button><select
+    ><label class="chat-photo">{{ productText('Upload photo', 'បញ្ចូលរូបថត') }}<input type="file" accept="image/jpeg,image/png,image/webp" (change)="photo($event)" [disabled]="busy()" /></label>
+    <label class="chat-photo">{{ productText('Camera', 'កាមេរ៉ា') }}<input type="file" accept="image/jpeg,image/png" capture="environment" (change)="photo($event)" [disabled]="busy()" /></label>
+    <button type="button" (click)="openCheckout()"><app-icon name="cart" />Cart & checkout</button><select
       aria-label="Assistant language"
       [(ngModel)]="language"
       [disabled]="busy()"
@@ -76,6 +78,7 @@
         </button>
       }
     </div>
+    @if(trackingOrderId()){<app-chat-order [orderId]="trackingOrderId()!" [language]="language" />}
     @for (message of messages(); track $index) {
       <article [class]="'chat-message ' + message.role">
         @if (message.role === "assistant") {
@@ -85,16 +88,16 @@
           <div class="message-bubble">@if(message.role === 'assistant'){<app-rich-message [text]="message.text"/>}@else{ {{message.text}} }</div>
           @for (product of message.products || []; track product.id) {
             <div class="chat-product">
-              <a [routerLink]="['/shop', product.id]" (click)="close()"
+              <button type="button" class="chat-detail" (click)="details(product)" [disabled]="busy()"
                 ><img
                   appProductImage
                   [src]="product.image"
                   [alt]="product.name"
                   loading="lazy"
-              /></a>
+              /></button>
               <div>
-                <a [routerLink]="['/shop', product.id]" (click)="close()"
-                  ><strong>{{ product.name }}</strong></a
+                <button type="button" class="chat-detail" (click)="details(product)" [disabled]="busy()"
+                  ><strong>{{ product.name }}</strong></button
                 >
                 <p class="chat-price">
                   @if (product.price !== undefined) {
@@ -108,9 +111,15 @@
                     <del>{{ product.originalPrice | currency: "USD" }}</del>
                   }
                 </p>
+                @if(message.cardType === 'ProductCard') {
+                  <div class="chat-gallery">@for(image of product.images || []; track image){<button type="button" (click)="product.image=image"><img appProductImage [src]="image" [alt]="product.name" /></button>}</div>
+                  @for(attribute of product.attributes || []; track attribute.name){<small>{{attribute.name}}: {{attribute.values.join(', ')}}</small>}
+                }
+                @if (product.promotion) { <small class="chat-promotion">{{ product.promotion }}</small> }
+                <button type="button" class="chat-detail" (click)="details(product)" [disabled]="busy()">{{ productText('View Details', 'មើលព័ត៌មានលម្អិត') }}</button>
                 @if (product.available !== undefined) {
                   <small>{{
-                    product.available > 0 ? "In stock" : "Out of stock"
+                    product.available > 0 ? productText("In stock", "មានក្នុងស្តុក") : productText("Out of stock", "អស់ពីស្តុក")
                   }}</small>
                 }
                 @if (product.variants.length > 1) { <select class="chat-variant" aria-label="Select product variant" [ngModel]="product.skuId" (ngModelChange)="selectVariant(product,$event)" [disabled]="cartLocked()">@for (variant of product.variants; track variant.id) { <option [ngValue]="variant.id">{{ variant.label }}{{ (variant.available ?? 0) < 1 ? ' · Unavailable' : '' }}</option> }</select> }
@@ -127,18 +136,14 @@
                   (click)="add(product)"
                   [disabled]="cartLocked() || !validQuantity(product)"
                 >
-                  {{ cartBusy() === product.skuId ? "Adding…" : "Add to Cart" }}
+                  {{ cartBusy() === product.skuId ? productText("Adding…", "កំពុងបន្ថែម…") : productText("Add to Cart", "បន្ថែមទៅកន្ត្រក") }}
                 </button>
-              } @else {
-                <a
-                  class="chat-add"
-                  [routerLink]="['/shop', product.id]"
-                  (click)="close()"
-                  >View</a
-                >
               }
             </div>
           }
+          @for(candidate of message.visualCandidates || []; track candidate.productId){<button type="button" class="chat-more" [disabled]="busy()" (click)="details({id:candidate.productId})">{{candidate.name}} · {{candidate.confidence * 100 | number:'1.0-0'}}%</button>}
+          @if(message.confirmationId){<div class="confirmation-note"><p>{{message.confirmationParameters}}</p><button type="button" [disabled]="busy()" (click)="confirmAction(message)">{{productText('Confirm action', 'បញ្ជាក់សកម្មភាព')}}</button><button type="button" [disabled]="busy()" (click)="message.confirmationId=undefined">{{productText('Cancel', 'បោះបង់')}}</button></div>}
+          @if(message.paymentOrderId){<app-payment-qr [orderId]="message.paymentOrderId!" />}
           @if (message.products?.length) {
             <a class="chat-more" routerLink="/shop" (click)="close()"
               >View more products <app-icon name="arrow"
@@ -153,22 +158,8 @@
           @for (row of message.rows || []; track $index) {
             <div class="chat-record">
               <strong>{{ row.title }}</strong
-              ><span>{{ row.detail }}</span>
+              ><span>{{ row.detail }}</span>@if(row.orderId){<button type="button" (click)="trackingOrderId.set(row.orderId!)">View details here</button>}
             </div>
-          }
-          @if (
-            message.cardType === "OrderCard" ||
-            message.cardType === "OrderList" ||
-            message.cardType === "ConfirmationCard"
-          ) {
-            <a class="chat-more" routerLink="/account/orders" (click)="close()"
-              >{{
-                message.cardType === "ConfirmationCard"
-                  ? "Review action in My Orders"
-                  : "View My Orders"
-              }}
-              <app-icon name="arrow"
-            /></a>
           }
           @for (suggestion of message.suggestions || []; track suggestion) {
             <button
@@ -208,7 +199,7 @@
     @if (cartFeedback()) {
       <p class="chat-feedback" role="status">{{ cartFeedback() }}</p>
     }
-    @if (checkoutVisible()) { <app-chat-checkout [labels]="cartLabels()" (navigate)="close()" /> }
+    @if (checkoutVisible()) { <app-chat-checkout [language]="language" [labels]="cartLabels()" (navigate)="close()" /> }
   </div>
   <form class="chat-composer" (ngSubmit)="send()">
     <textarea

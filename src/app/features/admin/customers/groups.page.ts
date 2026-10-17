@@ -1,353 +1,40 @@
-import { PermissionService } from "../../../core/auth/permission.service";
-import { TranslatePipe } from "../../../core/i18n/translate.pipe";
-import { Component, computed, inject, signal } from "@angular/core";
-import { FormsModule } from "@angular/forms";
-import { ActivatedRoute, Router, RouterLink } from "@angular/router";
-import { PageState } from "../../../shared/utils/page-state";
-import { Icon } from "../../../shared/components/icon";
-import { Status } from "../../../shared/components/status";
-import { AdminApi, field, Row, text, tone, when } from "../api/admin.api";
-@Component({
-  imports: [TranslatePipe, Status, FormsModule, Icon, RouterLink],
-  template: `<section>
-    @if (screen() === "list") {
-      <div class="adm-page-head">
-        <div>
-          <h2>{{ "Customer Groups" | translate }}</h2>
-          <p>Permission groups from the auth service.</p>
-        </div>
-        <div class="adm-head-actions">
-          <a [hidden]="!access.allows('/admin/customer-groups/add')" class="adm-btn adm-primary" routerLink="/admin/customer-groups/add"
-            ><app-icon name="plus" /> Add group</a
-          >
-        </div>
-      </div>
-    }
-    <app-status [busy]="busy()" [error]="error()" [message]="message()" />
-    @if (screen() === "form") {
-      <div class="adm-work">
-        <form class="adm-form adm-panel" (ngSubmit)="save()">
-          <h3>{{ groupId ? "Edit customer group" : "Add customer group" }}</h3>
-          <p>Define the details for this customer group.</p>
-          <label
-            >Group name<input
-              name="group_name"
-              [(ngModel)]="groupName"
-              required
-          /></label>
-          <label
-            >{{ "Description" | translate }}<textarea
-              name="description"
-              [(ngModel)]="groupDescription"
-              rows="4"
-            ></textarea>
-          </label>
-          <label
-            >Group type
-            <select name="type" [(ngModel)]="groupType">
-              @for (item of types; track item) {
-                <option [value]="item">{{ item }}</option>
-              }
-            </select>
-          </label>
-          <div>
-            <span>{{ "Status" | translate }}</span>
-            <div class="adm-actions">
-              <label style="display:flex;align-items:center;gap:8px"
-                ><input
-                  type="radio"
-                  name="groupActive"
-                  [checked]="groupActive"
-                  (change)="groupActive = true"
-                />
-                {{ "Active" | translate }}</label
-              >
-              <label style="display:flex;align-items:center;gap:8px"
-                ><input
-                  type="radio"
-                  name="groupActive"
-                  [checked]="!groupActive"
-                  (change)="groupActive = false"
-                />
-                {{ "Inactive" | translate }}</label
-              >
-            </div>
-          </div>
-          <div class="adm-actions">
-            <button class="adm-btn adm-primary" [disabled]="busy()">
-              {{ groupId ? "Update group" : "Save group" }}
-            </button>
-            <a class="adm-btn" routerLink="/admin/customer-groups">{{ "Cancel" | translate }}</a>
-          </div>
-        </form>
-        <aside class="adm-panel adm-preview">
-          <h3>Preview</h3>
-          <span class="adm-ico blue"><app-icon name="user" /></span>
-          <strong>{{ groupName || "Group name" }}</strong>
-          <p>
-            {{ groupDescription || "Description appears here as you type." }}
-          </p>
-          <span class="adm-badge">{{ (groupType || "CUSTOMER") | translate }}</span>
-          <span
-            class="adm-badge"
-            [class.on]="groupActive"
-            [class.off]="!groupActive"
-            >{{ (groupActive ? "Active" : "Inactive") | translate }}</span
-          >
-        </aside>
-      </div>
-    }
-    @if (screen() === "list") {
-      <div class="adm-table-card">
-        <form class="adm-filter" (ngSubmit)="$event.preventDefault()">
-          <input
-            name="q"
-            [ngModel]="query()"
-            (ngModelChange)="query.set($event)"
-            placeholder="Search this page by name or description"
-          />
-          <select
-            name="status"
-            [ngModel]="statusFilter()"
-            (ngModelChange)="statusFilter.set($event)"
-          >
-            <option value="">{{ "All statuses" | translate }}</option>
-            <option value="active">{{ "Active" | translate }}</option>
-            <option value="inactive">{{ "Inactive" | translate }}</option>
-          </select>
-        </form>
-        <div class="adm-table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Group name</th>
-                <th>{{ "Description" | translate }}</th>
-                <th>Group type</th>
-                <th>{{ "Status" | translate }}</th>
-                <th>Created</th>
-                <th>{{ "Action" | translate }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (row of visible(); track field(row, "id", "group_id")) {
-                <tr>
-                  <td>
-                    {{ text(field(row, "group_name", "name", "groupName")) }}
-                  </td>
-                  <td>{{ text(field(row, "description")) }}</td>
-                  <td>{{ text(field(row, "type")) }}</td>
-                  <td>
-                    <span
-                      class="adm-badge"
-                      [class.on]="activeRow(row)"
-                      [class.off]="!activeRow(row)"
-                      >{{ (activeRow(row) ? "Active" : "Inactive") | translate }}</span
-                    >
-                  </td>
-                  <td>{{ when(field(row, "created_at", "createdAt")) }}</td>
-                  <td class="adm-actions">
-                    <a
-                      class="adm-btn icon"
-                      [routerLink]="[
-                        '/admin/customer-groups/edit',
-                        field(row, 'id', 'group_id'),
-                      ]"
-                      [hidden]="!access.has('USER_GROUP_UPDATE')" aria-label="Edit group"
-                      ><app-icon name="edit"
-                    /></a>
-                    <button
-                      class="adm-btn icon danger"
-                      type="button"
-                      [hidden]="!access.has('USER_GROUP_DELETE')" aria-label="Delete group"
-                      (click)="remove(row)"
-                    >
-                      <app-icon name="trash" />
-                    </button>
-                  </td>
-                </tr>
-              } @empty {
-                <tr>
-                  <td colspan="6">
-                    <div class="adm-empty">
-                      <strong>No customer groups</strong>
-                      <p>No groups match this page.</p>
-                    </div>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-        <div class="adm-pager">
-          <span>Page {{ page }} of {{ pages() }}</span>
-          <span class="adm-pages">
-            <button
-              class="adm-btn"
-              type="button"
-              [disabled]="page <= 1 || busy()"
-              (click)="goto(page - 1)"
-            >
-              {{ "Previous" | translate }}
-            </button>
-            <button
-              class="adm-btn"
-              type="button"
-              [disabled]="page >= pages() || busy()"
-              (click)="goto(page + 1)"
-            >
-              {{ "Next" | translate }}
-            </button>
-            <select
-              [ngModel]="size"
-              (ngModelChange)="setSize($event)"
-              aria-label="Rows per page"
-            >
-              @for (option of sizes; track option) {
-                <option [ngValue]="option">{{ option }} / page</option>
-              }
-            </select>
-          </span>
-        </div>
-      </div>
-    }
-  </section>`,
-})
+import { Component, computed, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
+import { PermissionService } from '../../../core/auth/permission.service';
+import { PageState } from '../../../shared/utils/page-state';
+import { Icon } from '../../../shared/components/icon';
+import { Status } from '../../../shared/components/status';
+import { AdminApi, field, Row, text, usd } from '../api/admin.api';
+@Component({imports:[DatePipe,FormsModule,RouterLink,Icon,Status],templateUrl:'./groups.html',styleUrl:'./groups.css'})
 export class GroupsPage extends PageState {
-  access = inject(PermissionService);
-  private api = inject(AdminApi);
-  private router = inject(Router);
-  private route = inject(ActivatedRoute);
-  screen = signal<"list" | "form" | "detail">("list");
-  types = [
-    "CUSTOMER",
-    "VIP",
-    "Loyalty",
-    "Wholesale",
-    "Default",
-    "Behavioral",
-    "Segment",
-    "Corporate",
-  ];
-  rows = signal<Row[]>([]);
-  pages = signal(1);
-  total = signal(0);
-  page = 1;
-  size = 10;
-  sizes = [10, 20, 50];
-  query = signal("");
-  statusFilter = signal("");
-  editing = signal(false);
-  viewing = signal<Row | null>(null);
-  groupId = 0;
-  groupName = "";
-  groupDescription = "";
-  groupType = "CUSTOMER";
-  groupActive = true;
-  visible = computed(() => {
-    const q = this.query().trim().toLowerCase();
-    const status = this.statusFilter();
-    return this.rows().filter((row) => {
-      const active = this.activeRow(row);
-      if (status === "active" && !active) return false;
-      if (status === "inactive" && active) return false;
-      if (!q) return true;
-      return `${field(row, "group_name", "name", "groupName")} ${field(row, "description")}`
-        .toLowerCase()
-        .includes(q);
-    });
-  });
-  field = field;
-  text = text;
-  when = when;
-  constructor() {
-    super();
-    const url = this.router.url.split("?")[0];
-    const id = Number(this.route.snapshot.paramMap.get("id") || 0);
-    if (url.endsWith("/add")) {
-      this.screen.set("form");
-      this.open();
-      return;
-    }
-    if (url.includes("/edit/")) {
-      this.screen.set("form");
-      this.run(this.api.group(id), (row) => this.edit(row));
-      return;
-    }
-    this.load();
-  }
-  load(done?: string) {
-    this.run(this.api.groups(this.page, this.size), (result) => {
-      this.rows.set(result.items);
-      this.pages.set(Math.max(1, result.pages));
-      this.total.set(result.total);
-      if (done) this.message.set(done);
-    });
-  }
-  goto(page: number) {
-    if (this.busy()) return;
-    this.page = page;
-    this.load();
-  }
-  setSize(size: number) {
-    if (this.busy()) return;
-    this.size = Number(size) || 10;
-    this.page = 1;
-    this.load();
-  }
-  activeRow(row: Row) {
-    if (field(row, "is_active", "isActive") === false) return false;
-    const status = field(row, "status");
-    if (String(status).toUpperCase() === "BLK") return false;
-    if (status && tone(status) === "off") return false;
-    return true;
-  }
-  open() {
-    this.viewing.set(null);
-    this.groupId = 0;
-    this.groupName = "";
-    this.groupDescription = "";
-    this.groupType = "CUSTOMER";
-    this.groupActive = true;
-    this.editing.set(true);
-  }
-  edit(row: Row) {
-    this.viewing.set(null);
-    this.groupId = Number(field(row, "id", "group_id"));
-    this.groupName = String(field(row, "group_name", "name", "groupName"));
-    this.groupDescription = String(field(row, "description") || "");
-    this.groupType = String(field(row, "type") || "CUSTOMER");
-    if (!this.types.includes(this.groupType))
-      this.types = [this.groupType, ...this.types];
-    this.groupActive = this.activeRow(row);
-    this.editing.set(true);
-  }
-  save() {
-    const editing = this.router.url.split("?")[0].includes("/edit/");
-    if (editing && !this.groupId) return;
-    this.run(
-      this.api.saveGroup(
-        {
-          group_name: this.groupName,
-          description: this.groupDescription,
-          is_active: this.groupActive,
-          status: this.groupActive ? "ACT" : "BLK",
-          type: this.groupType || "CUSTOMER",
-        },
-        this.groupId || undefined,
-      ),
-      () => {
-        this.editing.set(false);
-        void this.router.navigate(["/admin/customer-groups"]);
-      },
-    );
-  }
-  remove(row: Row) {
-    if (!confirm("Delete this group?")) return;
-    const id = Number(field(row, "id", "group_id"));
-    this.run(this.api.deleteGroup(id), () => {
-      if (Number(field(this.viewing() || {}, "id", "group_id")) === id)
-        this.viewing.set(null);
-      this.load("Group deleted.");
-    });
-  }
+ access=inject(PermissionService);private api=inject(AdminApi);
+ rows=signal<Row[]>([]);query=signal('');statusFilter=signal('');typeFilter=signal('');page=signal(1);size=signal(10);filtersOpen=false;createdAfter=signal('');
+ field=field;text=text;usd=usd;
+ types=computed(()=>[...new Set(this.rows().map(row=>String(field(row,'type')||'Default')))].sort());
+ filtered=computed(()=>this.rows().filter(row=>{
+  const q=this.query().trim().toLowerCase();
+  return (!q||`${field(row,'group_name','name','groupName')} ${field(row,'description')}`.toLowerCase().includes(q))&&(!this.statusFilter()||(this.statusFilter()==='active')===this.activeRow(row))&&(!this.typeFilter()||String(field(row,'type')||'Default')===this.typeFilter())&&(!this.createdAfter()||String(field(row,'created_at','createdAt')).slice(0,10)>=this.createdAfter());
+ }));
+ activeCount=computed(()=>this.rows().filter(row=>this.activeRow(row)).length);
+ pages=computed(()=>Math.max(1,Math.ceil(this.filtered().length/this.size())));
+ visible=computed(()=>this.filtered().slice((this.page()-1)*this.size(),this.page()*this.size()));
+ constructor(){super();this.load();}
+ load(){this.run(this.api.allGroups(),rows=>{this.rows.set(rows);this.page.set(Math.min(this.page(),this.pages()));});}
+ activeRow(row:Row){return field(row,'is_active','isActive')!==false&&!['BLK','INACTIVE','DISABLED'].includes(String(field(row,'status')).toUpperCase());}
+ change(){this.page.set(1);}
+ goto(page:number){if(!this.busy()&&page>=1&&page<=this.pages())this.page.set(page);}
+ metric(row:Row,...keys:string[]){const value=field(row,...keys);return value===''||value===null||value===undefined?'—':Number(value).toLocaleString();}
+ totalMetric(...keys:string[]){if(!this.rows().length)return '—';const values=this.rows().map(row=>field(row,...keys));if(values.some(value=>value===''||value===null||value===undefined||!Number.isFinite(Number(value))))return '—';return values.reduce<number>((sum,value)=>sum+Number(value),0).toLocaleString();}
+ totalSpent(){const value=this.totalMetric('total_spent','totalSpent');return value==='—'?value:usd(Number(value.replaceAll(',','')));}
+ spent(row:Row){const value=field(row,'total_spent','totalSpent');return value===''||value===undefined||value===null?'—':usd(value);}
+ date(row:Row){const value=String(field(row,'created_at','createdAt'));return Number.isFinite(Date.parse(value))?value:null;}
+ icon(row:Row){const type=String(field(row,'type')).toUpperCase();return type==='VIP'?'crown':type==='WHOLESALE'?'bag':type==='SEGMENT'?'pin':'user';}
+ remove(row:Row){if(this.busy()||!this.access.has('USER_GROUP_DELETE')||!confirm('Delete this group?'))return;this.run(this.api.deleteGroup(Number(field(row,'group_id','id'))),()=>{this.load();this.message.set('Group deleted.');});}
+ export(){
+  const rows=[['Group Name','Description','Group Type','Customers','Orders','Total Spent','Status','Created At'],...this.filtered().map(row=>[field(row,'group_name','name','groupName'),field(row,'description'),field(row,'type'),this.metric(row,'total_customers','totalCustomers'),this.metric(row,'total_orders','totalOrders'),this.spent(row),this.activeRow(row)?'Active':'Inactive',field(row,'created_at','createdAt')])];
+  const csv=rows.map(row=>row.map(value=>'"'+String(value??'').replace(/^[=+@\-\t\r]/,"'$&").replaceAll('"','""')+'"').join(',')).join('\r\n');
+  const url=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));const link=document.createElement('a');link.href=url;link.download='customer-groups.csv';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+ }
 }

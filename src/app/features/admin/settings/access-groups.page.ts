@@ -21,8 +21,6 @@ export class AccessGroupsPage extends PageState {
   creating = this.router.url.endsWith("/add");
   rows = signal<Row[]>([]);
   functions = signal<Row[]>([]);
-  selected = signal<Row | null>(null);
-  permissions = signal<Row[]>([]);
   query = "";
   name = "";
   display = "";
@@ -55,29 +53,6 @@ export class AccessGroupsPage extends PageState {
 
   activeCount() {
     return this.rows().filter((row) => row["is_active"] === true).length;
-  }
-
-  inspect(row: Row) {
-    this.selected.set(row);
-    this.permissions.set([]);
-    this.run(
-      this.api.allPermissionRows(
-        "group-permissions",
-        1,
-        String(row["group_id"]),
-      ),
-      (rows) =>
-        this.permissions.set(
-          rows.filter((permission) => permission["is_active"] === true),
-        ),
-    );
-  }
-
-  functionName(id: unknown) {
-    const row = this.functions().find(
-      (item) => Number(item["func_id"]) === Number(id),
-    );
-    return String(row?.["func_name"] || `Permission ${id}`);
   }
 
   save() {

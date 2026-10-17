@@ -53,6 +53,7 @@ export class CatalogApi {
         }),
       );
   }
+  forSku(id: number) { return this.api.get<Product>("/api/v1/products/sku/" + id); }
   detail(id: number) {
     return this.api.data<Product>("/api/v1/products/get/all", {
       criteria_type: 5,

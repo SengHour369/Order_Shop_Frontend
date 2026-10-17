@@ -1,3 +1,37 @@
+@if(admin){
+<app-status [busy]="busy()" [error]="error()" />
+@if(actionError()){<p class="notices-error" role="alert">{{actionError()}}</p>}
+<section class="admin-notifications">
+ <div class="notification-stats">
+  <article><span class="stat-symbol blue"><app-icon name="bell" /></span><div><strong>{{total}}</strong><span>Total Notifications</span></div></article>
+  <article><span class="stat-symbol green"><i></i></span><div><strong>{{store.unread() ?? '—'}}</strong><span>Unread</span></div></article>
+  <article><span class="stat-symbol purple"><app-icon name="tag" /></span><div><strong>—</strong><span>High Priority <small>Not provided by API</small></span></div></article>
+  <article><span class="stat-symbol red"><app-icon name="alert" /></span><div><strong>—</strong><span>Requires Action <small>Not provided by API</small></span></div></article>
+ </div>
+ <div class="notification-filters">
+  <label class="notification-search"><app-icon name="search" /><input [(ngModel)]="search" placeholder="Search notifications..." aria-label="Search notifications" /></label>
+  <select [(ngModel)]="filter" aria-label="Notification type"><option value="all">All Types</option>@for(tab of tabs;track tab.key){@if(tab.key!=='all'){<option [value]="tab.key">{{tab.label}}</option>}}</select>
+  <select [(ngModel)]="status" aria-label="Notification status"><option value="all">All Status</option><option value="unread">Unread</option><option value="read">Read</option></select>
+  <select [(ngModel)]="period" aria-label="Notification time"><option value="all">All Time</option><option value="1">Last 24 hours</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option></select>
+  <button (click)="readAll()" [disabled]="busy()||actionBusy()||store.unread()===0"><app-icon name="mail" />Mark All Read</button>
+ </div>
+ @if(pages>1){<p class="filter-note">Filters apply to the current page.</p>}
+ <div class="admin-notification-list">
+ @for(n of filtered();track n.id){
+  <article [class.unread]="!n.read">
+   <span class="unread-dot" [class.visible]="!n.read"></span>
+   <input type="checkbox" [checked]="checked.has(n.id)" (change)="toggleChecked(n.id)" [attr.aria-label]="'Select '+n.title" />
+   <button class="notification-open" (click)="select(n)" [disabled]="busy()||actionBusy()">
+    <span [class]="'notice-symbol '+category(n)"><app-icon [name]="icon(n)" /></span>
+    <span class="notification-copy"><strong>{{n.title}}</strong><span>{{n.message}}</span></span>
+    <span class="notification-time"><time>{{relativeTime(n.createdAt)}}</time><span class="notice-badge" [class.is-read]="n.read">{{n.read?'Read':'Unread'}}</span></span>
+   </button>
+  </article>
+ }@empty{<p class="notices-empty">{{busy()?'Loading notifications…':'No notifications found.'}}</p>}
+ </div>
+ <footer class="notification-footer"><span>{{filtered().length}} shown on page {{page}} · {{total}} total notifications</span><div>@if(checked.size){<button (click)="readChecked()" [disabled]="busy()||actionBusy()">Mark selected read</button><button (click)="checked.clear()">Clear {{checked.size}} selected</button>}<button (click)="goto(page-1)" [disabled]="page<=1||busy()">←</button>@for(p of pageNumbers();track p){<button [class.active]="p===page" (click)="goto(p)" [disabled]="busy()">{{p}}</button>}<button (click)="goto(page+1)" [disabled]="page>=pages||busy()">→</button><span>20 / page</span></div></footer>
+</section>
+} @else {
 <header class="notices-heading"><h1>{{ 'Notifications' | translate }}@if(store.unread()!==null){ <span>({{store.unread()}})</span> }</h1><div class="notices-actions"><button [attr.aria-label]="'Mark all as read' | translate" (click)="readAll()" [disabled]="!auth.session()||busy()||actionBusy()||store.unread()===0"><app-icon name="check" />{{ 'Mark all as read' | translate }}</button><a routerLink="/account/notification-settings" [attr.aria-label]="'Notification settings' | translate"><app-icon name="settings" /></a></div></header>
 @if(!auth.session()){<app-sign-in-card action="read your latest notifications" path="/account/notifications" />}
 <app-status [busy]="busy()" [error]="error()" />
@@ -14,6 +48,7 @@
   </button>}@empty{@if(!busy()&&!error()){<div class="notices-empty"><app-icon name="bell" /><h2>{{ (notices().length?'No notifications in this category.':"You're all caught up") | translate }}</h2><p>{{ 'Your latest updates will appear here.' | translate }}</p></div>}}
  </section>
  @if(pages>1){<div class="notices-pagination"><button [disabled]="page<=1||busy()||actionBusy()" (click)="goto(page-1)">{{ 'Previous' | translate }}</button><span>{{ 'Page' | translate }} {{page}} / {{pages}}</span><button [disabled]="page>=pages||busy()||actionBusy()" (click)="goto(page+1)">{{ 'Next' | translate }}</button></div>}
+}
 }
 <dialog #detailEditor class="notice-dialog" aria-labelledby="notice-detail-title" (close)="selected.set(null)">
  @if(selected();as n){<div class="notice-dialog-heading"><span [class]="'notice-symbol '+category(n)" [class.transit]="icon(n)==='truck' || icon(n)==='card' || icon(n)==='settings'" [class.return-notice]="n.type?.startsWith('RETURN') || n.type?.startsWith('REFUND')"><app-icon [name]="icon(n)" /></span><h2 id="notice-detail-title">{{n.title}}</h2><button [attr.aria-label]="'Close notification' | translate" (click)="close()"><app-icon name="close" /></button></div><time>{{n.createdAt | date:'medium'}}</time><p>{{n.message}}</p>@if(actionError()){<p class="notices-error" role="alert">{{actionError() | translate}}</p>}<div class="notice-detail-actions">@if(!n.read){<button [disabled]="actionBusy()" (click)="read(n.id)">{{ 'Mark as Read' | translate }}</button>}@if(destination(n);as path){<a [routerLink]="path" (click)="close()">{{ 'View Details' | translate }}<app-icon name="arrow" /></a>}</div>}

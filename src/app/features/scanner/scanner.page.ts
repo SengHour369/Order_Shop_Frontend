@@ -1,7 +1,5 @@
-import { TranslatePipe } from "../../core/i18n/translate.pipe";
 import { Component, DestroyRef, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, forkJoin, of } from 'rxjs';
@@ -9,16 +7,15 @@ import { ScannerApi, ImageCandidate, ScanResult } from './scanner.api';
 import { CatalogApi } from '../catalog/catalog.api';
 import { CartApi } from '../cart/cart.api';
 import { CustomerStore } from '../../core/stores/customer.store';
-import { Product } from '../../core/api/models';
+import { Product, Sku } from '../../core/api/models';
 import { PageState } from '../../shared/utils/page-state';
 import { Icon } from '../../shared/components/icon';
 import { ProductImage } from '../../shared/components/product-image';
-import { ProductCard } from '../../shared/components/product-card';
 
 export const MAX_SCAN_IMAGE_BYTES = 4000 * 1024 * 1024;
 
 @Component({
-  imports: [TranslatePipe, FormsModule, CurrencyPipe, RouterLink, Icon, ProductImage, ProductCard],
+  imports: [CurrencyPipe, RouterLink, Icon, ProductImage],
   templateUrl: './scanner.html', styleUrl: './scanner.css',
 })
 export class ScannerPage extends PageState {
@@ -45,6 +42,9 @@ export class ScannerPage extends PageState {
   adding = signal(false);
   feedback = signal('');
   capturing = signal(false);
+  candidateDetails=signal<Record<number,Product>>({});
+  resultFilter=signal('all');
+  imageIndex=signal(0); selectedSkuId=signal(0); quantity=1;
   code = '';
   lookupType = 'code';
   private stream?: MediaStream;
@@ -150,12 +150,25 @@ export class ScannerPage extends PageState {
     if (file.size <= 20 * 1024 * 1024) this.preview.set(URL.createObjectURL(file));
     this.clearResults();
     this.run(this.api.recognize(file), response => {
-      this.screen.set('results'); this.message.set(response.message); this.candidates.set(response.candidates || []);
+      this.screen.set('results'); this.message.set(response.message); this.candidates.set(response.candidates || []); this.hydrateCandidates(response.candidates || []);
       if (response.matchType === 'AI_UNAVAILABLE') this.message.set('Photo recognition is temporarily unavailable. Please try another product photo later.');
       else if (!response.candidates?.length) this.message.set('No catalog match found. Try a clearer product photo.');
-      else if (response.exact && !response.requiresSelection && response.candidates.length === 1) this.selectCandidate(response.candidates[0]);
+
     });
   }
+  private hydrateCandidates(candidates:ImageCandidate[]) {
+    const ticket=this.resultTicket;this.candidateDetails.set({});this.resultFilter.set('all');
+    if(!candidates.length)return;
+    forkJoin(candidates.map(candidate=>this.catalog.detail(candidate.productId).pipe(catchError(()=>of(null)))))
+      .pipe(takeUntilDestroyed(this.destroy)).subscribe(products=>{if(ticket!==this.resultTicket)return;const details:Record<number,Product>={};for(const product of products)if(product)details[product.id]=product;this.candidateDetails.set(details);});
+  }
+  resultSku(candidate:ImageCandidate){const product=this.candidateDetails()[candidate.productId];return product?.skus.find(s=>s.id===candidate.productSkuId)||product?.skus.find(s=>s.is_default)||product?.skus[0];}
+  visibleCandidates(){return this.candidates().filter(candidate=>this.resultFilter()==='all'||(this.resultSku(candidate)?.quantity??0)>0);}
+  back(){if(this.product()){this.product.set(null);this.scanned.set(null);this.feedback.set('');}else this.reset();}
+  images(){const product=this.product();return [...new Set([...(product?.main_image||[]),...(product?.skus.map(s=>s.image_url).filter((url):url is string=>!!url)||[])])];}
+  chooseSku(sku:Sku){this.selectedSkuId.set(sku.id);this.quantity=1;this.imageIndex.set(Math.max(0,this.images().indexOf(sku.image_url||'')));}
+  optionLabel(){return this.sku()?.description||this.scanned()?.variant?.map(v=>v.value).join(' / ')||this.sku()?.sku;}
+  changeQuantity(delta:number){if(!this.adding())this.quantity=Math.max(1,Math.min(this.sku()?.quantity||1,this.quantity+delta));}
   private clearResults() {
     this.resultTicket++; this.product.set(null); this.scanned.set(null); this.candidates.set([]); this.related.set([]); this.searchResults.set([]); this.feedback.set('');
   }
@@ -175,6 +188,8 @@ export class ScannerPage extends PageState {
     if (!result.found || !result.productId || !result.productSkuId) return;
     this.product.set({ id: result.productId, name: result.name || 'Product', description: '', main_image: result.imageUrl ? [result.imageUrl] : [], is_active: result.availableForSale === true,
       skus: [{ id: result.productSkuId, sku: result.sku || '', price: result.originalPrice ?? result.finalPrice ?? 0, finalPrice: result.finalPrice ?? result.originalPrice, quantity: result.availableQuantity ?? 0, is_default: true }] });
+    this.selectedSkuId.set(result.productSkuId);this.quantity=1;this.imageIndex.set(0);
+    const detail=this.candidateDetails()[result.productId];if(detail?.skus?.length)this.product.set(detail);
     this.loadRelated();
   }
   selectCandidate(candidate: ImageCandidate) {
@@ -189,14 +204,14 @@ export class ScannerPage extends PageState {
     forkJoin(alternatives.map(candidate => this.catalog.detail(candidate.productId).pipe(catchError(() => of(null)))))
       .pipe(takeUntilDestroyed(this.destroy)).subscribe(products => { if (ticket === this.resultTicket) this.related.set(products.filter((product): product is Product => product !== null)); });
   }
-  sku() { return this.product()?.skus?.find(sku => sku.is_default) || this.product()?.skus?.[0]; }
+  sku() { return this.product()?.skus?.find(s=>s.id===this.selectedSkuId()) || this.product()?.skus?.find(sku => sku.is_default) || this.product()?.skus?.[0]; }
   canAdd() { return !!this.product()?.is_active && !!this.sku() && (this.sku()?.quantity ?? 0) > 0 && (this.scanned() ? this.scanned()?.finalPrice != null : true); }
   discount() { const sku = this.sku(); return sku && sku.price > 0 ? Math.max(0, Math.round((1 - (sku.finalPrice ?? sku.price) / sku.price) * 100)) : 0; }
   save() { const product = this.product(); if (product) this.feedback.set(this.store.toggle(product) ? (this.store.has(product.id) ? 'Saved to wishlist' : 'Removed from wishlist') : 'Could not save your wishlist on this browser.'); }
   add() {
-    const sku = this.sku(); if (!sku || !this.canAdd() || this.adding()) return;
+    const sku = this.sku(); if (!sku || !this.canAdd() || this.adding() || !Number.isInteger(this.quantity) || this.quantity<1 || this.quantity>sku.quantity) return;
     this.adding.set(true); this.feedback.set('');
-    this.cart.add(sku.id).pipe(takeUntilDestroyed(this.destroy)).subscribe({
+    this.cart.add(sku.id,this.quantity).pipe(takeUntilDestroyed(this.destroy)).subscribe({
       next: cart => { this.store.cartCount.set(cart.total_items); this.feedback.set('Added to cart'); },
       error: () => { this.adding.set(false); this.feedback.set('Could not add this product. Please try again.'); },
       complete: () => this.adding.set(false),

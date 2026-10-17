@@ -361,7 +361,7 @@ export class AdminLayout {
   isCustomerGroupScreen() { return this.router.url.startsWith("/admin/customer-groups/") || this.router.url.startsWith("/admin/groups/"); }
   isUserDetail() { return /^\/admin\/users\/\d+\/?(?:\?|$)/.test(this.currentUrl()); }
   isCustomerGroupsList() { return this.currentUrl().split('?')[0] === "/admin/customer-groups"; }
-  isUserReference() { return this.currentUrl().split('?')[0] === "/admin/customer-groups" || this.isUserEdit() || this.isUserDetail() || this.isCustomerCreate(); }
+  isUserReference() { return this.currentUrl().split('?')[0] === "/admin/customers" || this.currentUrl().split('?')[0] === "/admin/customer-groups" || this.isUserEdit() || this.isUserDetail() || this.isCustomerCreate(); }
   isCustomerCreate() { return this.currentUrl().startsWith("/admin/customers/add"); }
   isUserEdit() { return this.currentUrl().startsWith("/admin/users/edit/"); }
   isOrderDetail() { return /^\/admin\/orders\/\d+\/?(?:\?|$)/.test(this.router.url); }

@@ -98,7 +98,7 @@ import { Status } from "../../shared/components/status";
             <p class="small muted">Total confirmed by the shop.</p>
           </section>
           <section class="panel">
-            <h2>{{ "Payment Information" | translate }}</h2>@if(o.status === 'PENDING'){<app-payment-qr [orderId]="o.id" />}
+            <h2>{{ "Payment Information" | translate }}</h2>@if(o.status === 'PENDING'){<app-payment-qr [orderId]="o.id" (verified)="load()" />}
             <p>Check the payment service for your confirmed payment status.</p>
             <a
               class="button outline full"

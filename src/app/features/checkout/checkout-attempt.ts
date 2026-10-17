@@ -1,4 +1,5 @@
 import { Injectable } from "@angular/core";
+import { conversationId } from "../../shared/utils/conversation-id";
 import { Checkout } from "../../core/api/models";
 @Injectable({ providedIn: "root" })
 export class CheckoutAttempt {
@@ -33,7 +34,7 @@ export class CheckoutAttempt {
       address_id,
       payment_method,
       currency,
-      checkout_key: crypto.randomUUID(),
+      checkout_key: conversationId(),
       ...review,
     };
     sessionStorage.setItem(this.key(userId), JSON.stringify(body));

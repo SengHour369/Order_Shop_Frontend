@@ -14,4 +14,19 @@ describe('Provider-verified QR payment',()=>{
     http.expectNone('/api/v1/payments/orders/12/qr/image');expect(f.nativeElement.querySelector('img')).toBeNull();
     const checking=f.componentInstance.refresh(true);const req=http.expectOne('/api/v1/payments/orders/12/verify');expect(req.request.method).toBe('POST');expect(req.request.body).toEqual({});req.flush({...pending,status:'SUCCESS'});await checking;f.detectChanges();expect(f.nativeElement.textContent).toContain('Payment verified by Bakong');
   });
+  it('automatically verifies pending payments and stops after provider success',async()=>{
+    vi.useFakeTimers();vi.stubGlobal('URL',Object.assign(URL,{createObjectURL:vi.fn(()=> 'blob:qr'),revokeObjectURL:vi.fn()}));
+    const f=create();
+    try{
+      const pending={status:'PENDING',amount:10,currency:'USD',expiresAt:new Date(Date.now()+60000).toISOString()};
+      http.expectOne('/api/v1/payments/orders/12/qr').flush(pending);await Promise.resolve();
+      http.expectOne('/api/v1/payments/orders/12/qr/image').flush(new Blob(['qr'],{type:'image/png'}));await Promise.resolve();
+      const verified=vi.fn();f.componentInstance.verified.subscribe(verified);
+      vi.advanceTimersByTime(5000);
+      http.expectOne('/api/v1/payments/orders/12/verify').flush({...pending,status:'SUCCESS'});await Promise.resolve();f.detectChanges();
+      expect(verified).toHaveBeenCalledWith(12);expect(f.nativeElement.textContent).toContain('Payment verified by Bakong');
+      vi.advanceTimersByTime(10000);http.expectNone('/api/v1/payments/orders/12/verify');
+    }finally{f.destroy();vi.useRealTimers();vi.unstubAllGlobals();}
+  });
+
 });

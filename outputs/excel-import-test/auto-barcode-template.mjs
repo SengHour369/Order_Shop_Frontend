@@ -1,0 +1,18 @@
+import fs from 'node:fs/promises';
+import {Workbook,SpreadsheetFile} from '@oai/artifact-tool';
+const out=new URL('.',import.meta.url).pathname;
+const wb=Workbook.create(),sheet=wb.worksheets.add('Product SKUs');
+sheet.getRange('A1:D2').values=[['productId','description','price','quantity'],[null,'',null,0]];
+sheet.showGridLines=false;
+sheet.getRange('A1:D2').format.font={name:'Arial',size:11,color:'#20314A'};
+sheet.getRange('A1:D2').format.columnWidth=24;
+sheet.getRange('B1:B2').format.columnWidth=45;
+sheet.getRange('A1:D2').format.rowHeight=30;
+sheet.getRange('A1:D1').format={fill:'#18395D',font:{name:'Arial',size:11,bold:true,color:'#FFFFFF'}};
+sheet.getRange('A2:D2').format.fill='#FFF2CC';
+sheet.getRange('C2').setNumberFormat('0.00');sheet.getRange('D2').setNumberFormat('0');
+sheet.freezePanes.freezeRows(1);wb.recalculate();
+console.log((await wb.inspect({kind:'table',range:"'Product SKUs'!A1:D2",include:'values,formulas',tableMaxRows:2,tableMaxCols:4})).ndjson);
+const png=await wb.render({sheetName:'Product SKUs',autoCrop:'all',scale:1,format:'png'});
+await fs.writeFile(out+'auto-barcode-template.png',new Uint8Array(await png.arrayBuffer()));
+await (await SpreadsheetFile.exportXlsx(wb)).save(out+'product-sku-create-template.xlsx');

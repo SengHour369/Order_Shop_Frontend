@@ -2,6 +2,15 @@ import { CheckoutAttempt } from "./checkout-attempt";
 
 describe("Checkout retry identity", () => {
   beforeEach(() => sessionStorage.clear());
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("creates a retry-safe checkout key on Wi-Fi HTTP without randomUUID", () => {
+    vi.stubGlobal("crypto", {getRandomValues:crypto.getRandomValues.bind(crypto)});
+    const store = new CheckoutAttempt();
+    const body = store.begin(7, 12, "BAKONG", "USD");
+    expect(body.checkout_key).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    expect(store.begin(7, 12, "BAKONG", "USD").checkout_key).toBe(body.checkout_key);
+  });
 
   it("retains the same request after a timeout and page reload", () => {
     const original = new CheckoutAttempt().begin(7, 12, "BAKONG", "USD");

@@ -40,7 +40,7 @@ export class AssistantApi {
     return this.api.http.post<AiResult>(this.api.url('/api/ai/tools/'+encodeURIComponent(name)),parameters,{headers:conversationId ? {'Idempotency-Key':key,'X-Conversation-ID':conversationId} : {'Idempotency-Key':key}}).pipe(
       catchError(error => error.error?.status && typeof error.error.message === 'string' ? of(error.error as AiResult) : throwError(()=>error)));
   }
-  confirm(id: string) {
+  confirm(id: string, conversationId:string|null=null) {
     return this.api.http.post<AiResult>(this.api.url('/api/ai/confirm/' + encodeURIComponent(id)), {}).pipe(
       catchError(error => error.error?.status && typeof error.error.message === 'string'
         ? of(error.error as AiResult) : throwError(() => error)),

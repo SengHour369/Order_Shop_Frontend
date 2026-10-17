@@ -1,41 +1,43 @@
-<section class="scanner-shell" [attr.aria-label]='"Product scanner" | translate'>
-  <header class="scanner-heading">
-    @if (screen() === 'results') { <button class="icon-control" aria-label="Back to scanner" [disabled]="locked()" (click)="reset()"><app-icon name="arrow-left" /></button> }
-    @else { <a routerLink="/" class="icon-control" aria-label="Back to shop"><app-icon name="arrow-left" /></a> }
-    <div><span class="scanner-eyebrow">FIND IT. LOVE IT. SHOP IT.</span><h1>{{ (screen() === 'results' ? 'Scan Results' : 'Product Scanner') | translate }}</h1></div>
-    @if (screen() === 'results') { <a routerLink="/cart" class="icon-control scanner-cart" aria-label="View shopping cart"><app-icon name="cart" />@if (store.cartCount()) { <b>{{ store.cartCount() }}</b> }</a> }
-    @else { <button class="icon-control" aria-label="Scanner help" [attr.aria-expanded]="help()" (click)="help.set(!help())"><app-icon name="help" /></button> }
-  </header>
-  @if (help()) { <aside class="scanner-help"><strong>Find a product in seconds</strong><p>Place one product in good light, then take a photo or choose one from your gallery. Photos are sent to E-Shop to find catalog matches. JPEG, PNG and WebP, up to 4,000 MB.</p></aside> }
-  @if (screen() === 'scan') {
-    <aside class="photo-guidance"><app-icon name="sparkles" /><div><strong>Take a photo of the product</strong><p>We’ll identify and show similar products</p></div></aside>
-    @if (mode() === 'camera') {
-      <div class="camera-stage" [class.has-feed]="cameraReady() || preview()">
-        <video #video autoplay playsinline muted [hidden]="!cameraReady()" aria-label="Live product camera"></video>
-        @if (preview()) { <img class="captured-photo" [src]="preview()" alt="Your selected product photo" /> }
-        <div class="camera-top"><span><app-icon name="camera" />Take a photo of the product</span><button class="round-control" aria-label="Toggle camera flash" [attr.aria-pressed]="torch()" [disabled]="!torchAvailable() || locked()" (click)="toggleTorch()"><app-icon name="flash" /></button></div>
-        <div class="viewfinder" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-        @if (!cameraReady() && !preview()) { <div class="camera-start"><span class="camera-illustration"><app-icon name="camera" /></span><h2>Your next find starts here</h2><p>Point your camera at a product<br />and discover it in our store.</p><button class="start-button" [disabled]="cameraStarting() || locked()" (click)="startCamera()">{{ cameraStarting() ? 'Opening camera…' : 'Enable camera' }}</button><button class="native-camera" [disabled]="locked()" (click)="nativePhoto.click()">{{ "Take photo with your device" | translate }}</button></div> }
-
-        <div class="camera-bottom"><button class="camera-action" [disabled]="locked()" (click)="gallery.click()"><app-icon name="image" /><span>{{ "Gallery" | translate }}</span></button><button class="shutter" aria-label="Capture and scan product" [disabled]="!cameraReady() || locked()" (click)="capture()"><span></span></button><button class="camera-action" [disabled]="!cameraReady() || locked()" (click)="switchCamera()"><app-icon name="refresh" /><span>{{ "Switch" | translate }}</span></button></div>
-        @if (locked()) { <div class="scan-progress" role="status"><span class="scan-spinner"></span><strong>{{ capturing() ? 'Capturing photo…' : 'Finding your product…' }}</strong><span>This can take a few moments.</span></div> }
-      </div>
-      <input #gallery type="file" hidden accept="image/jpeg,image/png,image/webp" aria-label="Choose product photo" (change)="recognize($event)" />
-      <input #nativePhoto type="file" hidden accept="image/jpeg,image/png,image/webp" capture="environment" aria-label="Take product photo" (change)="recognize($event)" />
-      @if (cameraError()) { <p class="scanner-alert" role="alert">{{ cameraError() }}</p> }
-      <div class="recognition-footer"><div><span class="feature-icon"><app-icon name="sparkles" /></span><p><strong>{{ "AI Product Recognition" | translate }}</strong><small>Find catalog matches from a photo</small></p></div></div>
-    }
+<section class="scanner-shell" [class.capture-screen]="screen()==='scan'">
+ <header class="scanner-heading">
+ @if(screen()==='results'){<button class="icon-control" aria-label="Back" [disabled]="locked()" (click)="back()"><app-icon name="arrow-left" /></button>}@else{<a routerLink="/" class="icon-control" aria-label="Back to shop"><app-icon name="arrow-left" /></a>}
+ <h1>{{product()?'Product Detail':screen()==='results'?'Scan Results':'Product Scanner'}}</h1>
+ @if(product()){<a routerLink="/cart" class="icon-control scanner-cart" aria-label="View shopping cart"><app-icon name="cart" />@if(store.cartCount()){<b>{{store.cartCount()}}</b>}</a>}@else{<button class="icon-control" aria-label="Scanner help" (click)="help.set(!help())"><app-icon name="help" /></button>}
+ </header>
+ @if(help()){<aside class="scanner-help">Take a clear photo or choose one from Gallery. We compare it with catalog images to find similar products. Live camera requires HTTPS or localhost; Take Photo and Gallery work over Wi-Fi HTTP.</aside>}
+ @if(screen()==='scan'){
+ <aside class="photo-guidance"><app-icon name="sparkles" /><div><strong>Take a photo of the product</strong><p>We’ll identify and show similar products</p></div></aside>
+ <div class="camera-stage" [class.has-feed]="cameraReady()||preview()">
+  <video #video autoplay playsinline muted [hidden]="!cameraReady()" aria-label="Live product camera"></video>
+  @if(preview()){<img class="captured-photo" [src]="preview()" alt="Your selected product photo" />}
+  <div class="viewfinder" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+  @if(!cameraReady()&&!preview()){
+   <div class="camera-start"><app-icon name="camera" /><p>Frame your product here</p><button class="start-button" [disabled]="cameraStarting()||locked()" (click)="startCamera()">{{cameraStarting()?'Opening camera…':'Enable camera'}}</button><button class="native-camera" [disabled]="locked()" (click)="nativePhoto.click()">Take Photo</button></div>
   }
-  @if (screen() === 'results') {
-    @if (product(); as p) {
-      <div class="result-layout"><div class="result-main">
-        <article class="match-card"><a [routerLink]="['/shop', p.id]" class="match-image"><img appProductImage [src]="p.main_image[0] || ''" [alt]="p.name" /></a><div class="match-copy"><span class="match-label"><app-icon name="check" />Catalog match</span><a [routerLink]="['/shop',p.id]"><h2>{{ p.name }}</h2></a><p class="sku-code">{{ sku()?.sku }}</p><div class="scan-price">@if (sku(); as s) { @if (!scanned() || scanned()?.finalPrice != null || scanned()?.originalPrice != null) { <strong>{{ (s.finalPrice ?? s.price) | currency:'USD' }}</strong> } @else { <strong>Price unavailable</strong> }@if (discount()) { <del>{{ s.price | currency:'USD' }}</del><span>-{{ discount() }}%</span> } }</div><p class="stock-label" [class.unavailable]="!canAdd()">{{ canAdd() ? 'In stock · Ready to order' : 'Currently unavailable for purchase' }}</p><div class="match-actions"><button class="add-cart" [disabled]="!canAdd() || adding()" (click)="add()"><app-icon name="cart" />{{ (adding() ? 'Adding…' : 'Add to Cart') | translate }}</button><button class="save-product" [attr.aria-label]="store.has(p.id) ? 'Remove from wishlist' : 'Add to wishlist'" [attr.aria-pressed]="store.has(p.id)" (click)="save()"><app-icon name="heart" /></button></div>@if (feedback()) { <p class="action-feedback" role="status">{{ feedback() }}</p> }</div></article>
-        <section class="highlights"><h2>Product Highlights</h2><div class="highlight-grid">@for (variant of scanned()?.variant || []; track $index) { <div><app-icon name="tag" /><p><small>{{ variant.name }}</small><strong>{{ variant.value }}</strong></p></div> }<div><app-icon name="box" /><p><small>Availability</small><strong>{{ canAdd() ? 'In stock' : 'Check product details' }}</strong></p></div>@if (scanned()?.warehouseLocation; as location) { <div><app-icon name="pin" /><p><small>Location</small><strong>{{ location }}</strong></p></div> }<div><app-icon name="tag" /><p><small>Product code</small><strong>{{ sku()?.sku || 'See product details' }}</strong></p></div></div><a class="details-link" [routerLink]="['/shop',p.id]">View full product details <app-icon name="arrow" /></a></section>
-        @if (related().length) { <section class="similar-section"><div class="section-heading"><h2>{{ "Similar Matches" | translate }}</h2><a routerLink="/shop">{{ "See All" | translate }}</a></div><div class="similar-grid">@for (item of related(); track item.id) { <app-product-card [product]="item" /> }</div></section> }
-      </div><aside class="result-aside">@if (preview()) { <img class="source-preview" [src]="preview()" alt="Photo used for this search" /> }<app-icon name="camera" /><h2>Another product in mind?</h2><p>Take another photo to find similar products.</p><button class="scan-again" [disabled]="locked()" (click)="reset()">{{ "Scan another product" | translate }}</button></aside></div>
-    } @else {
-      <section class="candidate-section"><div class="result-notice" role="status"><app-icon [name]="candidates().length ? 'check' : 'search'" /><h2>{{ candidates().length ? 'We found similar products' : searchResults().length ? 'Search Results' : 'Let’s try another search' }}</h2><p>{{ message() }}</p></div>@if (preview()) { <img class="search-photo" [src]="preview()" alt="Photo used for this search" /> }<div class="candidate-grid">@for (candidate of candidates(); track candidate.productId) { <button class="candidate-card" [disabled]="locked()" (click)="selectCandidate(candidate)"><img appProductImage [src]="candidate.imageUrl || ''" [alt]="candidate.name" /><strong>{{ candidate.name }}</strong><span>View match <app-icon name="chevron" /></span></button> }</div>@if (searchResults().length) { <div class="search-products">@for (item of searchResults(); track item.id) { <app-product-card [product]="item" /> }</div> }<button class="scan-again" [disabled]="locked()" (click)="reset()">{{ "Try another photo" | translate }}</button></section>
-    }
+  <div class="camera-bottom"><button class="camera-action" [disabled]="locked()" (click)="gallery.click()"><app-icon name="image" /><span>Gallery</span></button><button class="shutter" aria-label="Capture and scan product" [disabled]="locked()" (click)="cameraReady()?capture():nativePhoto.click()"><span></span></button><button class="camera-action" [disabled]="!cameraReady()||locked()" (click)="switchCamera()"><app-icon name="refresh" /><span>Switch</span></button></div>
+  @if(locked()){<div class="scan-progress" role="status"><span class="scan-spinner"></span><strong>{{capturing()?'Capturing photo…':'Finding similar products…'}}</strong></div>}
+ </div>
+ <input #gallery type="file" hidden accept="image/jpeg,image/png,image/webp" aria-label="Choose product photo" (change)="recognize($event)" />
+ <input #nativePhoto type="file" hidden accept="image/jpeg,image/png,image/webp" capture="environment" aria-label="Take product photo" (change)="recognize($event)" />
+ @if(cameraError()){<p class="scanner-alert" role="alert">{{cameraError()}}</p>}
+ }
+ @if(screen()==='results'){
+  @if(product();as p){
+   <div class="detail-body"><div class="product-hero"><img appProductImage [src]="images()[imageIndex()]||sku()?.image_url||''" [alt]="p.name" /><button class="wishlist" (click)="save()" [attr.aria-pressed]="store.has(p.id)" aria-label="Save product"><app-icon name="heart" /></button></div>
+   <div class="image-dots">@for(image of images();track image;let i=$index){<button [class.active]="imageIndex()===i" (click)="imageIndex.set(i)" [attr.aria-label]="'Product image '+(i+1)"></button>}</div>
+   <h2 class="product-title">{{p.name}}</h2><p class="product-description">{{p.description}}</p>
+   <div class="scan-price">@if(sku();as s){<strong>{{(s.finalPrice??s.price)|currency:'USD'}}</strong>@if(discount()){<del>{{s.price|currency:'USD'}}</del><span>-{{discount()}}%</span>}}</div>
+   <div class="product-options"><div class="variants"><label>Option</label><div>@for(s of p.skus;track s.id){<button [class.selected]="sku()?.id===s.id" (click)="chooseSku(s)" [disabled]="adding()" [attr.aria-label]="s.description||s.sku"><img appProductImage [src]="s.image_url||p.main_image[0]||''" [alt]="s.description||s.sku" /></button>}</div><small>{{optionLabel()}}</small></div><div class="quantity-option"><label>Quantity</label><div><button (click)="changeQuantity(-1)" [disabled]="quantity<=1||adding()" aria-label="Decrease quantity">−</button><span>{{quantity}}</span><button (click)="changeQuantity(1)" [disabled]="quantity>=(sku()?.quantity||0)||adding()" aria-label="Increase quantity">+</button></div></div></div>
+   @if(!canAdd()){<p class="stock-warning">Currently unavailable for purchase</p>}
+   <a class="full-details" [routerLink]="['/shop',p.id]">View full product details</a>
+   @if(feedback()){<p class="action-feedback" role="status">{{feedback()}}</p>}
+   </div><footer class="detail-footer"><button class="add-cart" [disabled]="!canAdd()||adding()" (click)="add()"><app-icon name="cart" />{{adding()?'Adding…':'Add to Cart'}}</button></footer>
+  }@else{
+   <div class="results-body"><div class="results-summary">@if(preview()){<img [src]="preview()" alt="Photo used for this search" />}<div><strong>{{candidates().length?'We found similar products':'Let’s try another search'}}</strong><p>{{candidates().length?'Here are the products that match your photo.':message()}}</p></div></div>
+   @if(candidates().length){<nav class="result-tabs" aria-label="Result filters"><button [class.active]="resultFilter()==='all'" (click)="resultFilter.set('all')">All ({{candidates().length}})</button><button [class.active]="resultFilter()==='stock'" (click)="resultFilter.set('stock')">In stock</button></nav>}
+   <div class="candidate-list">@for(candidate of visibleCandidates();track candidate.productId;let i=$index){<button class="candidate-card" [class.best]="i===0" [disabled]="locked()" (click)="selectCandidate(candidate)"><img appProductImage [src]="candidate.imageUrl||''" [alt]="candidate.name" /><span class="candidate-copy"><strong>{{candidate.name}}</strong><small>{{candidate.sku||'Similar catalog product'}}</small>@if(resultSku(candidate);as s){<span class="candidate-price">{{(s.finalPrice??s.price)|currency:'USD'}}@if((s.finalPrice??s.price)<s.price){<del>{{s.price|currency:'USD'}}</del>}</span>}</span><app-icon name="chevron" /></button>}@empty{@if(candidates().length){<p>No in-stock matches.</p>}}</div>
+   <button class="scan-again" [disabled]="locked()" (click)="reset()">Try another photo</button></div>
   }
-  @if (error()) { <p class="scanner-alert" role="alert">{{ error() }}</p> }
+ }
+ @if(error()){<p class="scanner-alert" role="alert">{{error()}}</p>}
 </section>

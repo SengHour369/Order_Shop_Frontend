@@ -26,7 +26,7 @@ describe('Product scanner', () => {
     const camera = vi.fn(); vi.stubGlobal('navigator', {mediaDevices:{getUserMedia:camera}});
     const fixture=page(); fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Product Scanner');
-    expect(fixture.nativeElement.querySelector('[aria-label="Capture and scan product"]').disabled).toBe(true);
+    expect(fixture.nativeElement.querySelector('[aria-label="Capture and scan product"]').disabled).toBe(false);
     expect(camera).not.toHaveBeenCalled();
   });
   it('uses SKU lookup and renders the real price, variant and cart action', () => {
@@ -84,14 +84,18 @@ describe('Product scanner', () => {
     component.recognizeFile(file); const request=http.expectOne(recognizeUrl);
     expect(request.request.body.get('image')).toBe(file);
     request.flush({data:{matchType:'AI_IMAGE',exact:false,requiresSelection:true,message:'Choose a match',candidates:[{productId:7,name:'Headphones',sku:'HEADPHONE-BLACK',confidence:.7}]}});
+    http.expectOne('/api/v1/products/get/all').flush({data:{id:7,name:'Headphones',main_image:[],skus:[{id:71,price:179.99,finalPrice:129.99,quantity:3}],is_active:true}});
     expect(component.product()).toBeNull(); expect(component.candidates()).toHaveLength(1); http.expectNone(scanUrl);
     component.selectCandidate(component.candidates()[0]); http.expectOne(scanUrl).flush({data:found});
     expect(component.product()?.id).toBe(7);
   });
-  it('resolves one exact image match to current stock and price', () => {
+  it('keeps exact image matches in the result list until selected', () => {
     const component=page().componentInstance; component.recognizeFile(new File(['x'],'p.png',{type:'image/png'}));
     http.expectOne(recognizeUrl).flush({data:{matchType:'AI_IMAGE',exact:true,requiresSelection:false,message:'Found',candidates:[{productId:7,name:'Headphones',sku:'HEADPHONE-BLACK',confidence:.99}]}});
-    http.expectOne(scanUrl).flush({data:found}); expect(component.sku()?.finalPrice).toBe(129.99);
+    http.expectOne('/api/v1/products/get/all').flush({data:{id:7,name:'Headphones',main_image:[],skus:[],is_active:true}});
+    expect(component.product()).toBeNull();http.expectNone(scanUrl);
+    component.selectCandidate(component.candidates()[0]);
+    http.expectOne(scanUrl).flush({data:found}); expect(component.scanned()?.finalPrice).toBe(129.99);
   });
   it('offers another photo when recognition is unavailable without barcode controls', () => {
     const fixture=page(); const component=fixture.componentInstance;

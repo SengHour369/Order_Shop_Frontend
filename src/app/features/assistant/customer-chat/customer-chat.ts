@@ -322,7 +322,7 @@ export class CustomerChat {
     confirmAction(message: ChatMessage) {
         if (!message.confirmationId || this.busy() || !this.auth.session()) return;
         this.busy.set(true); this.error.set('');
-        this.request = this.api.confirm(message.confirmationId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        this.request = this.api.confirm(message.confirmationId,this.conversationId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
             next: result => {
                 message.confirmationId = undefined;
                 const intent = result.intent || '';

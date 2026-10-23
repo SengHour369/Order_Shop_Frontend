@@ -1,3 +1,5 @@
+import { AuthService } from "../../core/auth/auth.service";
+import { StorefrontAccessService } from "../../core/storefront/storefront-access.service";
 import { TranslatePipe } from "../../core/i18n/translate.pipe";
 import { Component, inject, signal } from "@angular/core";
 import { CurrencyPipe } from "@angular/common";
@@ -65,9 +67,10 @@ import { Status } from "../../shared/components/status";
             ><strong>{{ c.total_price | currency: "USD" }}</strong>
           </div>
           @if (c.items.length) {
+            @if (auth.session() || access.settings()?.guestCheckout) {
             <a class="button primary full" routerLink="/checkout"
-              >Continue to checkout →</a
-            >
+              >Continue to checkout →</a>
+            } @else {<p>Guest checkout is currently unavailable.</p><a class="button primary full" routerLink="/auth" [queryParams]="{returnUrl:'/checkout'}">Sign in to checkout</a>}
             <button
               class="button outline"
               [disabled]="busy()"
@@ -83,6 +86,8 @@ import { Status } from "../../shared/components/status";
 })
 export class CartPage extends PageState {
   api = inject(CartApi);
+  auth = inject(AuthService);
+  access = inject(StorefrontAccessService);
   store = inject(CustomerStore);
   cart = signal<Cart | null>(null);
   constructor() {

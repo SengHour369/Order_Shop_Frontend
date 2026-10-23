@@ -1,3 +1,6 @@
+import { PageAccessDenied } from '../../../shared/components/page-access-denied';
+import { CanAccessDirective } from '../../../core/auth/can-access.directive';
+import { PermissionService } from "../../../core/auth/permission.service";
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
 import { MonthlyReport } from "../reports/report.models";
 import { Component, inject, signal } from "@angular/core";
@@ -19,12 +22,13 @@ import {
   when,
 } from "../api/admin.api";
 @Component({
-  imports: [TranslatePipe, Status, RouterLink, Icon, FormsModule],
+  imports: [PageAccessDenied, CanAccessDirective, TranslatePipe, Status, RouterLink, Icon, FormsModule],
   templateUrl: "./dashboard.html",
   styleUrl: "./dashboard.css",
 })
 export class AdminDashboardPage extends PageState {
   private api = inject(AdminApi);
+  readonly access = inject(PermissionService);
   orders = signal<OrderSummary | null>(null);
   inventory = signal<InventorySummary | null>(null);
   customers = signal<number | null>(null);
@@ -60,18 +64,20 @@ export class AdminDashboardPage extends PageState {
     this.unavailable.set([]);
     this.run(
       forkJoin({
-        orders: this.available(this.api.ordersSummary(), "Order summary"),
-        inventory: this.available(this.api.inventorySummary(), "Inventory"),
-        customers: this.available(this.api.customerCount(), "Customers"),
-        recent: this.available(this.api.orders(1, "", 6), "Recent orders"),
-        monthly: this.available(
+        orders: this.access.has("ORDER_VIEW_ALL") ? this.available(this.api.ordersSummary(), "Order summary") : of(null),
+        inventory: this.access.has("INVENTORY_VIEW")
+          ? this.available(this.api.inventorySummary(), "Inventory")
+          : of(null),
+        customers: this.access.has("USER_MANAGE") ? this.available(this.api.customerCount(), "Customers") : of(null),
+        recent: this.access.has("ORDER_VIEW_ALL") ? this.available(this.api.orders(1, "", 6), "Recent orders") : of(null),
+        monthly: this.access.has("REPORT_VIEW") ? this.available(
           this.api.monthlyReport("sales", this.year),
           "Sales",
-        ),
-        weekly: this.available(
+        ) : of(null),
+        weekly: this.access.has("REPORT_VIEW") ? this.available(
           this.api.weeklyOrders(this.today()),
           "Weekly orders",
-        ),
+        ) : of(null),
       }),
       (result) => {
         this.orders.set(result.orders);

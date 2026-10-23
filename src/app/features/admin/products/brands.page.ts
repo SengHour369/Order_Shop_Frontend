@@ -1,3 +1,5 @@
+import { PageAccessDenied } from '../../../shared/components/page-access-denied';
+import { CanAccessDirective } from '../../../core/auth/can-access.directive';
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
 import { CatalogDetail } from "./catalog-detail";
 import { ProductImage } from "../../../shared/components/product-image";
@@ -9,8 +11,8 @@ import { Icon } from "../../../shared/components/icon";
 import { Status } from "../../../shared/components/status";
 import { AdminApi, field, Row, text, when } from "../api/admin.api";
 @Component({
-  imports: [TranslatePipe, CatalogDetail, Status, FormsModule, Icon, RouterLink, ProductImage],
-  template: `<section>
+  imports: [PageAccessDenied, CanAccessDirective, TranslatePipe, CatalogDetail, Status, FormsModule, Icon, RouterLink, ProductImage],
+  template: `@if (accessDenied()) { <app-page-access-denied /> } @else { <section>
     @if (screen() === "list") {
       <div class="adm-page-head">
         <div>
@@ -22,7 +24,7 @@ import { AdminApi, field, Row, text, when } from "../api/admin.api";
         </div>
         <div class="adm-head-actions">
           <a class="adm-btn adm-primary" routerLink="/admin/brands/add"
-            ><app-icon name="plus" /> {{ "Add brand" | translate }}</a
+             *appCanRoute="'/admin/brands/add'"><app-icon name="plus" /> {{ "Add brand" | translate }}</a
           >
         </div>
       </div>
@@ -54,15 +56,15 @@ import { AdminApi, field, Row, text, when } from "../api/admin.api";
         <div>
           <h2>{{ (brandId ? "Edit Brand" : "Add Brand") | translate }}</h2>
           <div class="adm-crumbs">
-            <a routerLink="/admin">{{ "Dashboard" | translate }}</a>
+            <a routerLink="/admin" *appCanRoute="'/admin'">{{ "Dashboard" | translate }}</a>
             <span>›</span>
-            <a routerLink="/admin/brands">{{ "Brands" | translate }}</a>
+            <a routerLink="/admin/brands" *appCanRoute="'/admin/brands'">{{ "Brands" | translate }}</a>
             <span>›</span>
             <span>{{ (brandId ? "Edit Brand" : "Add Brand") | translate }}</span>
           </div>
         </div>
         <div class="adm-head-actions">
-          <a class="adm-btn" routerLink="/admin/brands">{{ "Cancel" | translate }}</a>
+          <a class="adm-btn" routerLink="/admin/brands" *appCanRoute="'/admin/brands'">{{ "Cancel" | translate }}</a>
           <button
             class="adm-btn adm-primary"
             type="submit"
@@ -73,7 +75,7 @@ import { AdminApi, field, Row, text, when } from "../api/admin.api";
           </button>
         </div>
       </div>
-      <form id="brand-form" class="adm-cols-2" (ngSubmit)="save()">
+      <form id="brand-form" class="adm-cols-2" (ngSubmit)="save()" *appCan="'SUBCATEGORY_CREATE'">
         <div class="adm-stack">
           <article class="adm-panel">
             <div class="adm-section-title">
@@ -160,7 +162,7 @@ import { AdminApi, field, Row, text, when } from "../api/admin.api";
                 [class.on]="logoId === +field(logo, 'id')"
                 [attr.title]="logoLabel(logo)"
                 (click)="selectLogo(logo)"
-              >
+               *appCan="'SUBCATEGORY_CREATE'">
                 @if (logoId === +field(logo, "id")) {
                   <app-icon class="mark" name="check" />
                 }
@@ -191,7 +193,7 @@ import { AdminApi, field, Row, text, when } from "../api/admin.api";
                 type="button"
                 (click)="clearLogo()"
                 aria-label="Remove image"
-              >
+               *appCan="'SUBCATEGORY_CREATE'">
                 ✕
               </button>
             </div>
@@ -312,20 +314,20 @@ import { AdminApi, field, Row, text, when } from "../api/admin.api";
                       class="adm-btn icon"
                       [routerLink]="['/admin/brands/view', field(row, 'id')]"
                       aria-label="View brand"
-                      ><app-icon name="eye"
+                       *appCanRoute="['/admin/brands/view', field(row, 'id')]"><app-icon name="eye"
                     /></a>
                     <a
                       class="adm-btn icon"
                       [routerLink]="['/admin/brands/edit', field(row, 'id')]"
                       aria-label="Edit brand"
-                      ><app-icon name="edit"
+                       *appCanRoute="['/admin/brands/edit', field(row, 'id')]"><app-icon name="edit"
                     /></a>
                     <button
                       class="adm-btn icon danger"
                       type="button"
                       aria-label="Delete brand"
                       (click)="remove(row)"
-                    >
+                     *appCan="'SUBCATEGORY_CREATE'">
                       <app-icon name="trash" />
                     </button>
                   </td>
@@ -389,7 +391,7 @@ import { AdminApi, field, Row, text, when } from "../api/admin.api";
       </div>
     }
     @if (screen() === "detail" && viewing(); as current) { <app-catalog-detail [row]="current" kind="Brand" /> }
-  </section>`,
+  </section> }`,
 })
 export class BrandsPage extends PageState {
   private api = inject(AdminApi);

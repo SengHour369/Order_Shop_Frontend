@@ -30,6 +30,14 @@ export interface Sku {
   price: number;
   finalPrice?: number;
   quantity: number;
+  inventory?: { stock_qty: number; reserved_qty: number; available_qty: number } | null;
+  hasPromotion?: boolean;
+  promotion?: {
+    originalPrice: number;
+    finalPrice: number;
+    promotionApplied: boolean;
+    promotionName?: string | null;
+  } | null;
   image_url?: string;
   is_default?: boolean;
   originalPrice?: number;
@@ -72,6 +80,7 @@ export interface Address {
   is_default: boolean;
 }
 export interface Order {
+  paymentMethod?: string;
   created_at?: string;
   updated_at?: string;
   items?: OrderItem[];

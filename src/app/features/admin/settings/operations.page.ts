@@ -1,3 +1,5 @@
+import { ActivatedRoute } from "@angular/router";
+import { PageAccessDenied } from '../../../shared/components/page-access-denied';
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
 import { Component, DestroyRef, inject, signal } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
@@ -8,12 +10,12 @@ import { Status } from "../../../shared/components/status";
 import { AdminApi, Row, text, when } from "../api/admin.api";
 
 @Component({
-  imports: [TranslatePipe, FormsModule, Status],
-  template: `
+  imports: [PageAccessDenied, TranslatePipe, FormsModule, Status],
+  template: `@if (accessDenied()) { <app-page-access-denied /> } @else {
     <div class="adm-page-head">
       <div>
         <h2>{{ "Service Activity" | translate }}</h2>
-        <p>Review the latest background check and service audit records.</p>
+        <p>{{guestActivity ? "Guest order creation audit. Contact details and browser credentials are excluded." : "Review the latest background check and service audit records."}}</p>
       </div>
       <button
         class="adm-btn"
@@ -131,10 +133,11 @@ import { AdminApi, Row, text, when } from "../api/admin.api";
         </button>
       </div>
     </section>
-  `,
+   }`,
 })
 export class OperationsPage extends PageState {
   private api = inject(AdminApi);
+  guestActivity = !!inject(ActivatedRoute).snapshot.data["guestActivity"];
   private destroy = inject(DestroyRef);
   readonly services = [
     "auth",
@@ -191,6 +194,7 @@ export class OperationsPage extends PageState {
   }
   loadAudit() {
     const filters: Record<string, string> = {};
+    if (this.guestActivity) filters["resourceType"] = "GUEST_ORDER";
     if (this.actorId.trim()) filters["actorId"] = this.actorId.trim();
     if (this.resourceId.trim()) filters["resourceId"] = this.resourceId.trim();
     this.run(

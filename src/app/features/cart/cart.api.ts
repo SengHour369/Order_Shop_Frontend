@@ -1,3 +1,4 @@
+import { GuestApi } from "../../core/storefront/guest.api";
 import { inject, Injectable } from "@angular/core";
 import { ApiClient } from "../../core/api/api-client";
 import { AuthService } from "../../core/auth/auth.service";
@@ -8,8 +9,10 @@ import { Cart, Envelope } from "../../core/api/models";
 @Injectable({ providedIn: "root" })
 export class CartApi {
   private api = inject(ApiClient);
+  private guest = inject(GuestApi);
   private auth = inject(AuthService);
   load() {
+    if (!this.auth.session()) return this.guest.cart();
     return this.api.data<Cart>(
       "/api/v1/cart/user/id/get-or-create",
       {},
@@ -17,6 +20,7 @@ export class CartApi {
     );
   }
   add(skuId: number, quantity = 1, key=requestId()) {
+    if (!this.auth.session()) return this.guest.add(skuId, quantity);
     return this.change(
       "/api/v1/cart/user/id/items",
       { product_id: skuId, quantity },
@@ -24,6 +28,7 @@ export class CartApi {
     );
   }
   update(cartItemId: number, skuId: number, quantity: number, key=requestId()) {
+    if (!this.auth.session()) return this.guest.update(cartItemId, skuId, quantity);
     return this.change(
       "/api/v1/cart/user/id/items/cartItemId",
       { product_id: skuId, quantity },
@@ -31,6 +36,7 @@ export class CartApi {
     );
   }
   remove(cartItemId: number, key=requestId()) {
+    if (!this.auth.session()) return this.guest.remove(cartItemId);
     return this.change(
       "/api/v1/cart/user/userId/items/cartItemId",
       {},
@@ -38,6 +44,7 @@ export class CartApi {
     );
   }
   current() {
+    if (!this.auth.session()) return this.guest.cart();
     return this.api.data<Cart>(
       "/api/v1/cart/user/id",
       {},
@@ -48,6 +55,7 @@ export class CartApi {
     return this.api.http.post<Envelope<Cart>>(this.api.url(path),body,{params,headers:{'Idempotency-Key':key}}).pipe(map(unwrap));
   }
   clear() {
+    if (!this.auth.session()) return this.guest.clear();
     return this.api.data<Cart>(
       "/api/v1/cart/user/userId/clear",
       {},

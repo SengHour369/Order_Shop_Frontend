@@ -1,3 +1,5 @@
+import { PageAccessDenied } from '../../../shared/components/page-access-denied';
+import { CanAccessDirective } from '../../../core/auth/can-access.directive';
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
 import { Component, inject, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
@@ -16,8 +18,8 @@ import {
   when,
 } from "../api/admin.api";
 @Component({
-  imports: [TranslatePipe, Status, FormsModule, Icon, RouterLink],
-  template: `<section>
+  imports: [PageAccessDenied, CanAccessDirective, TranslatePipe, Status, FormsModule, Icon, RouterLink],
+  template: `@if (accessDenied()) { <app-page-access-denied /> } @else { <section>
     @if (screen() === "list") {
       <div class="adm-page-head">
         <div>
@@ -26,7 +28,7 @@ import {
         </div>
         <div class="adm-head-actions">
           <a class="adm-btn adm-primary" routerLink="/admin/inventory/add"
-            ><app-icon name="plus" /> Add inventory</a
+             *appCanRoute="'/admin/inventory/add'"><app-icon name="plus" /> Add inventory</a
           >
         </div>
       </div>
@@ -56,7 +58,7 @@ import {
     <app-status [busy]="busy()" [error]="error()" [message]="message()" />
     @if (screen() === "form" && composer(); as kind) {
       <div class="adm-work" style="margin-bottom:14px">
-        <form class="adm-form adm-panel" (ngSubmit)="submit(kind)">
+        <form class="adm-form adm-panel" (ngSubmit)="submit(kind)" *appCan="'INVENTORY_ADJUST'">
           <div class="adm-section-title">
             <div>
               <h3>
@@ -144,7 +146,7 @@ import {
                     : "Save quantity"
               }}
             </button>
-            <a class="adm-btn" routerLink="/admin/inventory">{{ "Cancel" | translate }}</a>
+            <a class="adm-btn" routerLink="/admin/inventory" *appCanRoute="'/admin/inventory'">{{ "Cancel" | translate }}</a>
           </div>
         </form>
         <aside class="adm-panel adm-preview">
@@ -247,19 +249,19 @@ import {
                       [routerLink]="['/admin/inventory/details']"
                       [queryParams]="{ id: field(row, 'id') }"
                       aria-label="View inventory"
-                      ><app-icon name="eye"
+                       *appCanRoute="['/admin/inventory/details']"><app-icon name="eye"
                     /></a>
                     <a
                       class="adm-btn"
                       [routerLink]="['/admin/inventory/edit']"
                       [queryParams]="{ id: field(row, 'id'), mode: 'adjust' }"
-                      >Set quantity</a
+                       *appCanRoute="['/admin/inventory/edit']">Set quantity</a
                     >
                     <a
                       class="adm-btn"
                       [routerLink]="['/admin/inventory/edit']"
                       [queryParams]="{ id: field(row, 'id') }"
-                      >Restock</a
+                       *appCanRoute="['/admin/inventory/edit']">Restock</a
                     >
                     <button
                       class="adm-btn icon danger"
@@ -267,7 +269,7 @@ import {
                       aria-label="Delete inventory"
                       [disabled]="busy()"
                       (click)="remove(row)"
-                    >
+                     *appCan="'INVENTORY_ADJUST'">
                       <app-icon name="trash" />
                     </button>
                   </td>
@@ -337,7 +339,7 @@ import {
             <h2>Inventory Details</h2>
             <p>Dashboard › Inventory › Details</p>
           </div>
-          <a class="adm-btn" routerLink="/admin/inventory">{{ "Back" | translate }}</a>
+          <a class="adm-btn" routerLink="/admin/inventory" *appCanRoute="'/admin/inventory'">{{ "Back" | translate }}</a>
         </div>
         <article class="adm-panel">
           <div class="adm-section-title">
@@ -415,22 +417,22 @@ import {
               class="adm-btn adm-primary"
               [routerLink]="['/admin/inventory/edit']"
               [queryParams]="{ id: field(current, 'id'), mode: 'adjust' }"
-              >Set quantity</a
+               *appCanRoute="['/admin/inventory/edit']">Set quantity</a
             >
             <a
               class="adm-btn"
               [routerLink]="['/admin/inventory/edit']"
               [queryParams]="{ id: field(current, 'id') }"
-              >Restock</a
+               *appCanRoute="['/admin/inventory/edit']">Restock</a
             >
           </div>
         </article>
       </div>
     }
     @if (screen() !== "list" && !composer() && !viewing()) {
-      <a class="adm-btn" routerLink="/admin/inventory">Back to inventory</a>
+      <a class="adm-btn" routerLink="/admin/inventory" *appCanRoute="'/admin/inventory'">Back to inventory</a>
     }
-  </section>`,
+  </section> }`,
 })
 export class InventoryPage extends PageState {
   private api = inject(AdminApi);

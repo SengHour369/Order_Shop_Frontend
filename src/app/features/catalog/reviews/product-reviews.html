@@ -1,29 +1,46 @@
 <div class="reviews-layout">
   <aside class="review-summary">
     <h2>{{ 'Customer Reviews' | translate }}</h2>
-    <div class="average-rating"><strong>{{ available() && total() ? averageLabel() : '—' }}</strong><span>{{ 'out of 5' | translate }}</span></div>
-    <div class="rating-stars" role="img" [style.--rating-fill]="available() ? average() / 5 * 100 + '%' : '0%'" [attr.aria-label]="available() && total() ? averageLabel() + ' / 5' : ('No ratings available' | translate)">★★★★★</div>
-    <p class="rating-total">{{ available() ? total() : '—' }} {{ 'global ratings' | translate }}</p>
+    <div class="average-rating"><strong>{{ reviewAvailable() && total() ? averageLabel() : '—' }}</strong><span>{{ 'out of 5' | translate }}</span></div>
+    <div class="rating-stars" role="img" [style.--rating-fill]="reviewAvailable() ? average() / 5 * 100 + '%' : '0%'" [attr.aria-label]="reviewAvailable() && total() ? averageLabel() + ' / 5' : ('No ratings available' | translate)">★★★★★</div>
+    <p class="rating-total">{{ reviewAvailable() ? total() : '—' }} {{ 'global ratings' | translate }}</p>
     <div class="rating-distribution">
       @for (row of distribution(); track row.stars) {
-        <button type="button" [disabled]="!available()" (click)="rating.set(row.stars)" [attr.aria-pressed]="rating() === row.stars" [attr.aria-label]="('Filter by rating' | translate) + ': ' + row.stars">
-          <span>{{ row.stars }} <b>★</b></span><span class="rating-track"><span [style.width.%]="row.percent"></span></span><span>{{ available() ? row.percent + '%' : '—' }}</span>
+        <button type="button" [disabled]="!reviewAvailable()" (click)="rating.set(row.stars)" [attr.aria-pressed]="rating() === row.stars" [attr.aria-label]="('Filter by rating' | translate) + ': ' + row.stars">
+          <span>{{ row.stars }} <b>★</b></span><span class="rating-track"><span [style.width.%]="row.percent"></span></span><span>{{ reviewAvailable() ? row.percent + '%' : '—' }}</span>
         </button>
       }
     </div>
-    <button class="write-review" type="button" disabled [title]="'Review submission is not connected yet.' | translate"><app-icon name="edit" />{{ 'Write a Review' | translate }}</button>
+    <button class="write-review" type="button" [disabled]="!canWrite()" (click)="writing.set(!writing())"><app-icon name="edit" />{{ 'Write a Review' | translate }}</button>
+    @if (!auth.session() && !access.settings()?.guestReviews && productId()) {<p>Sign in to write a review. Guest reviews are currently disabled.</p>}
+    @if (submissionMessage()) {<p role="status">{{submissionMessage()}}</p>}
+    @if (writing()) {
+      <form #reviewForm="ngForm" (ngSubmit)="submit()" class="review-compose">
+        @if (!auth.session()) {
+          <label>Display name<input name="author" [(ngModel)]="draft.author" required maxlength="80" /></label>
+          <label>Email to verify<input type="email" name="email" [(ngModel)]="draft.email" required email maxlength="254" /></label>
+          <button type="button" [disabled]="submitting() || !draft.email" (click)="sendCode()">Send code</button>
+          <label>Email code<input name="code" [(ngModel)]="draft.code" inputmode="numeric" maxlength="8" /></label>
+          <button type="button" [disabled]="submitting() || draft.code.length !== 8" (click)="verifyCode()">Verify contact</button>
+        }
+        <label>Rating<select name="rating" [(ngModel)]="draft.rating">@for (star of stars; track star) {<option [ngValue]="star">{{star}} stars</option>}</select></label>
+        <label>Title<input name="title" [(ngModel)]="draft.title" required maxlength="120" /></label>
+        <label>Review<textarea name="body" [(ngModel)]="draft.body" required maxlength="2000" rows="4"></textarea></label>
+        <p>Reviews are checked by a moderator before publication.</p><button type="submit" [disabled]="reviewForm.invalid || submitting()">Submit for review</button>
+      </form>
+    }
   </aside>
   <section class="review-results" [attr.aria-label]="'Product reviews' | translate">
     <div class="review-toolbar">
-      <label class="review-search"><span class="sr-only">{{ 'Search reviews' | translate }}</span><input type="search" [ngModel]="search()" (ngModelChange)="search.set($event)" [disabled]="!available()" [placeholder]="'Search reviews...' | translate" /><app-icon name="search" /></label>
-      <label class="review-sort"><span class="sr-only">{{ 'Sort reviews' | translate }}</span><select [ngModel]="sort()" (ngModelChange)="sort.set($event)" [disabled]="!available()"><option value="recent">{{ 'Most Recent' | translate }}</option><option value="helpful">{{ 'Most Helpful' | translate }}</option><option value="highest">{{ 'Highest Rated' | translate }}</option></select></label>
+      <label class="review-search"><span class="sr-only">{{ 'Search reviews' | translate }}</span><input type="search" [ngModel]="search()" (ngModelChange)="search.set($event)" [disabled]="!reviewAvailable()" [placeholder]="'Search reviews...' | translate" /><app-icon name="search" /></label>
+      <label class="review-sort"><span class="sr-only">{{ 'Sort reviews' | translate }}</span><select [ngModel]="sort()" (ngModelChange)="sort.set($event)" [disabled]="!reviewAvailable()"><option value="recent">{{ 'Most Recent' | translate }}</option><option value="helpful">{{ 'Most Helpful' | translate }}</option><option value="highest">{{ 'Highest Rated' | translate }}</option></select></label>
     </div>
     <div class="review-filters" [attr.aria-label]="'Review filters' | translate">
-      <button type="button" [disabled]="!available()" [class.active]="!rating() && !photosOnly()" (click)="rating.set(0); photosOnly.set(false)">{{ 'All' | translate }} ({{ available() ? total() : '—' }})</button>
-      <button type="button" [disabled]="!available()" [class.active]="photosOnly()" [attr.aria-pressed]="photosOnly()" (click)="photosOnly.set(!photosOnly())">{{ 'With Photos' | translate }} ({{ available() ? withPhotos() : '—' }})</button>
-      @for (row of distribution(); track row.stars) { <button type="button" [disabled]="!available()" [class.active]="rating() === row.stars" [attr.aria-pressed]="rating() === row.stars" (click)="rating.set(rating() === row.stars ? 0 : row.stars)">{{ row.stars }} <b>★</b> ({{ available() ? row.count : '—' }})</button> }
+      <button type="button" [disabled]="!reviewAvailable()" [class.active]="!rating() && !photosOnly()" (click)="rating.set(0); photosOnly.set(false)">{{ 'All' | translate }} ({{ reviewAvailable() ? total() : '—' }})</button>
+      <button type="button" [disabled]="!reviewAvailable()" [class.active]="photosOnly()" [attr.aria-pressed]="photosOnly()" (click)="photosOnly.set(!photosOnly())">{{ 'With Photos' | translate }} ({{ reviewAvailable() ? withPhotos() : '—' }})</button>
+      @for (row of distribution(); track row.stars) { <button type="button" [disabled]="!reviewAvailable()" [class.active]="rating() === row.stars" [attr.aria-pressed]="rating() === row.stars" (click)="rating.set(rating() === row.stars ? 0 : row.stars)">{{ row.stars }} <b>★</b> ({{ reviewAvailable() ? row.count : '—' }})</button> }
     </div>
-    @if (!available()) {
+    @if (!reviewAvailable()) {
       <div class="reviews-empty" role="status"><app-icon name="star" /><h3>{{ 'Reviews are currently unavailable.' | translate }}</h3><p>{{ 'Customer reviews are not connected yet. Please contact support if you have questions about this product.' | translate }}</p></div>
     } @else {
       <p class="sr-only" role="status">{{ filtered().length }} {{ 'reviews found' | translate }}</p>

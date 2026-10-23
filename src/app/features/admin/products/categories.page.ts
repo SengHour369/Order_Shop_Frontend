@@ -1,3 +1,5 @@
+import { PageAccessDenied } from '../../../shared/components/page-access-denied';
+import { CanAccessDirective } from '../../../core/auth/can-access.directive';
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
 import { CatalogDetail } from "./catalog-detail";
 import { ProductImage } from "../../../shared/components/product-image";
@@ -19,8 +21,8 @@ function dated(value: unknown) {
   });
 }
 @Component({
-  imports: [TranslatePipe, CatalogDetail, Status, FormsModule, Icon, RouterLink, ProductImage],
-  template: `<section>
+  imports: [PageAccessDenied, CanAccessDirective, TranslatePipe, CatalogDetail, Status, FormsModule, Icon, RouterLink, ProductImage],
+  template: `@if (accessDenied()) { <app-page-access-denied /> } @else { <section>
     @if (screen() === "list") {
       <div class="adm-page-head">
         <div>
@@ -37,7 +39,7 @@ function dated(value: unknown) {
             <app-icon name="down" /> {{ "Export" | translate }}
           </button>
           <a class="adm-btn adm-primary" routerLink="/admin/categories/add"
-            ><app-icon name="plus" /> {{ "Add category" | translate }}</a
+             *appCanRoute="'/admin/categories/add'"><app-icon name="plus" /> {{ "Add category" | translate }}</a
           >
         </div>
       </div>
@@ -133,7 +135,10 @@ function dated(value: unknown) {
                         field(row, 'id'),
                       ]"
                       aria-label="View category"
-                      ><app-icon name="eye"
+                       *appCanRoute="[
+                        '/admin/categories/view',
+                        field(row, 'id'),
+                      ]"><app-icon name="eye"
                     /></a>
                     <a
                       class="adm-btn icon"
@@ -142,14 +147,17 @@ function dated(value: unknown) {
                         field(row, 'id'),
                       ]"
                       aria-label="Edit category"
-                      ><app-icon name="edit"
+                       *appCanRoute="[
+                        '/admin/categories/edit',
+                        field(row, 'id'),
+                      ]"><app-icon name="edit"
                     /></a>
                     <button
                       class="adm-btn icon danger"
                       type="button"
                       aria-label="Delete category"
                       (click)="remove(row)"
-                    >
+                     *appCan="'CATEGORY_CREATE'">
                       <app-icon name="trash" />
                     </button>
                   </td>
@@ -218,15 +226,15 @@ function dated(value: unknown) {
         <div>
           <h2>{{ (editId ? "Edit Category" : "Add Category") | translate }}</h2>
           <div class="adm-crumbs">
-            <a routerLink="/admin">{{ "Dashboard" | translate }}</a>
+            <a routerLink="/admin" *appCanRoute="'/admin'">{{ "Dashboard" | translate }}</a>
             <span>›</span>
-            <a routerLink="/admin/categories">{{ "Categories" | translate }}</a>
+            <a routerLink="/admin/categories" *appCanRoute="'/admin/categories'">{{ "Categories" | translate }}</a>
             <span>›</span>
             <span>{{ (editId ? "Edit Category" : "Add Category") | translate }}</span>
           </div>
         </div>
         <div class="adm-head-actions">
-          <a class="adm-btn" routerLink="/admin/categories">{{ "Cancel" | translate }}</a>
+          <a class="adm-btn" routerLink="/admin/categories" *appCanRoute="'/admin/categories'">{{ "Cancel" | translate }}</a>
           <button
             class="adm-btn adm-primary"
             type="submit"
@@ -237,7 +245,7 @@ function dated(value: unknown) {
           </button>
         </div>
       </div>
-      <form id="category-form" class="adm-cols-2" (ngSubmit)="save()">
+      <form id="category-form" class="adm-cols-2" (ngSubmit)="save()" *appCan="'CATEGORY_CREATE'">
         <article class="adm-panel">
           <div class="adm-section-title">
             <div>
@@ -372,7 +380,7 @@ function dated(value: unknown) {
       </form>
     }
     @if (screen() === "detail" && viewing(); as current) { <app-catalog-detail [row]="current" kind="Category" /> }
-  </section>`,
+  </section> }`,
 })
 export class CategoriesPage extends PageState {
   private api = inject(AdminApi);

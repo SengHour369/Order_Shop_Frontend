@@ -1,5 +1,8 @@
+import { PageAccessDenied } from '../../../shared/components/page-access-denied';
+import { CanAccessDirective } from '../../../core/auth/can-access.directive';
+import { ProductImage } from "../../../shared/components/product-image";
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
-import { Component, inject, signal } from "@angular/core";
+import { Component, DestroyRef, effect, inject, input, output, signal, untracked } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
@@ -31,11 +34,13 @@ function csvCell(value: unknown) {
   return `"${String(value ?? "").replace(/"/g, '""')}"`;
 }
 @Component({
-  imports: [TranslatePipe, Status, RouterLink, FormsModule, Icon],
-  template: `<section>
+  selector: "app-admin-orders",
+  styleUrl: "./orders-list.css",
+  imports: [PageAccessDenied, CanAccessDirective, TranslatePipe, Status, RouterLink, FormsModule, Icon],
+  template: `@if (accessDenied()) { <app-page-access-denied /> } @else { <section>
     <div class="adm-page-head">
       <div>
-        <h2>{{ "History Order Details" | translate }}</h2>
+        <h2>{{ (embedded() ? "Orders" : "History Order Details") | translate }}</h2>
         <p>Orders returned by the order service.</p>
       </div>
       <div class="adm-head-actions">
@@ -49,7 +54,7 @@ function csvCell(value: unknown) {
         </button>
       </div>
     </div>
-    <div class="adm-stats">
+    @if(queryRecords() === null){<div class="adm-stats">
       <article class="adm-card stat">
         <span class="k">{{ "Total orders" | translate }}</span>
         <strong>{{ summary()?.totalOrders ?? "—" }}</strong>
@@ -71,7 +76,9 @@ function csvCell(value: unknown) {
         <span class="adm-ico grad-red"><app-icon name="close" /></span>
       </article>
     </div>
+    }
     <app-status [busy]="busy()" [error]="error()" />
+    @if(queryRecords() !== null){<p class="query-notice" role="status">Server-filtered order results{{queryDate() ? ' for ' + queryDate() : ''}}. Up to 20 records returned; filters and pages apply to these results.</p>}
     <div class="adm-table-card">
       <form class="adm-filter" (ngSubmit)="$event.preventDefault()">
         <input
@@ -89,6 +96,7 @@ function csvCell(value: unknown) {
             <option [value]="item">{{ pretty(item) }}</option>
           }
         </select>
+        <label class="order-guest-toggle"><input type="checkbox" role="switch" name="guestsOnly" [(ngModel)]="guestsOnly" (ngModelChange)="page=1; load()" /><span>Guest orders only</span></label>
         <select name="payment" [(ngModel)]="paymentMethod">
           <option value="all">All Payment Methods</option>
           <optgroup label="KHQR network">
@@ -181,12 +189,16 @@ function csvCell(value: unknown) {
                   >
                 </td>
                 <td>
+                  @if (embedded()) {
+                    <button type="button" class="adm-btn" (click)="openOrder.emit(+text(field(order, 'id')))">View order</button>
+                  } @else {
                   <a
                     class="adm-btn icon"
                     [routerLink]="['/admin/orders', field(order, 'id')]"
                     [attr.aria-label]='"View order" | translate'
-                    ><app-icon name="eye"
+                     *appCanRoute="['/admin/orders', field(order, 'id')]"><app-icon name="eye"
                   /></a>
+                  }
                 </td>
               </tr>
             } @empty {
@@ -243,9 +255,14 @@ function csvCell(value: unknown) {
         </span>
       </div>
     </div>
-  </section>`,
+  </section> }`,
 })
 export class OrdersPage extends PageState {
+  private embeddedDestroy = inject(DestroyRef);
+  embedded = input(false);
+  queryRecords = input<Row[] | null>(null);
+  queryDate = input("");
+  openOrder = output<number>();
   private api = inject(AdminApi);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -257,6 +274,7 @@ export class OrdersPage extends PageState {
   pages = signal(1);
   page = 1;
   size = 10;
+  guestsOnly = false;
   status = "";
   search = "";
   paymentMethod = "all";
@@ -265,9 +283,9 @@ export class OrdersPage extends PageState {
   text = text;
   usd = usd;
   tone = tone;
-  constructor() {
-    super();
-    this.route.queryParamMap.subscribe((params) => {
+  ngOnInit() {
+    if (this.embedded()) { this.load(); return; }
+    this.route.queryParamMap.pipe(takeUntilDestroyed(this.embeddedDestroy)).subscribe((params) => {
       const q = params.get("q") || "";
       this.search = q;
       this.page = 1;
@@ -283,9 +301,16 @@ export class OrdersPage extends PageState {
     });
   }
   load() {
+    const records=this.queryRecords();
+    if(records !== null){
+      const matching=records.filter(row=>!this.status || String(field(row,'status'))===this.status);
+      this.rows.set(matching.slice((this.page-1)*this.size,this.page*this.size));
+      this.total.set(matching.length);this.pages.set(Math.max(1,Math.ceil(matching.length/this.size)));
+      return;
+    }
     this.run(
       forkJoin({
-        list: this.api.orders(this.page, this.status, this.size),
+        list: this.api.orders(this.page, this.status, this.size, this.guestsOnly),
         summary: this.api.ordersSummary(),
       }),
       (result) => {
@@ -328,6 +353,7 @@ export class OrdersPage extends PageState {
   }
   filtersOn() {
     return (
+      this.guestsOnly ||
       !!this.search.trim() ||
       !!this.status ||
       this.paymentMethod !== "all" ||
@@ -335,7 +361,8 @@ export class OrdersPage extends PageState {
     );
   }
   clearFilters() {
-    const reload = !!this.status;
+    const reload = !!this.status || this.guestsOnly;
+    this.guestsOnly = false;
     this.search = "";
     this.paymentMethod = "all";
     this.date = "";
@@ -367,6 +394,7 @@ export class OrdersPage extends PageState {
     });
   }
   customerName(row: Row) {
+    if (field(row, "customerType", "customer_type") === "GUEST") return "Guest customer";
     const name = field(row, "customer_name", "customerName");
     if (name !== "") return String(name);
     const customer = row["customer"];
@@ -490,19 +518,30 @@ export class OrdersPage extends PageState {
   }
 }
 @Component({
-  imports: [TranslatePipe, Status, RouterLink, Icon, FormsModule],
+  selector: "app-admin-order-detail",
+  imports: [PageAccessDenied, CanAccessDirective, TranslatePipe, Status, RouterLink, Icon, FormsModule, ProductImage],
   templateUrl: "./order-detail.html",
-  styleUrl: "./order-detail.css",
+  styleUrls: ["./order-detail.css", "../styles/detail-typography.css"],
 })
 export class OrderDetailPage extends PageState {
+  embeddedOrderId = input<number | null>(null);
   editing = signal(false);
+  guestDelivery(row:Row):Row {
+    const value=field(row,'shippingAddressSnapshot','shipping_address_snapshot');
+    try {const parsed=typeof value==='string'?JSON.parse(value):value;return parsed && typeof parsed==='object' && !Array.isArray(parsed)?parsed as Row:{};}catch{return {};}
+  }
   customerField(row: Row, ...keys: string[]) {
+    if(field(row,'customerType','customer_type')==='GUEST') return field(this.guestDelivery(row),...keys);
     const customer = row['customer'];
     return customer && typeof customer === 'object' ? field(customer as Row, ...keys) : field(row, ...keys);
   }
   addressField(row: Row, ...keys: string[]) {
     const address = field(row, 'shipping_address', 'shippingAddress');
-    return address && typeof address === 'object' ? field(address as Row, ...keys) : '';
+    if (address && typeof address === 'object') return field(address as Row, ...keys);
+    const snapshot = this.guestDelivery(row);
+    const aliases:Record<string,string>={recipient_name:'fullName',phone_number:'phone',address_line1:'streetHouse',city:'province'};
+    for(const key of keys) {const value=snapshot[aliases[key] || key];if(value)return value;}
+    return '';
   }
   customerLocation(row: Row) { return [this.addressField(row, 'city', 'province'), this.addressField(row, 'country')].filter(Boolean).join(', ') || '—'; }
   mapUrl(row: Row) {
@@ -521,17 +560,17 @@ export class OrderDetailPage extends PageState {
     catch { this.error.set('Could not copy. Select and copy the value manually.'); }
   }
   timeline(row: Row) {
-    const events = [{ label: 'Order Placed', at: this.placed(row), shipping: false }];
+    const events = [{ label: 'Order Placed', at: this.placed(row), shipping: false, failed: false }];
     const paidAt = this.paymentField(row, 'payment_date', 'paymentDate', 'paid_at');
-    if (paidAt && ['SUCCESS', 'PAID', 'COMPLETED', 'APPROVED'].includes(String(this.paymentStatusOf(row)).toUpperCase())) events.push({ label: 'Payment Successful', at: paidAt, shipping: false });
+    if (paidAt && ['SUCCESS', 'PAID', 'COMPLETED', 'APPROVED'].includes(String(this.paymentStatusOf(row)).toUpperCase())) events.push({ label: 'Payment Successful', at: paidAt, shipping: false, failed: false });
     const history = field(row, 'status_history', 'statusHistory');
     if (Array.isArray(history) && history.length) {
       for (const event of history as Row[]) {
         const status = field(event, 'new_status', 'newStatus', 'status');
-        events.push({ label: this.pretty(status), at: field(event, 'changed_at', 'changedAt', 'created_at'), shipping: String(status).toUpperCase().includes('SHIP') });
+        events.push({ label: this.pretty(status), at: field(event, 'changed_at', 'changedAt', 'created_at'), shipping: String(status).toUpperCase().includes('SHIP'), failed: ['FAILED', 'CANCELLED', 'REFUNDED'].includes(String(status).toUpperCase()) });
       }
     } else if (field(row, 'status') && String(field(row, 'status')).toUpperCase() !== 'PENDING') {
-      events.push({ label: this.pretty(field(row, 'status')), at: field(row, 'updated_at', 'updatedAt'), shipping: String(field(row, 'status')).toUpperCase().includes('SHIP') });
+      events.push({ label: this.pretty(field(row, 'status')), at: field(row, 'updated_at', 'updatedAt'), shipping: String(field(row, 'status')).toUpperCase().includes('SHIP'), failed: ['FAILED', 'CANCELLED', 'REFUNDED'].includes(String(field(row, 'status')).toUpperCase()) });
     }
     return events;
   }
@@ -548,6 +587,9 @@ export class OrderDetailPage extends PageState {
     const a = document.createElement('a'); a.href = url; a.download = 'order-invoice.html'; a.click(); URL.revokeObjectURL(url);
   }
   shippingAddress(row: Row) {
+    if(field(row,'customerType','customer_type')==='GUEST') {
+      const delivery=this.guestDelivery(row);return ['streetHouse','village','commune','district','province'].map(key=>delivery[key]).filter(Boolean).join(', ') || 'Guest delivery details were redacted under the retention policy';
+    }
     const address = field(row, 'shipping_address', 'shippingAddress');
     if (typeof address === 'string' && address) return address;
     if (address && typeof address === 'object') {
@@ -577,9 +619,11 @@ export class OrderDetailPage extends PageState {
   tone = tone;
   constructor() {
     super();
-    this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) =>
-      this.load(Number(params.get("id"))),
-    );
+    this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) => {
+      const id = Number(params.get("id"));
+      if (id > 0 && !this.embeddedOrderId()) this.load(id);
+    });
+    effect(() => { const id = this.embeddedOrderId(); if (id && id > 0) untracked(() => this.load(id)); });
   }
   load(id: number) {
     this.order.set(null);
@@ -614,6 +658,7 @@ export class OrderDetailPage extends PageState {
     );
   }
   save() {
+    if (this.embeddedOrderId()) return;
     const id = Number(field(this.order() || {}, "id"));
     this.run(this.api.orderStatus(id, this.next), (order) => {
       this.order.update(current => ({ ...current, ...order }));
@@ -622,6 +667,7 @@ export class OrderDetailPage extends PageState {
     });
   }
   customerName(row: Row) {
+    if (field(row, "customerType", "customer_type") === "GUEST") return "Guest customer";
     const name = field(row, "customer_name", "customerName");
     if (name !== "") return String(name);
     const customer = row["customer"];

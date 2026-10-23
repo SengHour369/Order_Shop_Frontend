@@ -1,3 +1,5 @@
+import { PageAccessDenied } from '../../../shared/components/page-access-denied';
+import { CanAccessDirective } from '../../../core/auth/can-access.directive';
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
 import { Component, inject, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
@@ -16,8 +18,8 @@ const statuses = [
   "CLOSED",
 ];
 @Component({
-  imports: [TranslatePipe, Status, FormsModule, RouterLink, Icon],
-  template: `<section>
+  imports: [PageAccessDenied, CanAccessDirective, TranslatePipe, Status, FormsModule, RouterLink, Icon],
+  template: `@if (accessDenied()) { <app-page-access-denied /> } @else { <section>
     <div class="adm-page-head">
       <div>
         <h2>{{ "Cancellations" | translate }}</h2>
@@ -218,13 +220,16 @@ const statuses = [
                 '/admin/orders',
                 field(current, 'orderId', 'order_id'),
               ]"
-              >Open order</a
+               *appCanRoute="[
+                '/admin/orders',
+                field(current, 'orderId', 'order_id'),
+              ]">Open order</a
             >
           }
         </article>
       </aside>
     }
-  </section>`,
+  </section> }`,
 })
 export class CancellationsPage extends PageState {
   private api = inject(AdminApi);

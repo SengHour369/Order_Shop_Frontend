@@ -9,6 +9,7 @@ describe('Assistant product actions', () => {
   const product: AssistantProduct = { id:8, name:'Laptop', image:'/laptop.png', description:'', skuId:42, price:699, available:3, sku:'LAP-42' };
   beforeEach(() => TestBed.configureTestingModule({ providers:[provideRouter([]),provideHttpClient(),provideHttpClientTesting(),{provide:AuthService,useValue:{userId:()=>7,session:()=>({id:7})}}] }));
   afterEach(() => TestBed.inject(HttpTestingController).verify());
+  it('shows product management instead of customer purchase actions for admins',()=>{const f=TestBed.createComponent(AssistantProductCard);f.componentRef.setInput('product',product);f.componentRef.setInput('administrator',true);f.detectChanges();expect(f.nativeElement.textContent).toContain('Manage product');expect(f.nativeElement.textContent).not.toContain('Add to Cart');expect(f.nativeElement.querySelector('a').getAttribute('href')).toBe('/admin/products/view/8');f.componentInstance.add();TestBed.inject(HttpTestingController).expectNone(()=>true);});
   it('adds the returned SKU rather than the product ID and reports failures', () => {
     const fixture = TestBed.createComponent(AssistantProductCard); fixture.componentRef.setInput('product',product);
     const card = fixture.componentInstance; card.add();

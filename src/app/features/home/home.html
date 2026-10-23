@@ -26,7 +26,7 @@
     ><a class="button outline" routerLink="/shop">{{ "Shop Now" | translate }}</a>
   </div>
   <div class="customer-perks">
-    <a routerLink="/account/orders"
+    <a [routerLink]="auth.session() ? '/account/orders' : '/guest/orders'"
       ><app-icon name="truck" /><span
         ><strong>{{ "Delivery Updates" | translate }}</strong><small>{{ "Follow your order" | translate }}</small></span
       ></a
@@ -72,7 +72,7 @@
   <a routerLink="/shop">{{ "View All" | translate }} <app-icon name="arrow" /></a>
 </div>
 <app-status [busy]="busy()" [error]="error()" />
-@if (auth.session()) {
+@if (!accessDenied() || auth.session()) {
   <div class="product-grid welcome-products">
     @for (p of products(); track p.id) {
       <app-product-card [product]="p" />

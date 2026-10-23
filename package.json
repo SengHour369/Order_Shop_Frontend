@@ -8,6 +8,7 @@
     "build": "ng build",
     "test": "ng test --watch=false --runner-config=vitest.config.mts",
     "audit:api": "node scripts/audit-endpoints.cjs",
+    "check:auth": "node scripts/check-auth-origin.cjs",
     "smoke:api": "node scripts/smoke-api.cjs"
   },
   "dependencies": {
@@ -17,6 +18,7 @@
     "@angular/forms": "^22.2.0",
     "@angular/platform-browser": "^22.2.0",
     "@angular/router": "^22.2.0",
+    "@google/genai": "^2.31.0",
     "keycloak-js": "^26.2.4",
     "rxjs": "~7.8.0",
     "tslib": "^2.8.0"

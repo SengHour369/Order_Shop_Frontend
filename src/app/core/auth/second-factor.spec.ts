@@ -9,10 +9,10 @@ describe('Two-factor sign-in',()=>{
   it('does not accept a session until the second factor succeeds',()=>{
     const auth=TestBed.inject(AuthService),http=TestBed.inject(HttpTestingController);
     auth.login('test-user','test-password').subscribe();
-    http.expectOne('/api/v1/public/email/username/login').flush({token_type:'MFA',refresh_token:'opaque-challenge'});
+    http.expectOne('/api/v1/public/session/login').flush({token_type:'MFA',refresh_token:'opaque-challenge'});
     expect(auth.session()).toBeNull();expect(auth.secondFactorChallenge()).toBe('opaque-challenge');
     auth.completeSecondFactor('123456').subscribe();
-    const request=http.expectOne('/api/v1/public/second-factor');
+    const request=http.expectOne('/api/v1/public/session/second-factor');
     expect(request.request.body).toEqual({challenge:'opaque-challenge',code:'123456'});
     request.flush({id:7,access_token:'test-access',refresh_token:'test-refresh'});
     expect(auth.session()?.id).toBe(7);expect(auth.secondFactorChallenge()).toBe('');
@@ -21,7 +21,7 @@ describe('Two-factor sign-in',()=>{
     const auth=TestBed.inject(AuthService),http=TestBed.inject(HttpTestingController);
     auth.accept({token_type:'MFA',refresh_token:'opaque-challenge'} as never);
     auth.completeSecondFactor('000000').subscribe({error:()=>{}});
-    http.expectOne('/api/v1/public/second-factor').flush({message:'Invalid code'},{status:401,statusText:'Unauthorized'});
+    http.expectOne('/api/v1/public/session/second-factor').flush({message:'Invalid code'},{status:401,statusText:'Unauthorized'});
     expect(auth.session()).toBeNull();
   });
 });

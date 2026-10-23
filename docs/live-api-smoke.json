@@ -1,6 +1,6 @@
 {
-  "checkedAt": "2026-10-16T11:48:52.058Z",
-  "baseUrl": "http://localhost:8080",
+  "checkedAt": "2026-10-19T13:00:15.901Z",
+  "baseUrl": "http://localhost:4200",
   "authenticated": false,
   "note": "Availability checks only. A 401 proves authentication is required; it does not validate an authenticated flow.",
   "checks": [
@@ -27,32 +27,32 @@
     {
       "method": "GET",
       "route": "/openapi/auth-service",
-      "status": 200,
-      "documentedPaths": 64
+      "status": null,
+      "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
     },
     {
       "method": "GET",
       "route": "/openapi/catalog-service",
-      "status": 200,
-      "documentedPaths": 73
+      "status": null,
+      "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
     },
     {
       "method": "GET",
       "route": "/openapi/order-service",
-      "status": 200,
-      "documentedPaths": 51
+      "status": null,
+      "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
     },
     {
       "method": "GET",
       "route": "/openapi/payment-service",
-      "status": 200,
-      "documentedPaths": 21
+      "status": null,
+      "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
     },
     {
       "method": "GET",
       "route": "/openapi/admin-service",
-      "status": 200,
-      "documentedPaths": 4
+      "status": null,
+      "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
     }
   ]
 }

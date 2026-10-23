@@ -3,3 +3,7 @@ dist
 .angular
 .npm-cache
 .git
+deploy/grafana/.env
+
+reports
+frontend-dist.tar.gz

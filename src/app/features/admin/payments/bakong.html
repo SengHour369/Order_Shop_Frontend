@@ -1,6 +1,9 @@
+@if (accessDenied()) {
+  <app-page-access-denied />
+} @else {
 
 <section class="callback-page">
-  <header><h2>Process Bakong Payment Callback</h2><nav><a routerLink="/admin">{{ "Dashboard" | translate }}</a><span>›</span><a routerLink="/admin/payments">{{ "Payments" | translate }}</a><span>›</span>Bakong Callback</nav></header>
+  <header><h2>Process Bakong Payment Callback</h2><nav><a routerLink="/admin" *appCanRoute="'/admin'">{{ "Dashboard" | translate }}</a><span>›</span><a routerLink="/admin/payments" *appCanRoute="'/admin/payments'">{{ "Payments" | translate }}</a><span>›</span>Bakong Callback</nav></header>
   <app-status [busy]="busy()" [error]="error()" />
   <div class="callback-grid">
     <div class="callback-main">
@@ -26,9 +29,11 @@
           @if(qrUrl()){<img class="qr-image" [src]="qrUrl()" alt="Bakong payment QR" />}
           @if(qrError()){<p role="alert" class="qr-error">{{ qrError() }}</p>}
           <button class="cb-button" type="button" [disabled]="qrBusy() || !qr.trim() || !md5.trim()" (click)="loadQr()">Load QR</button>
-          <div class="action-row"><a class="cb-button" routerLink="/admin/payments">{{ "Cancel" | translate }}</a><button class="cb-button primary" [disabled]="busy()"><app-icon name="refresh" />{{ busy() ? 'Verifying…' : 'Verify Callback' }}</button></div>
+          <div class="action-row"><a class="cb-button" routerLink="/admin/payments" *appCanRoute="'/admin/payments'">{{ "Cancel" | translate }}</a><button class="cb-button primary" [disabled]="busy()"><app-icon name="refresh" />{{ busy() ? 'Verifying…' : 'Verify Callback' }}</button></div>
         </form>
       </article>
     </aside>
   </div>
 </section>
+
+}

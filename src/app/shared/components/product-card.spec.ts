@@ -94,6 +94,31 @@ describe("Product card UI integration", () => {
     http.expectNone("/api/v1/cart/user/id/items?userId=7");
   });
 
+  it("uses available stock rather than reserved units and blocks adding them", () => {
+    const fixture = TestBed.createComponent(ProductCard);
+    fixture.componentRef.setInput("product", {
+      ...product, skus: [{ ...product.skus[1], quantity: 10,
+        inventory: { stock_qty: 10, reserved_qty: 10, available_qty: 0 } }],
+    });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.product-stock').textContent).toContain('Out of Stock');
+    expect(fixture.nativeElement.querySelector('button.primary').disabled).toBe(true);
+    fixture.componentInstance.add();
+    http.expectNone('/api/v1/cart/user/id/items?userId=7');
+  });
+
+  it("shows promotion name and original price when price already contains the discount", () => {
+    const fixture = TestBed.createComponent(ProductCard);
+    fixture.componentRef.setInput("product", {
+      ...product, skus: [{ ...product.skus[1], price: 180, originalPrice: 200, finalPrice: 180,
+        promotion: { originalPrice: 200, finalPrice: 180, promotionApplied: true, promotionName: 'Weekend offer' } }],
+    });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.discount').textContent).toContain('10%');
+    expect(fixture.nativeElement.querySelector('del').textContent).toContain('200.00');
+    expect(fixture.nativeElement.querySelector('.product-promotion').textContent).toContain('Weekend offer');
+  });
+
   it("shows request failure without displaying a cart success message", () => {
     const fixture = TestBed.createComponent(ProductCard);
     fixture.componentRef.setInput("product", product);

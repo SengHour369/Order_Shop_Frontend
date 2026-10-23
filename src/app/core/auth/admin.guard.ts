@@ -1,6 +1,8 @@
 import { inject } from "@angular/core";
 import { CanActivateFn, Router } from "@angular/router";
-import { AuthService } from "./auth.service";
-export const adminGuard: CanActivateFn = () =>
-  inject(AuthService).session()?.role === "ADMIN" ||
-  inject(Router).createUrlTree(["/admin"]);
+import { map } from "rxjs";
+import { PermissionService } from "./permission.service";
+export const adminGuard: CanActivateFn = () => {
+  const access = inject(PermissionService), router = inject(Router);
+  return access.load().pipe(map(loaded => loaded && access.isAdministrator() || router.createUrlTree(["/admin/access-denied"])));
+};

@@ -1,6 +1,9 @@
+@if (accessDenied()) {
+  <app-page-access-denied />
+} @else {
 <section class="user-editor">
-  <form #editForm="ngForm" (ngSubmit)="save()">
-    <header class="editor-toolbar"><a class="editor-button" routerLink="/admin/customers"><app-icon name="arrow-left" />Back to Customers</a><div><a class="editor-button" routerLink="/admin/customers">{{ 'Cancel' | translate }}</a><button class="editor-button primary" [disabled]="busy() || !user() || editForm.invalid">{{ createdId ? 'Retry Save' : 'Create Customer' }}</button><input #photoInput type="file" hidden accept="image/jpeg,image/png" (change)="choosePhoto($event)" /></div></header>
+  <form #editForm="ngForm" (ngSubmit)="save()" *appCan="'USER_MANAGE'">
+    <header class="editor-toolbar"><a class="editor-button" routerLink="/admin/customers" *appCanRoute="'/admin/customers'"><app-icon name="arrow-left" />Back to Customers</a><div><a class="editor-button" routerLink="/admin/customers" *appCanRoute="'/admin/customers'">{{ 'Cancel' | translate }}</a><button class="editor-button primary" [disabled]="busy() || !user() || editForm.invalid">{{ createdId ? 'Retry Save' : 'Create Customer' }}</button><input #photoInput type="file" hidden accept="image/jpeg,image/png" (change)="choosePhoto($event)" /></div></header>
     <app-status [busy]="busy()" [error]="error()" [message]="message()" />
     @if (user(); as current) {
       <fieldset class="editor-form-fields" [disabled]="busy()"><div class="editor-columns">
@@ -39,3 +42,5 @@
     }
   </form>
 </section>
+
+}

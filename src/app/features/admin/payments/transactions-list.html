@@ -1,8 +1,11 @@
+@if (accessDenied()) {
+  <app-page-access-denied />
+} @else {
 <section class="transactions-ui">
   <header class="transaction-heading">
     <div>
       <h2>{{ 'Transactions' | translate }}</h2>
-      <nav class="transaction-crumbs" aria-label="Breadcrumb"><a routerLink="/admin">{{ 'Dashboard' | translate }}</a><app-icon name="chevron" /><span>{{ 'Transactions' | translate }}</span></nav>
+      <nav class="transaction-crumbs" aria-label="Breadcrumb"><a routerLink="/admin" *appCanRoute="'/admin'">{{ 'Dashboard' | translate }}</a><app-icon name="chevron" /><span>{{ 'Transactions' | translate }}</span></nav>
       @if (customerId) { <p>Transactions for customer {{ customerId }}</p> }
     </div>
     <div class="heading-actions">
@@ -51,7 +54,7 @@
               <td><div class="transaction-method"><span [class]="'method-logo ' + methodBrand(row)">@switch (methodBrand(row)) { @case ('visa') { VISA } @case ('mastercard') { <i></i><i></i> } @case ('paypal') { P } @case ('stripe') { S } @case ('apple') { <app-icon name="card" /> } @default { <app-icon name="card" /> } }</span><span>{{ text(methodName(row)) }}</span>@if (account(row)) { <small>{{ account(row) }}</small> }</div></td>
               <td><span [class]="'transaction-badge ' + statusTone(row)">{{ statusLabel(row) }}</span></td>
               <td class="amount">{{ usd(field(row, 'amount')) }}</td>
-              <td class="action">@if (field(row, 'id') !== '') { <a class="view-transaction" [routerLink]="['/admin/transactions', field(row, 'id')]" [attr.aria-label]="'View transaction ' + text(field(row, 'transaction_no', 'transactionNo', 'id'))"><app-icon name="eye" /></a> }</td>
+              <td class="action">@if (field(row, 'id') !== '') { <a class="view-transaction" [routerLink]="['/admin/transactions', field(row, 'id')]" [attr.aria-label]="'View transaction ' + text(field(row, 'transaction_no', 'transactionNo', 'id'))" *appCanRoute="['/admin/transactions', field(row, 'id')]"><app-icon name="eye" /></a> }</td>
             </tr>
           } @empty {
             <tr><td colspan="8"><div class="transaction-empty"><app-icon name="list" /><strong>{{ busy() ? 'Loading transactions...' : error() ? 'Transactions unavailable' : 'No transactions found' }}</strong><span>{{ busy() ? 'Fetching your payment records.' : error() ? 'Try loading the records again.' : 'Try changing your search or filters.' }}</span></div></td></tr>
@@ -73,3 +76,5 @@
     </footer>
   </div>
 </section>
+
+}

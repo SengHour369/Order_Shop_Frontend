@@ -1,3 +1,4 @@
+import { PermissionService } from '../../../core/auth/permission.service';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of, Subject } from 'rxjs';
@@ -15,7 +16,7 @@ const records: Row[] = Array.from({ length: 24 }, (_, i) => ({
 }));
 function setup(customer = '') {
   const api = { allTransactions: vi.fn(() => of(records)) };
-  TestBed.configureTestingModule({ providers: [provideRouter([]),
+  TestBed.configureTestingModule({ providers: [provideRouter([]), { provide: PermissionService, useValue: { has: () => true, allows: () => true } },
     { provide: AdminApi, useValue: api },
     { provide: ActivatedRoute, useValue: { queryParamMap: of(convertToParamMap({ customer })) } },
   ] });

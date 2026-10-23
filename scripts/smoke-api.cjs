@@ -3,6 +3,9 @@ const fs = require("node:fs");
 const baseUrl = process.argv[2] || "http://localhost:8080";
 const routes = [
   "/actuator/health",
+  "/api/v1/storefront/access-settings",
+  "/api/v1/storefront/products",
+  "/api/v1/storefront/categories",
   "/api/v1/promotions/active?page=1&size=1",
   "/api/notifications/unread-count",
   "/api/v1/admin/session",

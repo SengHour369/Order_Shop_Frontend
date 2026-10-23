@@ -351,3 +351,7 @@
     height: 28px;
   }
 }
+
+/* Permission-filtered cards fill the available width without empty columns. */
+.dashboard-metrics { grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr)); }
+.dashboard-main-grid, .dashboard-bottom-grid { grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); }

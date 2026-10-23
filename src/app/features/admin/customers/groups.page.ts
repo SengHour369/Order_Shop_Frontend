@@ -1,3 +1,5 @@
+import { PageAccessDenied } from '../../../shared/components/page-access-denied';
+import { CanAccessDirective } from '../../../core/auth/can-access.directive';
 import { Component, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -7,7 +9,7 @@ import { PageState } from '../../../shared/utils/page-state';
 import { Icon } from '../../../shared/components/icon';
 import { Status } from '../../../shared/components/status';
 import { AdminApi, field, Row, text, usd } from '../api/admin.api';
-@Component({imports:[DatePipe,FormsModule,RouterLink,Icon,Status],templateUrl:'./groups.html',styleUrl:'./groups.css'})
+@Component({imports: [PageAccessDenied, CanAccessDirective, DatePipe,FormsModule,RouterLink,Icon,Status],templateUrl:'./groups.html',styleUrl:'./groups.css'})
 export class GroupsPage extends PageState {
  access=inject(PermissionService);private api=inject(AdminApi);
  rows=signal<Row[]>([]);query=signal('');statusFilter=signal('');typeFilter=signal('');page=signal(1);size=signal(10);filtersOpen=false;createdAfter=signal('');

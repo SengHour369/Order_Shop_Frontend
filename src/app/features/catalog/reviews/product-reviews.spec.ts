@@ -1,3 +1,6 @@
+import { LanguageService } from '../../../core/i18n/language.service';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ProductReviews, ProductReview } from './product-reviews';
 const rows: ProductReview[] = [
@@ -5,6 +8,7 @@ const rows: ProductReview[] = [
  {id:'2',author:'Sophie L.',rating:4,title:'Great headphones',body:'Good battery.',createdAt:'2026-10-04T12:00:00Z',verifiedPurchase:false,photos:[],helpfulCount:12},
 ];
 describe('Product reviews',()=>{
+ beforeEach(()=>{TestBed.configureTestingModule({providers:[provideHttpClient(),provideHttpClientTesting()]});TestBed.inject(LanguageService).setLanguage('en');});
  it('shows unavailable rather than fabricated ratings and disables persistence actions',()=>{
   const fixture=TestBed.createComponent(ProductReviews);fixture.detectChanges();
   expect(fixture.nativeElement.textContent).toContain('Reviews are currently unavailable.');

@@ -23,7 +23,10 @@ describe("Checkout retry identity", () => {
     const store = new CheckoutAttempt();
     const first = store.begin(7, 12, "BAKONG", "USD");
     const other = store.begin(8, 13, "COD", "USD");
+    store.attachOrder(7,11);
+    expect(new CheckoutAttempt().orderId(7)).toBe(11);
     store.clear(7);
+    expect(store.orderId(7)).toBeNull();
     expect(store.read(7)).toBeNull();
     expect(store.read(8)).toEqual(other);
     expect(store.begin(7, 12, "BAKONG", "USD").checkout_key).not.toBe(

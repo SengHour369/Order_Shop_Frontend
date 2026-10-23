@@ -1,3 +1,4 @@
+import { toChatProduct } from './customer-chat/chat-message';
 import { AssistantQuota } from './assistant-quota';
 import { LanguageSelect } from "../../core/i18n/language-select";
 import { TranslatePipe } from "../../core/i18n/translate.pipe";
@@ -19,6 +20,7 @@ import { Icon } from "../../shared/components/icon";
 
 export interface ChatMessage {
   requestKey?:string;
+  voiceTurnId?:string;
   feedback?:'up'|'down';
   role: "user" | "assistant";
   text: string;
@@ -239,10 +241,11 @@ export class AssistantPage extends PageState implements OnInit {
     return values.filter((value): value is Record<string, unknown> => !!value && typeof value === 'object' && Array.isArray((value as Record<string, unknown>)['skus']) && typeof (value as Record<string, unknown>)['name'] === 'string' && Number.isInteger((value as Record<string, unknown>)['id']))
       .map(value => {
         const skus = value['skus'] as Record<string, unknown>[];
-        const sku = skus.find(item => item['is_default'] === true) || skus[0];
+        const detail=toChatProduct(value);
+        const sku = skus.find(item=>item['id']===detail?.skuId) || skus[0];
         const images = value['images'] || value['main_image'];
         const number = (value: unknown) => value !== null && value !== undefined && Number.isFinite(Number(value)) ? Number(value) : null;
-        return { id: Number(value['id']), name: String(value['name']), description: typeof value['description'] === 'string' ? value['description'] : '', image: Array.isArray(images) && typeof images[0] === 'string' ? images[0] : '/images/product-placeholder.svg', skuId: number(sku?.['id']), price: number(sku?.['effectivePrice'] ?? sku?.['finalPrice'] ?? sku?.['basePrice'] ?? sku?.['price']), available: number(sku?.['available'] ?? sku?.['quantity']), sku: String(sku?.['sku'] || '') };
+        return { detail:detail || undefined, id: Number(value['id']), name: String(value['name']), description: typeof value['description'] === 'string' ? value['description'] : '', image: Array.isArray(images) && typeof images[0] === 'string' ? images[0] : '/images/product-placeholder.svg', skuId: number(sku?.['id']), price: number(sku?.['effectivePrice'] ?? sku?.['finalPrice'] ?? sku?.['basePrice'] ?? sku?.['price']), available: number(sku?.['available'] ?? sku?.['quantity']), sku: String(sku?.['sku'] || '') };
       });
   }
   async attachText(event: Event) {
@@ -323,7 +326,7 @@ export class AssistantPage extends PageState implements OnInit {
     this.mobileMenu = false;
     this.recentPanel()?.nativeElement.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
-  private scrollChat() {
+  protected scrollChat() {
     setTimeout(() => {
       const element = this.chatScroll()?.nativeElement;
       if (element) element.scrollTop = element.scrollHeight;

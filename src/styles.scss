@@ -3830,3 +3830,31 @@ html[lang="km"] .eyebrow, html[lang="km"] .card-header h2, html[lang="km"] .adm-
 @media (max-width: 650px) {
   .customer-experience.customer-checkout-page .mobile-nav { display: none; }
 }
+
+.product-stock {
+  margin: 8px 0;
+  color: #166534;
+  font-size: 13px;
+}
+.product-stock.unavailable { color: #b91c1c; }
+.product-promotion {
+  margin: 8px 0;
+  color: #b45309;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Keep checkout and its payment step in the same compact storefront shell. */
+.customer-experience.customer-checkout-page .category-nav,
+.customer-experience.customer-checkout-page .site-footer,
+.customer-experience.customer-checkout-page app-customer-chat,
+.customer-experience.customer-checkout-page .brand small,
+.customer-experience.customer-checkout-page .header-camera,
+.customer-experience.customer-checkout-page .header-actions app-language-select{display:none}
+.customer-experience.customer-checkout-page .site-main{max-width:1140px;margin:0 auto;padding:0 24px 28px}
+.customer-experience.customer-checkout-page .header-top{max-width:1140px;min-height:72px;margin:auto;gap:24px;padding:0 24px}
+.customer-experience.customer-checkout-page .header-search{background:#f4f6ff;border:0;border-radius:30px}
+.customer-experience.customer-checkout-page .header-actions>a>span:last-child{display:none}
+.customer-experience.customer-checkout-page .header-actions>a:last-child>span:last-child{display:inline}
+@media(max-width:650px){.customer-experience.customer-checkout-page .site-main{padding:0 16px 16px}.customer-experience.customer-checkout-page .header-top{min-height:62px;padding:0 16px;gap:12px}.customer-experience.customer-checkout-page .header-search{display:none}.customer-experience.customer-checkout-page .header-actions>a:last-child{display:none}.customer-experience.customer-checkout-page .header-actions>a[href="/account/wishlist"]{display:flex}.customer-experience.customer-checkout-page .brand{font-size:21px}}
+.customer-experience.customer-checkout-page .header-search{margin-left:0;max-width:none}.customer-experience.customer-checkout-page .header-search .search-button{background:transparent;color:#4e5b96}.customer-experience.customer-checkout-page .shop-header{background:#fff}.customer-experience.customer-checkout-page .header-actions{margin-left:auto}

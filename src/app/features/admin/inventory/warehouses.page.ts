@@ -1,3 +1,5 @@
+import { PageAccessDenied } from '../../../shared/components/page-access-denied';
+import { CanAccessDirective } from '../../../core/auth/can-access.directive';
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
 import { Component, inject, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
@@ -16,7 +18,7 @@ interface WarehouseLocation {
 }
 
 @Component({
-  imports: [TranslatePipe, FormsModule, RouterLink, Status, Icon],
+  imports: [PageAccessDenied, CanAccessDirective, TranslatePipe, FormsModule, RouterLink, Status, Icon],
   templateUrl: "./warehouses.html",
   styleUrls: ["../styles/reference.css", "../styles/operations.css"],
 })

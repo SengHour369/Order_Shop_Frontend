@@ -1,10 +1,13 @@
+@if (accessDenied()) {
+  <app-page-access-denied />
+} @else {
 <section class="reference-page">
   <header class="adm-page-head">
     <div>
       <h2>{{ "Returns" | translate }}</h2>
       <p>Process and track customer product returns.</p>
       <div class="adm-crumbs">
-        <a routerLink="/admin">{{ "Dashboard" | translate }}</a
+        <a routerLink="/admin" *appCanRoute="'/admin'">{{ "Dashboard" | translate }}</a
         ><span>›</span>{{ "Returns" | translate }}
       </div>
     </div>
@@ -17,9 +20,9 @@
       <div>
         <h2>Create Return</h2>
         <div class="adm-crumbs">
-          <a routerLink="/admin">{{ "Dashboard" | translate }}</a>
+          <a routerLink="/admin" *appCanRoute="'/admin'">{{ "Dashboard" | translate }}</a>
           <span>›</span>
-          <a routerLink="/admin/returns">{{ "Returns" | translate }}</a>
+          <a routerLink="/admin/returns" *appCanRoute="'/admin/returns'">{{ "Returns" | translate }}</a>
           <span>›</span>
           <span>Create Return</span>
         </div>
@@ -160,11 +163,11 @@
         <thead><tr><th>{{ "Return ID" | translate }}</th><th>{{ "Order" | translate }}</th><th>{{ "Customer" | translate }}</th><th>{{ "Product" | translate }}</th><th>{{ "Type" | translate }}</th><th>{{ "Reason" | translate }}</th><th>{{ "Status" | translate }}</th><th class="amount">{{ "Amount" | translate }}</th><th>{{ "Actions" | translate }}</th></tr></thead>
         <tbody>
           @for(row of visible(); track row['return_id']) {
-            <tr><td class="return-id">{{ text(row['return_id']) }}</td><td><a [routerLink]="['/admin/returns',row['return_id']]">{{ text(row['order_no']) }}</a></td><td>{{ customerName(row) }}</td>
+            <tr><td class="return-id">{{ text(row['return_id']) }}</td><td><a [routerLink]="['/admin/returns',row['return_id']]" *appCanRoute="['/admin/returns',row['return_id']]">{{ text(row['order_no']) }}</a></td><td>{{ customerName(row) }}</td>
             <td>{{ text(field(row,'product_name') || productsOf(row)[0]?.['product_name']) }}</td>
             <td><span class="return-type" [attr.data-type]="row['return_type']">{{ pretty(row['return_type']) }}</span></td><td class="reason" [title]="(text(row['reason'])) | translate">{{ text(row['reason']) }}</td>
             <td><span [class]="'reference-badge ' + returnTone(row)">{{ pretty(row['status']) }}</span></td><td class="amount">{{ usd(row['amount']) }}</td>
-            <td><a class="adm-btn icon" [routerLink]="['/admin/returns',row['return_id']]" aria-label="View return"><app-icon name="eye" /></a></td></tr>
+            <td><a class="adm-btn icon" [routerLink]="['/admin/returns',row['return_id']]" aria-label="View return" *appCanRoute="['/admin/returns',row['return_id']]"><app-icon name="eye" /></a></td></tr>
           } @empty {<tr><td colspan="9" class="returns-empty">{{ busy() ? 'Loading returns...' : 'No returns found.' }}</td></tr>}
         </tbody>
       </table>
@@ -200,3 +203,5 @@
     </footer>
   </section>
 </section>
+
+}

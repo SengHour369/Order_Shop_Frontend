@@ -3,7 +3,7 @@
   #launcher="dragLauncher"
   class="ai-launcher"
   appDragLauncher
-  [hidden]="opened()"
+  [hidden]="opened() || pageMode()"
   type="button"
   (click)="open()"
   aria-label="Open E-Shop AI assistant. Drag to move, or use Alt and arrow keys."
@@ -13,20 +13,27 @@
 >
   <span class="bot-avatar" aria-hidden="true"><app-icon name="robot" /></span>
 </button>
-<app-launcher-welcome [position]="launcher.position()" [dismissed]="opened()" />
+<app-launcher-welcome [position]="launcher.position()" [dismissed]="opened() || pageMode()" />
 <dialog
   #chatDialog
   id="customer-ai-chat"
   class="ai-chat"
+  [class.page-chat]="pageMode()"
+  [attr.open]="pageMode() ? '' : null"
   aria-labelledby="ai-chat-title"
-  (close)="opened.set(false)"
+  (close)="live.close(); voice.reset(); opened.set(false)"
+  (cancel)="live.close(); voice.reset()"
 >
+  <div class="chat-shopbar"><a routerLink="/" (click)="close()" class="chat-brand"><app-icon name="bag" />E-Shop</a><div class="chat-search"><app-icon name="search"/><input aria-label="Search products in assistant" placeholder="Search products, brands, categories…" [(ngModel)]="search" (keydown.enter)="searchProducts()"/><button type="button" (click)="searchProducts()" aria-label="Search products"><app-icon name="search"/></button></div><a routerLink="/cart" (click)="close()" aria-label="Shopping cart" class="chat-cart"><app-icon name="cart"/>@if(store.cartCount()){<span>{{store.cartCount()}}</span>}</a><span class="customer-avatar">{{initials()}}</span><strong class="chat-account">{{auth.session()?.username||'Guest'}}</strong></div>
   <header class="chat-header">
     <span class="bot-avatar"><app-icon name="robot" /></span>
     <div>
       <h2 id="ai-chat-title">E-Shop AI Assistant</h2>
-      <p>Your shopping assistant · Ready to help</p>
+      <p class="assistant-status"><span></span>Ready to help</p><p class="assistant-description">I can help you find products, place orders, make payments, track orders and more.</p>
     </div>
+    <button type="button" class="chat-icon" (click)="voice.reset(); live.open()" [disabled]="!auth.session() || busy()" aria-label="Call AI">☎ {{productText('Call AI','ហៅ AI')}}</button>
+    <button class="header-new-chat" type="button" (click)="newChat()" [disabled]="busy()"><app-icon name="plus"/>New Chat</button>
+    <button class="chat-icon menu-toggle" type="button" (click)="menuOpen.set(!menuOpen())" aria-label="Assistant options" [attr.aria-expanded]="menuOpen()">⋮</button>
     <button
       class="chat-icon"
       type="button"
@@ -37,7 +44,7 @@
     </button>
   </header>
   @if(auth.session()){<div class="daily-quota" role="status"><strong>{{quota.label()}}</strong>@if(quota.exhausted()){<p>You have reached your daily AI request limit ({{quota.value()?.used}}/{{quota.value()?.dailyLimit}}). Please try again tomorrow.</p><small>Resets: {{quota.value()?.resetAt}}</small>}@if(quota.error()){<small>{{quota.error()}}</small>}</div>}
-  <div class="chat-toolbar">
+  <div class="chat-toolbar" [class.expanded]="menuOpen()">
     <button type="button" (click)="newChat()" [disabled]="busy()">
       <app-icon name="plus" />{{ "New chat" | translate }}</button
     ><label class="chat-photo">{{ productText('Upload photo', 'បញ្ចូលរូបថត') }}<input type="file" accept="image/jpeg,image/png,image/webp" (change)="photo($event)" [disabled]="busy()" /></label>
@@ -51,6 +58,7 @@
       <option value="km">ខ្មែរ</option>
     </select>
   </div>
+  <div class="chat-workspace"><div class="chat-main">
   <div
     #chatLog
     class="chat-log"
@@ -63,7 +71,7 @@
     <article class="chat-message assistant">
       <span class="bot-avatar small"><app-icon name="robot" /></span>
       <div class="message-bubble">
-        Hi! 👋 I’m your E-Shop AI assistant. How can I help you today?
+        Hi! I’m your E-Shop AI Assistant.<br/>Is there anything I can do to help you?
       </div>
     </article>
     <div class="chat-shortcuts" aria-label="Suggested questions">
@@ -71,7 +79,7 @@
         <button
           type="button"
           [class]="'shortcut ' + shortcut.tone"
-          (click)="choose(shortcut.prompt)"
+          (click)="runShortcut(shortcut)"
           [disabled]="busy()"
         >
           <app-icon [name]="shortcut.icon" /><span>{{ shortcut.label }}</span>
@@ -85,9 +93,12 @@
           <span class="bot-avatar small"><app-icon name="robot" /></span>
         }
         <div class="message-content">
-          <div class="message-bubble">@if(message.role === 'assistant'){<app-rich-message [text]="message.text"/>}@else{ {{message.text}} }</div>
-          @for (product of message.products || []; track product.id) {
+          <div class="message-bubble">@if(message.role === 'assistant'){<app-rich-message [text]="message.text"/>}@else{ {{message.text}} }</div>@if(message.role === 'assistant' && message.text){<div class="voice-playback"><button type="button" (click)="voice.play(message.text)" [disabled]="live.isActive() || voice.recording() || voice.pending()" aria-label="Play assistant response"><app-icon name="speaker"/> Play</button>@if(voice.speaking() === message.text){<button type="button" (click)="voice.togglePause()">{{voice.paused() ? 'Resume' : 'Pause'}}</button><button type="button" (click)="voice.stopSpeech()">Stop</button>}</div>}<time class="message-time">{{time(message.time)}}</time>
+          @if(message.products?.length){<section class="product-collection" aria-label="Product results"><header class="collection-heading"><span class="collection-icon"><app-icon name="bag" /></span><div><h3>{{productText('Products','ផលិតផល')}}</h3><small>{{displayedProducts(message).length}} {{productText('products shown','ផលិតផលបង្ហាញ')}}</small></div><label class="stock-filter"><input type="checkbox" [(ngModel)]="message.inStockOnly" (ngModelChange)="syncProductOrder(message)" />{{productText('In stock only','មានក្នុងស្តុក')}}</label><select aria-label="Sort product results" [ngModel]="message.productSort || 'relevance'" (ngModelChange)="message.productSort=$event; syncProductOrder(message)"><option value="relevance">{{productText('Relevance','ភាពពាក់ព័ន្ធ')}}</option><option value="price-asc">Price: Low to high</option><option value="price-desc">Price: High to low</option><option value="name">Name</option></select><a routerLink="/shop" (click)="close()">{{productText('View all','មើលទាំងអស់')}}</a></header>
+          <div class="chat-products" [class.single-product]="message.products.length === 1">
+          @for (product of displayedProducts(message); track product.id) {
             <div class="chat-product">
+              <button type="button" class="product-save" (click)="saveProduct(product)" [disabled]="busy()" [attr.aria-label]="store.has(product.id)?'Remove from wishlist':'Save to wishlist'" [attr.aria-pressed]="store.has(product.id)"><app-icon name="heart"/></button>
               <button type="button" class="chat-detail" (click)="details(product)" [disabled]="busy()"
                 ><img
                   appProductImage
@@ -99,27 +110,30 @@
                 <button type="button" class="chat-detail" (click)="details(product)" [disabled]="busy()"
                   ><strong>{{ product.name }}</strong></button
                 >
+                @if(product.brand){<small>Brand: {{product.brand}}</small>}@if(product.category){<small>{{product.category}}</small>}@if(product.productCode){<small>{{product.productCode}}</small>}
+                @if(product.description){<p class="product-description">{{product.description}}</p>}
                 <p class="chat-price">
                   @if (product.price !== undefined) {
-                    <b>{{ product.price | currency: "USD" }}</b>
+                    <b>{{ product.price | currency: (product.currency || "USD") }}</b>
                   }
                   @if (
                     product.originalPrice !== undefined &&
                     product.price !== undefined &&
                     product.originalPrice > product.price
                   ) {
-                    <del>{{ product.originalPrice | currency: "USD" }}</del>
+                    <del>{{ product.originalPrice | currency: (product.currency || "USD") }}</del>
                   }
                 </p>
                 @if(message.cardType === 'ProductCard') {
                   <div class="chat-gallery">@for(image of product.images || []; track image){<button type="button" (click)="product.image=image"><img appProductImage [src]="image" [alt]="product.name" /></button>}</div>
                   @for(attribute of product.attributes || []; track attribute.name){<small>{{attribute.name}}: {{attribute.values.join(', ')}}</small>}
                 }
+                @if(product.discount){<small>Discount: {{product.discount | currency:(product.currency || "USD")}}</small>}@if(product.promotionEndAt){<small>Valid until: {{product.promotionEndAt}}</small>}
                 @if (product.promotion) { <small class="chat-promotion">{{ product.promotion }}</small> }
                 <button type="button" class="chat-detail" (click)="details(product)" [disabled]="busy()">{{ productText('View Details', 'មើលព័ត៌មានលម្អិត') }}</button>
                 @if (product.available !== undefined) {
                   <small>{{
-                    product.available > 0 ? productText("In stock", "មានក្នុងស្តុក") : productText("Out of stock", "អស់ពីស្តុក")
+                    product.available > 0 ? productText("In stock", "មានក្នុងស្តុក") + ' · ' + product.available : productText("Out of stock", "អស់ពីស្តុក")
                   }}</small>
                 }
                 @if (product.variants.length > 1) { <select class="chat-variant" aria-label="Select product variant" [ngModel]="product.skuId" (ngModelChange)="selectVariant(product,$event)" [disabled]="cartLocked()">@for (variant of product.variants; track variant.id) { <option [ngValue]="variant.id">{{ variant.label }}{{ (variant.available ?? 0) < 1 ? ' · Unavailable' : '' }}</option> }</select> }
@@ -141,9 +155,11 @@
               }
             </div>
           }
+          </div>
+          @if(!displayedProducts(message).length){<p class="collection-empty" role="status">No matching products in these results. Clear the stock filter to see all.</p>}</section>}
           @for(candidate of message.visualCandidates || []; track candidate.productId){<button type="button" class="chat-more" [disabled]="busy()" (click)="details({id:candidate.productId})">{{candidate.name}} · {{candidate.confidence * 100 | number:'1.0-0'}}%</button>}
           @if(message.confirmationId){<div class="confirmation-note"><p>{{message.confirmationParameters}}</p><button type="button" [disabled]="busy()" (click)="confirmAction(message)">{{productText('Confirm action', 'បញ្ជាក់សកម្មភាព')}}</button><button type="button" [disabled]="busy()" (click)="message.confirmationId=undefined">{{productText('Cancel', 'បោះបង់')}}</button></div>}
-          @if(message.paymentOrderId){<app-payment-qr [orderId]="message.paymentOrderId!" />}
+          @if(message.paymentOrderId){<app-payment-qr [chatLayout]="true" [orderId]="message.paymentOrderId!" />}
           @if (message.products?.length) {
             <a class="chat-more" routerLink="/shop" (click)="close()"
               >View more products <app-icon name="arrow"
@@ -155,10 +171,12 @@
           @if (message.cardType === "CheckoutGuide" || message.cardType === "PaymentStatusCard") {
             <a class="chat-more" routerLink="/account/payments" (click)="close()">{{ "Payment Information" | translate }} <app-icon name="arrow" /></a>
           }
-          @for (row of message.rows || []; track $index) {
+          @if(message.orderId){<app-chat-order [orderId]="message.orderId!" [language]="language" />}
+          @if(message.ordersList){<app-customer-orders [embedded]="true" [language]="language" />}
+          @if(message.data && !message.paymentOrderId && !message.orderId && !message.ordersList){<app-assistant-result [data]="message.data" [intent]="message.intent || ''" (openRecord)="trackingOrderId.set($event)"/>}
+          @for (row of (message.data ? [] : message.rows || []); track $index) {
             <div class="chat-record">
-              <strong>{{ row.title }}</strong
-              ><span>{{ row.detail }}</span>@if(row.orderId){<button type="button" (click)="trackingOrderId.set(row.orderId!)">View details here</button>}
+              @if(!message.data){<strong>{{ row.title }}</strong><span>{{ row.detail }}</span>@if(row.orderId){<button type="button" (click)="trackingOrderId.set(row.orderId!)">View details here</button>}}
             </div>
           }
           @for (suggestion of message.suggestions || []; track suggestion) {
@@ -171,7 +189,7 @@
               {{ suggestion }}
             </button>
           }
-        </div>
+        </div>@if(message.role === "user"){<span class="customer-avatar small">{{initials()}}</span>}
       </article>
     }
     @if (busy()) {
@@ -201,7 +219,18 @@
     }
     @if (checkoutVisible()) { <app-chat-checkout [language]="language" [labels]="cartLabels()" (navigate)="close()" /> }
   </div>
+  <div class="composer-shortcuts">@for(action of shortcuts;track action.label){<button type="button" (click)="runShortcut(action)" [disabled]="busy()"><app-icon [name]="action.icon"/>{{action.label}}</button>}</div>
+  <div class="voice-options"><small>Audio is sent to Google for transcription. Avoid private or banking details; review the draft before Send.</small>
+    <label>Voice language <select [(ngModel)]="voiceLanguage" [disabled]="live.isActive() || voice.recording() || voice.pending()"><option value="en">English</option><option value="km">ខ្មែរ</option></select></label>
+    <label><input type="checkbox" [ngModel]="voice.autoPlay()" (ngModelChange)="voice.autoPlay.set($event); !$event && voice.stopSpeech()"/> Read new replies aloud</label>
+  </div>
+  @if(voice.recording()){<div class="voice-status" role="status"><span>Listening · {{voice.seconds()}} / 60s</span><span class="voice-wave" aria-hidden="true">@for(level of voice.levels(); track $index){<i [style.height.px]="level"></i>}</span><button type="button" (click)="voice.reset()">Discard</button></div>}
+  @if(voice.pending()){<p class="voice-status" role="status">Preparing voice transcript… <button type="button" (click)="voice.reset()">Cancel</button></p>}
+  @if(voice.error()){<p class="voice-error" role="alert">{{voice.error()}}</p>}
+  @if(voiceDraft()){<p class="voice-status" role="status">Review and edit your transcript below, then press Send.</p>}
   <form class="chat-composer" (ngSubmit)="send()">
+    <label class="composer-attachment" aria-label="Attach a product photo"><app-icon name="camera"/><input type="file" accept="image/jpeg,image/png,image/webp" (change)="photo($event)" [disabled]="busy()"/></label>
+    <button type="button" class="voice-mic" (click)="recordVoice()" [disabled]="live.isActive() || busy() || voice.pending() || quota.exhausted()" [attr.aria-label]="voice.recording() ? 'Stop recording' : 'Record voice message'" [attr.aria-pressed]="voice.recording()"><app-icon [name]="voice.recording() ? 'stop' : 'mic'"/></button>
     <textarea
       #messageInput
       name="chatPrompt"
@@ -216,7 +245,7 @@
     ><button
       type="submit"
       aria-label="Send message"
-      [disabled]="busy() || quota.exhausted() || !prompt.trim()"
+      [disabled]="busy() || quota.exhausted() || !prompt.trim() || voice.recording() || voice.pending() || prompt.length > 4000"
     >
       <app-icon name="send" />
     </button>
@@ -224,4 +253,6 @@
   <p class="chat-footnote">
     AI can make mistakes. Check product and order details.
   </p>
+  </div><aside class="chat-sidebar" [class.mobile-visible]="menuOpen()"><section><h3>Chat History</h3><p class="history-note">Conversations in this session</p>@for(entry of history();track entry.id){<button type="button" class="history-entry" (click)="openHistory(entry.id)" [disabled]="busy()" [class.current]="entry.id===conversationId">@if(entry.image){<img appProductImage [src]="entry.image" alt=""/>}@else{<app-icon name="help"/>}<span><strong>{{entry.title}}</strong><small>{{time(entry.time)}}</small></span></button>}@empty{<p class="history-empty">Your conversations will appear here.</p>}</section><section class="sidebar-actions"><h3>Quick Actions</h3>@for(action of shortcuts.slice(1);track action.label){<button type="button" (click)="runShortcut(action)" [disabled]="busy()"><app-icon [name]="action.icon"/>{{action.label}}</button>}</section></aside></div>
+<app-voice-call [call]="live" (retry)="startCall()" />
 </dialog>

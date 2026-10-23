@@ -1,3 +1,4 @@
+import { PageAccessDenied } from '../../../shared/components/page-access-denied';
 import { Component, DestroyRef, OnChanges, OnInit, SimpleChanges, computed, inject, input, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -26,11 +27,11 @@ export function executionCompleted(record: ExecutionRecord) {
   return record.history?.executions.map(attempt=>attempt.completedAt).filter((value):value is string=>!!value).sort().at(-1)??'';
 }
 export function executionReport(records: ExecutionRecord[]) {
-  const lines = [['Batch ID','Import types','Owner ID','Started at','Completed at','Status','Confirmed created rows','Total rows'],
-    ...records.map(record=>[record.batch.id, executionTypes(record).join(', '), record.batch.ownerId, executionStarted(record), executionCompleted(record), record.batch.status, record.preview?.summary.statuses['CREATED']??'',record.preview?.summary.totalRows??''])];
+  const lines = [['Batch ID','Filename','Source type','Entity','Approved by','Import types','Owner ID','Started at','Completed at','Status','Confirmed applied rows','Total rows'],
+    ...records.map(record=>[record.batch.id, record.batch.filename??'',record.batch.sourceType??'EXCEL_IMPORT',record.batch.entityType??'',record.batch.reviewerId??'',executionTypes(record).join(', '), record.batch.ownerId, executionStarted(record), executionCompleted(record), record.batch.status, record.preview?.summary.statuses['CREATED']??'',record.preview?.summary.totalRows??''])];
   return '\uFEFF'+lines.map(line=>line.map(value=>{let text=String(value);if(/^\s*[=+@-]/.test(text))text="'"+text;return '"'+text.replaceAll('"','""')+'"';}).join(',')).join('\r\n');
 }
-@Component({selector:'app-import-executions',imports:[DatePipe,FormsModule,Icon,AiImportComponent,ImportValuesComponent,ImportActivityComponent],templateUrl:'./import-executions.html',styleUrl:'./import-executions.css'})
+@Component({selector:'app-import-executions',imports: [PageAccessDenied, DatePipe,FormsModule,Icon,AiImportComponent,ImportValuesComponent,ImportActivityComponent],templateUrl:'./import-executions.html',styleUrl:'./import-executions.css'})
 export class ImportExecutionsComponent extends PageState implements OnInit,OnChanges {
   initialBatchId=input('');
   private api=inject(AiImportsApi);
@@ -112,7 +113,7 @@ export class ImportExecutionsComponent extends PageState implements OnInit,OnCha
   }
   statusLabel(status:string){return ({COMPLETED:'Completed',PARTIAL_SUCCESS:'Completed with issues',FAILED:'Failed',PROCESSING:'Processing',APPROVED:'Awaiting execution'} as Record<string,string>)[status]??status;}
   statusTone(status:string){return status==='COMPLETED'?'success':status==='FAILED'?'failed':status==='PARTIAL_SUCCESS'?'warning':'neutral';}
-  batchName(id:string){return 'Workbook '+id.slice(0,8);}
+  batchName(id:string){return this.records().find(record=>record.batch.id===id)?.batch.filename??(this.detail()?.batch.id===id?this.detail()?.batch.filename:undefined)??'Request '+id.slice(0,8);}
   selectedRecord(){const preview=this.detail(),history=this.detailHistory();return preview?{batch:preview.batch,preview,history}:null;}
   count(status:string){return this.detail()?.summary.statuses[status]??0;}
   importedRows(){return this.detail()?.rows.content.filter(row=>row.status==='CREATED'&&!!row.resourceId)??[];}

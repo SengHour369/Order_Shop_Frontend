@@ -6,7 +6,6 @@ const batch:ImportBatch={id:'11111111-1111-4111-8111-111111111111',revision:8,st
 describe('Excel import API contracts',()=>{
  let http:HttpTestingController;let api:AiImportsApi;
  beforeEach(()=>{TestBed.configureTestingModule({providers:[provideHttpClient(),provideHttpClientTesting()]});http=TestBed.inject(HttpTestingController);api=TestBed.inject(AiImportsApi);});afterEach(()=>http.verify());
- it('uploads workbook bytes as multipart without serializing cells into prompts',()=>{const file=new File(['bytes'],'categories.xlsx');api.upload(file).subscribe();const r=http.expectOne('/api/ai/imports/upload');expect(r.request.method).toBe('POST');expect(r.request.body.get('file')).toBe(file);expect(r.request.headers.has('Content-Type')).toBe(false);r.flush(batch);});
  it('creates a staged row using a stable client row ID, current version and string values',()=>{
   api.addRow(batch,'sheet','row-uuid',{name:'New category',status:'true'}).subscribe();const request=http.expectOne('/api/ai/imports/'+batch.id+'/sheets/sheet/rows');
   expect(request.request.method).toBe('POST');expect(request.request.body).toEqual({version:8,rowId:'row-uuid',values:{name:'New category',status:'true'}});request.flush({batch:{...batch,revision:9},row:{id:'row-uuid'}});
@@ -32,4 +31,10 @@ describe('Excel import API contracts',()=>{
   const preview=http.expectOne(r=>r.url.endsWith('/images/image'));
   expect(preview.request.responseType).toBe('blob');preview.flush(new Blob(['image']));
  });
+ it('stages manual product DTO fields and files through the shared approval engine',()=>{
+  const file=new File(['bytes'],'photo.png',{type:'image/png'});api.stageProduct({name:'Product',description:'Description',is_active:true,sub_category_id:3,skus:[{price:12,quantity:0}]},[file],42,7).subscribe();
+  const request=http.expectOne('/api/ai/imports/manual-product');expect(request.request.method).toBe('POST');expect(request.request.body.getAll('files')).toEqual([file]);
+  const row=JSON.parse(request.request.body.get('row'));expect(row.tool).toBe('PRODUCT_BULK_UPDATE');expect(row.values).toMatchObject({id:'42',expectedVersion:'7',name:'Product',subCategoryId:'3',isActive:'true'});expect(JSON.parse(row.values.skus)).toEqual([{price:12,quantity:0}]);expect(row.values.promotionPrice).toBeUndefined();expect(row.values.brand).toBeUndefined();request.flush(batch);
+ });
+
 });

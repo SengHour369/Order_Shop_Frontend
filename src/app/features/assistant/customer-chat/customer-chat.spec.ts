@@ -41,6 +41,62 @@ describe("Customer floating AI chat", () => {
         fixture.detectChanges();
         return fixture;
     }
+    it('keeps a voice transcript editable until Send and preserves the conversation', () => {
+        const fixture=create(), chat=fixture.componentInstance;
+        chat.conversationId='existing-conversation';
+        chat.voiceLanguage='km';
+        vi.spyOn(chat.voice,'start').mockImplementation(async (_language, review) => review('តម្លៃប៉ុន្មាន?'));
+        chat.recordVoice();
+        expect(chat.prompt).toBe('តម្លៃប៉ុន្មាន?');
+        expect(chat.voiceDraft()).toBe(true);
+        expect(chat.messages()).toHaveLength(0);
+        http.expectNone('/api/ai/chat');
+        chat.prompt='តើផលិតផលនេះមានតម្លៃប៉ុន្មាន?';
+        chat.send();
+        const request=http.expectOne('/api/ai/chat');
+        expect(request.request.body.message).toBe('តើផលិតផលនេះមានតម្លៃប៉ុន្មាន?');
+        expect(request.request.body.conversationId).toBe('existing-conversation');
+        expect(request.request.body.language).toBe('km');
+        request.flush(response());
+        expect(chat.voiceDraft()).toBe(false);
+    });
+    it('prevents submission during voice recording or transcription', () => {
+        const chat=create().componentInstance;
+        chat.prompt='Find shoes';
+        chat.voice.recording.set(true); chat.send();
+        chat.voice.recording.set(false); chat.voice.pending.set(true); chat.send();
+        http.expectNone('/api/ai/chat');
+        expect(chat.prompt).toBe('Find shoes');
+        chat.voice.pending.set(false);
+    });
+    it('renders a My Orders reply as the native embedded customer table without raw payloads',()=>{
+        session.set({id:7,username:'Customer',email:'customer@example.test',role:'USER',access_token:'test',refresh_token:'test'});
+        const fixture=create(),chat=fixture.componentInstance;
+        chat.prompt='Show my orders';chat.send();
+        http.expectOne('/api/ai/chat').flush(response([{id:30,order_number:'ORD-30',status:'DELIVERED'}],'OrderList'));
+        fixture.detectChanges();
+        http.expectOne(r=>r.url==='/api/v1/orders/user/history'&&r.params.get('userId')==='7').flush({content:[{data:{id:30,order_number:'ORD-30',status:'DELIVERED',order_date:'2026-10-22T10:00:00',total_amount:39,paymentMethod:'KHQR',items:[]}}],totalPages:1});
+        fixture.detectChanges();
+        const table=fixture.nativeElement.querySelector('app-customer-orders table');
+        expect(table.textContent).toContain('ORD-30');expect(table.textContent).toContain('View Details');
+        expect(fixture.nativeElement.querySelector('pre,code')).toBeNull();
+        expect(fixture.nativeElement.textContent).not.toContain('"order_number"');
+    });
+    it('archives real conversations and reopens them without charging another AI request',()=>{
+        const fixture=create(),chat=fixture.componentInstance;
+        chat.prompt='Find a laptop';chat.send();http.expectOne('/api/ai/chat').flush(response());
+        expect(chat.history()[0].title).toBe('Find a laptop');
+        chat.newChat();expect(chat.messages()).toEqual([]);
+        chat.openHistory('conversation-1');expect(chat.messages()).toHaveLength(2);
+        expect(chat.conversationId).toBe('conversation-1');http.expectNone('/api/ai/chat');
+    });
+    it('clears visible conversation history on an account change',()=>{
+        const fixture=create(),chat=fixture.componentInstance;
+        chat.prompt='Guest search';chat.send();http.expectOne('/api/ai/chat').flush(response());
+        expect(chat.history()).toHaveLength(1);
+        session.set({id:9,username:'Other',email:'other@example.test',role:'USER',access_token:'other',refresh_token:'other'});fixture.detectChanges();
+        expect(chat.history()).toEqual([]);expect(chat.messages()).toEqual([]);
+    });
     it('does not open or send a chat for the welcome hint and reuses the same dialog after closing',()=>{
         const fixture=create(),chat=fixture.componentInstance;
         const dialog=fixture.nativeElement.querySelector('dialog');
@@ -136,6 +192,22 @@ describe("Customer floating AI chat", () => {
         expect(card.querySelector('button.chat-detail')).not.toBeNull();
         http.expectNone(r => r.url.includes('/items'));
     });
+    it('sorts and filters genuine product cards while leaving unknown prices unavailable',async()=>{
+        const fixture=create(),chat=fixture.componentInstance;chat.prompt='Find shoes';chat.send();
+        http.expectOne('/api/ai/chat').flush(response([
+          {id:1,name:'Expensive shoes',skus:[{id:11,basePrice:100,available:3}]},
+          {id:2,name:'Affordable shoes',skus:[{id:12,basePrice:50,available:0}]},
+          {id:3,name:'Unknown price shoes',skus:[{id:13,available:2}]}
+        ],'ProductList'));fixture.detectChanges();
+        await fixture.whenStable();
+        const sorting=fixture.nativeElement.querySelector('[aria-label="Sort product results"]') as HTMLSelectElement;
+        sorting.value='price-asc';sorting.dispatchEvent(new Event('change'));await fixture.whenStable();fixture.detectChanges();
+        let cards=fixture.nativeElement.querySelectorAll('.chat-products .chat-product');
+        expect(cards[0].textContent).toContain('Affordable shoes');expect(cards[2].textContent).toContain('Unknown price shoes');
+        (fixture.nativeElement.querySelector('.stock-filter input') as HTMLInputElement).click();await fixture.whenStable();fixture.detectChanges();cards=fixture.nativeElement.querySelectorAll('.chat-products .chat-product');
+        expect(cards.length).toBe(2);expect(cards[0].textContent).toContain('Expensive shoes');
+        expect(fixture.nativeElement.querySelector('.collection-heading').textContent).toContain('2 products shown');
+    });
     it('never offers add to cart for unavailable stock', () => {
         const fixture = create(), chat = fixture.componentInstance;
         chat.opened.set(true); chat.prompt = 'Find phone'; chat.send();
@@ -146,12 +218,23 @@ describe("Customer floating AI chat", () => {
         chat.add(chat.messages()[1].products![0]);
         http.expectNone(r => r.url.includes('/items'));
     });
+    it('keeps product cards usable with a compact call bar and routes clicks into the same call',()=>{
+        const fixture=create(),chat=fixture.componentInstance;chat.opened.set(true);chat.conversationId='existing-chat';
+        chat.live.status.set('LISTENING');chat.live.opened.set(false);
+        vi.spyOn(chat.live,'isConnected').mockReturnValue(true);const selected=vi.spyOn(chat.live,'selectProduct').mockResolvedValue();
+        chat.messages.set([{role:'assistant',text:'Actual catalog',products:[{id:24,name:'Actual product',image:'/real.png',quantity:1,skuId:88,available:3,variants:[{id:88,label:'Blue',available:3},{id:89,label:'Black',price:80,available:2}]}]}]);
+        fixture.detectChanges();
+        expect(fixture.nativeElement.querySelector('.call-bar')).not.toBeNull();expect(fixture.nativeElement.querySelector('section.call')).toBeNull();
+        chat.details(chat.messages()[0].products![0]);expect(selected).toHaveBeenCalledWith(24,88);
+        chat.selectVariant(chat.messages()[0].products![0],89);expect(selected).toHaveBeenCalledWith(24,89);expect(chat.messages()[0].products![0].price).toBe(80);
+        http.expectNone('/api/v1/storefront/products/24');expect(chat.conversationId).toBe('existing-chat');chat.live.end();
+    });
     it('loads actual details and SKU attributes inside the conversation', () => {
         const fixture = create(), chat = fixture.componentInstance;
         chat.details({id:24});
-        const request = http.expectOne('/api/v1/products/get/all');
-        expect(request.request.body.criteria_value).toBe('24');
-        request.flush({data:{id:24,name:'Phone',description:'Catalog description',main_image:['/phone.png','/back.png'],skus:[{id:88,price:300,finalPrice:240,inventory:{availableQuantity:2},quantity:8,attributes:[{name:'Color',attributes:[{value:'Blue'}]}]}]}});
+        const request = http.expectOne('/api/v1/storefront/products/24');
+        expect(request.request.method).toBe('GET');
+        request.flush({id:24,name:'Phone',description:'Catalog description',main_image:['/phone.png','/back.png'],skus:[{id:88,price:300,finalPrice:240,inventory:{availableQuantity:2},quantity:8,attributes:[{name:'Color',attributes:[{value:'Blue'}]}]}]});
         fixture.detectChanges();
         expect(chat.messages()[0].products![0].available).toBe(2);
         expect(fixture.nativeElement.textContent).toContain('Color: Blue');

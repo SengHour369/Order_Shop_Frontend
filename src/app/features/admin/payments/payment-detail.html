@@ -1,18 +1,22 @@
+@if (accessDenied()) {
+  <app-page-access-denied />
+} @else {
 <section class="detail-page detail-payment">
   <header class="detail-head">
 <div>
 <h2>{{ "Payment Details" | translate }}</h2>
 <nav class="detail-crumbs" aria-label="Breadcrumb">
-<a routerLink="/admin">{{ "Dashboard" | translate }}</a>
+<a routerLink="/admin" *appCanRoute="'/admin'">{{ "Dashboard" | translate }}</a>
 <span>›</span>
-<a routerLink="/admin/payments">{{ "Payments" | translate }}</a>
+<a routerLink="/admin/payments" *appCanRoute="'/admin/payments'">{{ "Payments" | translate }}</a>
 <span>›</span>{{ row() ? text(field(row()!, 'code', 'id')) : id }}</nav>
 </div>
-<a class="detail-button" routerLink="/admin/payments">
+<a class="detail-button" routerLink="/admin/payments" *appCanRoute="'/admin/payments'">
 <app-icon name="arrow-left" /> Back to Payments</a>
 </header>
   <app-status [busy]="busy()" [error]="error()" />
   @if (row(); as current) {
+    @if (field(current, "customerType", "customer_type") === "GUEST") {<p class="detail-badge">Guest order payment · No registered customer account</p>}
     <div class="detail-grid">
 <div class="detail-stack">
       <article class="detail-card">
@@ -54,7 +58,7 @@
 </div>
 <button class="detail-button detail-wide" [disabled]="busy()" (click)="load()">
 <app-icon name="refresh" /> {{ "Check Status Now" | translate }}</button>
-<a class="detail-button detail-wide" [routerLink]="['/admin/payments/bakong-callback', id]">
+<a class="detail-button detail-wide" [routerLink]="['/admin/payments/bakong-callback', id]" *appCanRoute="['/admin/payments/bakong-callback', id]">
 <app-icon name="shield" /> Review Callback</a>
 </article>
     </div>
@@ -74,7 +78,7 @@
 <span>{{ "Order ID" | translate }}</span>
 <span>{{ text(field(current, 'order_id', 'orderId') || id) }}</span>
 </div>
-<a [routerLink]="['/admin/orders', field(current, 'order_id', 'orderId') || id]">View Order ↗</a>
+<a [routerLink]="['/admin/orders', field(current, 'order_id', 'orderId') || id]" *appCanRoute="['/admin/orders', field(current, 'order_id', 'orderId') || id]">View Order ↗</a>
 </div>
 </article>
       <article class="detail-card">
@@ -110,3 +114,5 @@
 </div>
   }
 </section>
+
+}

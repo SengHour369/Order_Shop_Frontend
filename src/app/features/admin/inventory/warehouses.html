@@ -1,10 +1,13 @@
+@if (accessDenied()) {
+  <app-page-access-denied />
+} @else {
 <section class="reference-page">
   <header class="adm-page-head">
     <div>
       <h2>{{ "Warehouses" | translate }}</h2>
       <div class="adm-crumbs">
-        <a routerLink="/admin">{{ "Dashboard" | translate }}</a><span>›</span
-        ><a routerLink="/admin/inventory">{{ "Inventory" | translate }}</a><span>›</span>{{ "Warehouses" | translate }}
+        <a routerLink="/admin" *appCanRoute="'/admin'">{{ "Dashboard" | translate }}</a><span>›</span
+        ><a routerLink="/admin/inventory" *appCanRoute="'/admin/inventory'">{{ "Inventory" | translate }}</a><span>›</span>{{ "Warehouses" | translate }}
       </div>
     </div>
     <button
@@ -173,7 +176,7 @@
           </div>
         }
         <a class="adm-btn adm-primary" routerLink="/admin/inventory"
-          >View Inventory</a
+           *appCanRoute="'/admin/inventory'">View Inventory</a
         >
       } @else {
         <p>Select a location to view its inventory.</p>
@@ -181,3 +184,5 @@
     </aside>
   </div>
 </section>
+
+}

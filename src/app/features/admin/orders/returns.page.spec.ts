@@ -4,12 +4,26 @@ import {
   HttpTestingController,
   provideHttpClientTesting,
 } from "@angular/common/http/testing";
-import { of } from "rxjs";
+import { of, throwError } from "rxjs";
 import { AdminApi } from "../api/admin.api";
 import { ReturnDetailPage, ReturnsPage } from "./returns.page";
-import { ActivatedRoute, convertToParamMap } from "@angular/router";
+import { ActivatedRoute, convertToParamMap, provideRouter } from "@angular/router";
 
 describe("Returns reference integration", () => {
+  it("replaces a denied page with access guidance instead of empty returns", () => {
+    const api = {
+      returns: vi.fn(() => throwError(() => ({ status: 403 }))),
+      returnSummary: vi.fn(() => of({})),
+    };
+    TestBed.configureTestingModule({ providers: [provideRouter([]), { provide: AdminApi, useValue: api }] });
+    const fixture = TestBed.createComponent(ReturnsPage); fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Access denied');
+    expect(fixture.nativeElement.textContent).not.toContain('No returns found');
+    expect(fixture.nativeElement.querySelector('table')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.reference-stats')).toBeNull();
+    expect(fixture.nativeElement.querySelector('input')).toBeNull();
+  });
+
   it("blocks invalid lifecycle actions and refreshes history after an allowed action", () => {
     const api = {
       returnDetail: () => of({status: "REQUESTED", return_id: "RET-1"}),

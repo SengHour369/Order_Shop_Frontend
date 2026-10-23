@@ -33,12 +33,14 @@
       <h1>{{ p.name }}</h1>
       @if (selected(); as sku) {
         <div class="detail-price">
-          <strong>{{ sku.finalPrice ?? sku.price | currency:'USD' }}</strong>
-          @if (discount()) {
-            <del>{{ sku.originalPrice ?? sku.price | currency:'USD' }}</del><span class="discount">−{{ discount() }}%</span>
+          <strong>{{ sellingPrice(sku) | currency:'USD' }}</strong>
+          @if (hasDiscount(sku)) {
+            <del>{{ originalPrice(sku) | currency:'USD' }}</del>@if (discount() > 0) { <span class="discount">−{{ discount() }}%</span> }
           }
         </div>
       }
+      @if (promotionName(selected())) { <p class="product-promotion">{{ promotionName(selected()) }}</p> }
+      <p class="product-stock" role="status">{{ 'Available stock' | translate }}: {{ p.is_active ? available() : 0 }}</p>
       <p class="detail-summary">{{ p.description }}</p>
       @if (selected(); as sku) {
         <p class="option-heading">{{ 'Option' | translate }}: <strong>{{ optionLabel(sku) }}</strong></p>
@@ -127,7 +129,7 @@
             @if (selected(); as sku) {
               <div><dt>{{ 'SKU' | translate }}</dt><dd>{{ sku.sku }}</dd></div>
               @if (sku.barcode) { <div><dt>{{ 'Barcode' | translate }}</dt><dd>{{ sku.barcode }}</dd></div> }
-              <div><dt>{{ 'Availability' | translate }}</dt><dd>{{ (p.is_active && sku.quantity > 0 ? 'In Stock' : 'Out of Stock') | translate }}</dd></div>
+              <div><dt>{{ 'Availability' | translate }}</dt><dd>{{ (p.is_active && available() > 0 ? 'In Stock' : 'Out of Stock') | translate }}</dd></div>
             }
           </dl></section>
           @if (tab() === 'details') {
@@ -138,7 +140,7 @@
           }
         </div>
       } @else if (tab() === 'reviews') {
-        <app-product-reviews />
+        <app-product-reviews [productId]="p.id" [skuId]="skuId()" />
       } @else {
         <div class="detail-empty"><app-icon [name]="tab() === 'reviews' ? 'star' : 'help'" /><h2>{{ (tab() === 'reviews' ? 'Customer Reviews' : 'Customer Questions & Answers') | translate }}</h2>
           <p>{{ (tab() === 'reviews' ? 'Reviews are not available for this product yet.' : 'Need more information about this product? Contact our support team.') | translate }}</p>

@@ -1,16 +1,18 @@
+import { conversationId as createUuid } from '../../../shared/utils/conversation-id';
+import { CanAccessDirective } from '../../../core/auth/can-access.directive';
 import {Component,DestroyRef,inject,input,signal,OnInit,OnChanges,SimpleChanges} from '@angular/core';
 import {DatePipe,KeyValuePipe} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
-import {Observable,Subscription,from,concatMap,tap,last,of,catchError,map} from 'rxjs';
+import {Observable,Subscription,from,concatMap,tap,last,map} from 'rxjs';
 import {PermissionService} from '../../../core/auth/permission.service';
 import {AuthService} from '../../../core/auth/auth.service';
 import {Icon} from '../../../shared/components/icon';
 import {TranslatePipe} from '../../../core/i18n/translate.pipe';
 import {ImportValuesComponent,ImportActivityComponent} from './import-readable-details';
 import {AiImportsApi,ImportBatch,ImportPreview,ImportRow,ImportSheet,ImportTool,ImportAction,ImportMode,ExecutionHistory,ImportImage,stringValues} from './ai-imports.api';
-@Component({selector:'app-ai-import',imports:[DatePipe,KeyValuePipe,FormsModule,Icon,TranslatePipe,ImportValuesComponent,ImportActivityComponent],templateUrl:'./ai-import.html',styleUrl:'./ai-import.scss'})
+@Component({selector:'app-ai-import',imports:[CanAccessDirective,DatePipe,KeyValuePipe,FormsModule,Icon,TranslatePipe,ImportValuesComponent,ImportActivityComponent],templateUrl:'./ai-import.html',styleUrl:'./ai-import.scss'})
 export class AiImportComponent implements OnInit,OnChanges{
  mode=input<ImportMode>('upload');initialBatchId=input('');
  api=inject(AiImportsApi);access=inject(PermissionService);auth=inject(AuthService);private lifetime=inject(DestroyRef);
@@ -44,12 +46,6 @@ export class AiImportComponent implements OnInit,OnChanges{
   this.api.list(this.mode(),target,this.mode()==='executions'&&this.has('IMPORT_REVIEW')).pipe(takeUntilDestroyed(this.lifetime)).subscribe({next:r=>{if(ticket!==this.listTicket)return;this.listPage=target;this.listPages=r.totalPages;this.batchCount=r.totalElements;this.batches.set(r.content);this.listLoading.set(false);if(this.mode()==='review'&&!this.selectedId()&&!this.initialBatchId()&&r.content.length)this.load(r.content[0].id);},error:e=>{if(ticket===this.listTicket){this.listLoading.set(false);this.error.set(this.failure(e));}}});
  }
  paginateList(delta:number){const target=this.listPage+delta;if(target>=0&&target<this.listPages)this.refreshList(target);}
- upload(event:Event){
-  const input=event.target as HTMLInputElement;const file=input.files?.[0];input.value='';if(!file||this.locked()||!this.has('IMPORT_UPLOAD'))return;
-  if(!/\.xlsx?$/i.test(file.name)||file.size===0){this.error.set('Choose a non-empty XLSX or XLS workbook.');return;}
-  if(this.hasDrafts()){this.error.set('Save or discard your corrections before replacing the workbook.');return;}
-  this.run(this.api.upload(file).pipe(tap(batch=>this.uploadedFiles[batch.id]={name:file.name,size:file.size}),concatMap(batch=>this.api.action(batch,'analyze').pipe(catchError(()=>{this.message.set('Workbook uploaded. Review the extracted columns and choose the worksheet type.');return of(batch);})))),batch=>{this.load(batch.id);this.refreshList(0);});
- }
  load(id:string,targetPage=0,targetFilter=''){
   if(this.busy())return;
   if(!/^[a-f0-9-]{36}$/i.test(id)){this.error.set('Invalid import identifier.');return;}
@@ -81,7 +77,7 @@ export class AiImportComponent implements OnInit,OnChanges{
  inputMin(field:string){const type=this.fieldSchema(field)?.type;return type==='id'?1:type==='zero'?0:['money','percent'].includes(type??'')?0.0001:null;}
  inputMax(field:string){const type=this.fieldSchema(field)?.type;return type==='percent'?100:['id','zero'].includes(type??'')?1000000000:null;}
  inputStep(field:string){return ['money','percent'].includes(this.fieldSchema(field)?.type??'')?'0.0001':'1';}
- fieldLimit(field:string){return field==='name'?120:field==='barcode'?64:field==='address'?500:2000;}
+ fieldLimit(field:string){return this.fieldSchema(field)?.type==='json'?12000:field==='name'?120:field==='barcode'?64:field==='address'?500:2000;}
  setCell(row:ImportRow,field:string,value:unknown){if(this.values(row).includes(field))this.rowValues[row.id][field]=value==null?'':String(value);}
  rowDirty(id:string){return JSON.stringify(this.rowValues[id]??{})!==JSON.stringify(this.baselines[id]??{});}
  hasDrafts(){return this.draftRows().length>0||Object.keys(this.rowValues).some(id=>this.rowDirty(id));}
@@ -90,12 +86,12 @@ export class AiImportComponent implements OnInit,OnChanges{
  rowConfirmed(row:ImportRow){return !!this.preview()?.sheets.find(sheet=>sheet.id===row.sheetId)?.confirmed;}
  rowEditable(row:ImportRow){if(!this.editable())return false;if(this.rowConfirmed(row))return this.domainAllowed(row.sheetId);return this.has('IMPORT_UPLOAD')&&this.preview()?.batch.ownerId===this.auth.session()?.id||this.domainAllowed(row.sheetId);}
  newRow(row:ImportRow){return this.draftRows().some(draft=>draft.id===row.id);}
- addRow(){const sheet=this.currentSheet();if(this.locked()||!this.editable()||!sheet?.confirmed||!this.domainAllowed(sheet.id))return;const id=crypto.randomUUID();const number=Math.max(1,...Object.values(this.knownRows).map(row=>row.rowNumber),...this.draftRows().map(row=>row.rowNumber))+1;const row:ImportRow={id,sheetId:sheet.id,rowNumber:number,originalValues:'{}',valuesJson:'{}',status:'NEW',edited:true,skipped:false,resourceId:null,affectedResourceId:null};this.rowValues[id]=Object.fromEntries(this.tableFields().map(field=>[field,'']));this.baselines[id]={};this.draftRows.update(rows=>[...rows,row]);this.search.set('');}
+ addRow(){const sheet=this.currentSheet();if(this.locked()||!this.editable()||!sheet?.confirmed||!this.domainAllowed(sheet.id))return;const id=createUuid();const number=Math.max(1,...Object.values(this.knownRows).map(row=>row.rowNumber),...this.draftRows().map(row=>row.rowNumber))+1;const row:ImportRow={id,sheetId:sheet.id,rowNumber:number,originalValues:'{}',valuesJson:'{}',status:'NEW',edited:true,skipped:false,resourceId:null,affectedResourceId:null};this.rowValues[id]=Object.fromEntries(this.tableFields().map(field=>[field,'']));this.baselines[id]={};this.draftRows.update(rows=>[...rows,row]);this.search.set('');}
  removeDraft(row:ImportRow){if(this.locked()||!this.newRow(row))return;this.draftRows.update(rows=>rows.filter(draft=>draft.id!==row.id));delete this.rowValues[row.id];delete this.baselines[row.id];}
  sheetPageCount(id:string){return this.preview()?.rows.content.filter(row=>row.sheetId===id).length??0;}
  statusCount(...statuses:string[]){return statuses.reduce((total,status)=>total+(this.preview()?.summary.statuses[status]??0),0);}
  statusLabel(row:ImportRow){return row.skipped?'Skipped':({VALID:'Valid',INVALID:'Need review',DUPLICATE:'Duplicate',UNVALIDATED:'Not validated',CREATED:'Created',FAILED:'Failed',EDITED:'Edited'} as Record<string,string>)[row.status]??row.status;}
- batchLabel(){const batch=this.preview()?.batch;return batch?this.uploadedFiles[batch.id]?.name??'Workbook '+batch.id.slice(0,8):'';}
+ batchLabel(){const batch=this.preview()?.batch;return batch?batch.filename??this.uploadedFiles[batch.id]?.name??'Workbook '+batch.id.slice(0,8):'';}
  batchStatusLabel(){const status=this.preview()?.batch.status??'';return ({SUBMITTED:'Pending approval',APPROVED:'Approved',CHANGES_REQUESTED:'Changes requested',DRAFT:'Draft',VALIDATED:'Validated',COMPLETED:'Completed'} as Record<string,string>)[status]??status;}
  importTypes(){const labels:Record<string,string>={CATEGORY_BULK_UPDATE:'Category updates',BRANCH_BULK_UPDATE:'Branch updates',PRODUCT_BULK_UPDATE:'Product updates',PRODUCT_BULK_CREATE:'Products',PRODUCT_SKU_BULK_CREATE:'Product SKUs',CATEGORY_BULK_CREATE:'Categories',BRANCH_BULK_CREATE:'Branches',INVENTORY_STOCK_IN_BULK:'Stock in',INVENTORY_STOCK_ADJUST_BULK:'Stock adjustments',PROMOTION_BULK_CREATE:'Promotions'};return [...new Set(this.preview()?.sheets.map(sheet=>labels[sheet.tool??'']??sheet.tool??'Unmapped')??[])].join(', ');}
  reviewSelection(){return this.visibleRows().filter(row=>!row.skipped&&this.selectedRows().has(row.id));}
@@ -107,7 +103,7 @@ export class AiImportComponent implements OnInit,OnChanges{
   let current=p.batch;
   this.run(from(rows).pipe(concatMap(row=>this.api.skip(current,row).pipe(tap(batch=>current=batch))),last()),batch=>{this.selectedRows.set(new Set());this.message.set('Selected rows skipped. Validate and resubmit the updated version for review.');this.load(batch.id,this.page,this.filter);this.refreshList();});
  }
- productRow(row:ImportRow){return this.preview()?.sheets.find(s=>s.id===row.sheetId)?.tool==='PRODUCT_BULK_CREATE';}
+ productRow(row:ImportRow){return this.preview()?.sheets.find(s=>s.id===row.sheetId)?.tool?.startsWith('PRODUCT_BULK_')??false;}
  rowImages(row:ImportRow){const ids=(this.rowValues[row.id]?.['imageIds']??'').split(',');return this.preview()?.images?.filter(image=>image.rowId===row.id&&ids.includes(image.id))??[];}
  attachImage(row:ImportRow,event:Event){const input=event.target as HTMLInputElement;const file=input.files?.[0];input.value='';const p=this.preview();if(!p||!file||this.locked()||!this.editable()||!this.domainAllowed(row.sheetId))return;if(file.size>5242880||!['image/png','image/jpeg'].includes(file.type)){this.error.set('Choose a PNG/JPEG image up to 5 MiB.');return;}this.run(this.api.attachImage(p.batch,row.id,file),b=>this.load(b.id,this.page,this.filter));}
  detachImage(row:ImportRow,image:ImportImage){const p=this.preview();if(p&&!this.locked()&&this.editable()&&this.domainAllowed(row.sheetId))this.run(this.api.detachImage(p.batch,row.id,image.id),b=>this.load(b.id,this.page,this.filter));}
@@ -115,7 +111,7 @@ export class AiImportComponent implements OnInit,OnChanges{
  sheetName(id:string){return this.preview()?.sheets.find(s=>s.id===id)?.name??id;}
  suggestions(sheet:ImportSheet){return this.object(this.preview()?.mappings.find(m=>m.sheetId===sheet.id)?.suggestions);}
  messages(row:ImportRow){return this.preview()?.errors.filter(e=>e.rowId===row.id)??[];}
- editable(){return this.fresh()&&!!this.preview()&&!['PROCESSING','COMPLETED','PARTIAL_SUCCESS','FAILED','REJECTED'].includes(this.preview()!.batch.status);}
+ editable(){const batch=this.preview()?.batch;if(!this.fresh()||!batch||['PROCESSING','COMPLETED','PARTIAL_SUCCESS','FAILED','REJECTED'].includes(batch.status))return false;const actor=this.auth.session()?.id;return batch.ownerId===actor?!['SUBMITTED','APPROVED'].includes(batch.status):this.has('IMPORT_REVIEW')&&batch.assignedReviewerId===actor;}
  domainAllowed(sheetId:string){const tool=this.preview()?.sheets.find(s=>s.id===sheetId)?.tool;const definition=this.tools().find(t=>t.name===tool);return !!definition&&definition.enabled&&this.has(definition.permission);}
  canSubmit(){const b=this.preview()?.batch;return this.editable()&&this.has('IMPORT_UPLOAD')&&b?.ownerId===this.auth.session()?.id;}
  canReview(){const b=this.preview()?.batch;return this.fresh()&&b?.status==='SUBMITTED'&&b.assignedReviewerId===this.auth.session()?.id&&this.has('IMPORT_REVIEW');}

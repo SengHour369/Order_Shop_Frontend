@@ -2,6 +2,7 @@ import { TestBed } from "@angular/core/testing";
 import { ActivatedRoute, convertToParamMap, Router } from "@angular/router";
 import { of } from "rxjs";
 import { AdminApi } from "../api/admin.api";
+import { AiImportsApi } from "../imports/ai-imports.api";
 import { ProductFormPage } from "./products.page";
 
 describe("Dynamic product form", () => {
@@ -11,6 +12,7 @@ describe("Dynamic product form", () => {
     create = vi.fn(() => of({ id: 10 }));
     TestBed.configureTestingModule({
       providers: [
+        {provide:AiImportsApi,useValue:{stageProduct:create,action:()=>of({id:"request",revision:2,status:"SUBMITTED"})}},
         {
           provide: ActivatedRoute,
           useValue: { paramMap: of(convertToParamMap({})) },
@@ -38,6 +40,8 @@ describe("Dynamic product form", () => {
       ],
     });
     page = TestBed.runInInjectionContext(() => new ProductFormPage());
+    page.ngOnInit();
+    page.reviewerId=2;
   });
 
   it("generates Cartesian variants and saves one default SKU with actual attribute payloads", () => {
@@ -120,7 +124,7 @@ describe("Dynamic product form", () => {
       },
     ];
     page.generateVariants();
-    expect(page.error()).toContain("100");
+    expect(page.error()).toContain("50");
     expect(page.variants).toHaveLength(1);
     page.bulkField = "quantity";
     page.bulkValue = 1.5;

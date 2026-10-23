@@ -1,5 +1,7 @@
 import { Component, input } from "@angular/core";
 const icons: Record<string, string> = {
+  speaker: "M11 5L6 9H2v6h4l5 4V5 M15 8a6 6 0 0 1 0 8 M18 5a10 10 0 0 1 0 14",
+  stop: "M5 5h14v14H5z",
   alert: "M12 3L1 21h22L12 3 M12 9v5 M12 17h.01",
   menu: "M4 6h16 M4 12h16 M4 18h16",
   crown: "M3 6l4 4 5-7 5 7 4-4-3 15H6L3 6 M6 18h12",

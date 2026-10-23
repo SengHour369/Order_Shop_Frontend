@@ -1,6 +1,8 @@
+import { PageAccessDenied } from '../../../shared/components/page-access-denied';
+import { CanAccessDirective } from '../../../core/auth/can-access.directive';
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
 import { ProductImage } from "../../../shared/components/product-image";
-import { Component, inject, signal } from "@angular/core";
+import { Component, effect, inject, input, output, signal } from "@angular/core";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { Icon } from "../../../shared/components/icon";
 import { FormsModule } from "@angular/forms";
@@ -74,11 +76,16 @@ export function promotionError(draft: PromotionDraft): string {
 }
 
 @Component({
-  imports: [TranslatePipe, FormsModule, Status, RouterLink, Icon, ProductImage],
+  selector: "app-admin-promotions",
+  imports: [PageAccessDenied, CanAccessDirective, TranslatePipe, FormsModule, Status, RouterLink, Icon, ProductImage],
   templateUrl: "./promotions.html",
   styleUrl: "../styles/reference.css",
 })
 export class PromotionsPage extends PageState {
+  embedded = input(false);
+  cancelled = output<void>();
+  saved = output<{id:number;status:string}>();
+  busyChanged = output<boolean>();
   private api = inject(AdminApi);
   private route = inject(ActivatedRoute, { optional: true });
   private router = inject(Router, { optional: true });
@@ -132,6 +139,10 @@ export class PromotionsPage extends PageState {
   when = when;
   constructor() {
     super();
+    effect(()=>this.busyChanged.emit(this.busy()));
+  }
+  ngOnInit() {
+    if(this.embedded()){this.mode='create';this.create();return;}
     const path = this.route?.snapshot.routeConfig?.path || "";
     if (path === "promotions/add") {
       this.mode = "create";
@@ -141,7 +152,6 @@ export class PromotionsPage extends PageState {
       this.edit(Number(this.route?.snapshot.paramMap.get("id")));
     } else {
       this.load();
-      this.create();
     }
   }
   load(message = "") {
@@ -252,6 +262,7 @@ export class PromotionsPage extends PageState {
       (row) => {
         this.selectedId = Number(row["id"]);
         this.apply(row);
+        if(this.embedded()){this.saved.emit({id:this.selectedId,status:String(row['status'] || '')});return;}
         this.load("Promotion saved.");
         if (this.mode === "create")
           void this.router?.navigate(["/admin/promotions", this.selectedId]);

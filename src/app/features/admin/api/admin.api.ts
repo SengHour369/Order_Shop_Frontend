@@ -252,11 +252,11 @@ export class AdminApi {
   customerCount() {
     return this.api.post<number>("/api/v1/user/count", {});
   }
-  orders(page = 1, status = "", size = 10) {
+  orders(page = 1, status = "", size = 10, guestsOnly = false) {
     return this.page<Row>(
       this.api.post(
         "/api/v1/orders/get/all",
-        this.query(page, size, status ? 2 : 0, status),
+        this.query(page, size, guestsOnly ? 5 : status ? 2 : 0, guestsOnly ? "GUEST" + (status ? ":" + status : "") : status),
       ),
     );
   }

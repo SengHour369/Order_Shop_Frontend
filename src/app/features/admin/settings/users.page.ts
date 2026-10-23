@@ -1,3 +1,6 @@
+import { PageAccessDenied } from '../../../shared/components/page-access-denied';
+import { PermissionService } from '../../../core/auth/permission.service';
+import { CanAccessDirective } from '../../../core/auth/can-access.directive';
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
 import { Component, inject, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
@@ -6,8 +9,8 @@ import { PageState } from "../../../shared/utils/page-state";
 import { Status } from "../../../shared/components/status";
 import { AdminApi, field, Row, text } from "../api/admin.api";
 @Component({
-  imports: [TranslatePipe, FormsModule, RouterLink, Status],
-  template: `
+  imports: [PageAccessDenied, CanAccessDirective, TranslatePipe, FormsModule, RouterLink, Status],
+  template: `@if (accessDenied()) { <app-page-access-denied /> } @else {
     <section>
       <div class="adm-page-head">
         <div>
@@ -23,7 +26,7 @@ import { AdminApi, field, Row, text } from "../api/admin.api";
             type="button"
             [disabled]="busy()"
             [class.on]="resource === item.resource"
-            (click)="select(item.resource)"
+            (click)="select(item.resource)" *appCan="permissionCode('VIEW', item.resource)"
           >
             {{ (item.label) | translate }}
           </button>
@@ -45,19 +48,19 @@ import { AdminApi, field, Row, text } from "../api/admin.api";
               @for (row of rows(); track field(row, "id")) {
                 <tr>
                   <td>
-                    <a [routerLink]="['/admin/users', field(row, 'id')]">{{
+                    <a [routerLink]="['/admin/users', field(row, 'id')]" *appCanRoute="['/admin/users', field(row, 'id')]">{{
                       text(field(row, "username"))
                     }}</a>
                   </td>
                   <td>{{ text(field(row, "email")) }}</td>
                   <td>{{ text(field(row, "status")) }}</td>
                   <td>
-                    <a class="adm-btn" [routerLink]="['/admin/users/edit', field(row, 'id')]">Edit User</a>
+                    <a class="adm-btn" [routerLink]="['/admin/users/edit', field(row, 'id')]" *appCanRoute="['/admin/users/edit', field(row, 'id')]">Edit User</a>
                     <button
                       class="adm-btn"
                       [disabled]="busy()"
                       (click)="accountStatus(row)"
-                    >
+                     *appCan="'USER_MANAGE'">
                       {{ (field(row, "status") === "ACT" ? "Block" : "Activate") | translate }}
                     </button>
                   </td>
@@ -71,7 +74,7 @@ import { AdminApi, field, Row, text } from "../api/admin.api";
           </table>
         </div>
       } @else {
-        <form class="adm-panel adm-form" (ngSubmit)="create()">
+        <form class="adm-panel adm-form" (ngSubmit)="create()" *appCan="permissionCode('CREATE')">
           <h3>Add {{ label() }}</h3>
           <div class="adm-form-grid">
             @if (resource === "user-groups" || resource === "functions") {
@@ -150,7 +153,7 @@ import { AdminApi, field, Row, text } from "../api/admin.api";
                       class="adm-btn"
                       [disabled]="busy()"
                       (click)="toggle(row)"
-                    >
+                     *appCan="permissionCode('UPDATE')">
                       {{
                         field(row, "is_active") === true ? "Disable" : "Enable"
                       }}
@@ -159,7 +162,7 @@ import { AdminApi, field, Row, text } from "../api/admin.api";
                       class="adm-btn"
                       [disabled]="busy()"
                       (click)="remove(row)"
-                    >
+                     *appCan="permissionCode('DELETE')">
                       {{ "Delete" | translate }}
                     </button>
                   </td>
@@ -191,10 +194,15 @@ import { AdminApi, field, Row, text } from "../api/admin.api";
         </div>
       }
     </section>
-  `,
+   }`,
 })
 export class UsersPage extends PageState {
   private api = inject(AdminApi);
+  readonly access = inject(PermissionService);
+  permissionCode(action: string, resource = this.resource) {
+    const prefixes: Record<string, string> = { users: 'USER_MANAGE', 'user-groups': 'USER_GROUP', functions: 'FUNC', 'group-permissions': 'GRP_PERM', 'user-permissions': 'USER_PERM' };
+    return resource === 'users' ? 'USER_MANAGE' : (prefixes[resource] || 'DENIED') + '_' + action;
+  }
   tabs = [
     { resource: "users", label: "Users" },
     { resource: "user-groups", label: "Permission groups" },
@@ -232,6 +240,7 @@ export class UsersPage extends PageState {
     return Number(row[key]);
   }
   select(resource: string) {
+    if (!this.access.has(this.permissionCode("VIEW", resource))) return;
     this.resource = resource;
     this.page = 1;
     this.rows.set([]);
@@ -256,6 +265,7 @@ export class UsersPage extends PageState {
     this.load();
   }
   create() {
+    if (!this.access.has(this.permissionCode("CREATE"))) return;
     let params: Record<string, string | number>;
     if (this.resource === "user-groups" || this.resource === "functions") {
       if (!this.code.trim() || !this.name.trim()) {
@@ -288,6 +298,7 @@ export class UsersPage extends PageState {
     );
   }
   toggle(row: Row) {
+    if (!this.access.has(this.permissionCode("UPDATE"))) return;
     if (!confirm("Change this permission record?")) return;
     this.run(
       this.api.permissionStatus(
@@ -299,6 +310,7 @@ export class UsersPage extends PageState {
     );
   }
   remove(row: Row) {
+    if (!this.access.has(this.permissionCode("DELETE"))) return;
     if (!confirm("Delete this permission record?")) return;
     this.run(this.api.deletePermissionRow(this.resource, this.id(row)), () =>
       this.load("Record deleted."),

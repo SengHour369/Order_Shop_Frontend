@@ -1,10 +1,13 @@
+@if (accessDenied()) {
+  <app-page-access-denied />
+} @else {
 <section class="reference-page">
   <header class="adm-page-head">
     <div>
       <h2>{{ creating ? "Create Group" : "Groups" }}</h2>
       <div class="adm-crumbs">
-        <a routerLink="/admin">{{ "Dashboard" | translate }}</a><span>›</span
-        ><a routerLink="/admin/groups">Groups</a>
+        <a routerLink="/admin" *appCanRoute="'/admin'">{{ "Dashboard" | translate }}</a><span>›</span
+        ><a routerLink="/admin/groups" *appCanRoute="'/admin/groups'">Groups</a>
         @if (creating) {
           <span>›</span>Create Group
         }
@@ -12,7 +15,7 @@
     </div>
     @if (!creating && access.allows("/admin/groups/add")) {
       <a class="adm-btn adm-primary" routerLink="/admin/groups/add"
-        >＋ Add Group</a
+         *appCanRoute="'/admin/groups/add'">＋ Add Group</a
       >
     }
   </header>
@@ -79,7 +82,7 @@
                       >{{ row["is_active"] ? "Active" : "Inactive" }}</span
                     >
                   </td>
-                  <td>{{ when(row["created_at"]) }}</td><td><a class="adm-btn" [routerLink]="['/admin/groups', row['group_id']]">View</a></td>
+                  <td>{{ when(row["created_at"]) }}</td><td><a class="adm-btn" [routerLink]="['/admin/groups', row['group_id']]" *appCanRoute="['/admin/groups', row['group_id']]">View</a></td>
                 </tr>
               } @empty {
                 <tr>
@@ -94,7 +97,7 @@
 
     </div>
   } @else {
-    <form (ngSubmit)="save()">
+    <form (ngSubmit)="save()" *appCan="creating ? 'USER_GROUP_CREATE' : 'USER_GROUP_UPDATE'">
       <div class="ops-subgrid access-editor">
         <div>
           <section class="adm-panel">
@@ -136,7 +139,7 @@
         </p>
       }
       <footer class="ops-footer">
-        <a class="adm-btn" routerLink="/admin/groups">← Cancel</a
+        <a class="adm-btn" routerLink="/admin/groups" *appCanRoute="'/admin/groups'">← Cancel</a
         ><button class="adm-btn adm-primary" [disabled]="busy()">
           {{ createdId ? "Retry Remaining Permissions" : "Create Group" }}
         </button>
@@ -144,3 +147,5 @@
     </form>
   }
 </section>
+
+}

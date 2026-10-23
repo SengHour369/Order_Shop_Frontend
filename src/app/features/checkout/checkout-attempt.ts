@@ -40,7 +40,14 @@ export class CheckoutAttempt {
     sessionStorage.setItem(this.key(userId), JSON.stringify(body));
     return body;
   }
+  orderId(userId:number):number|null {
+    try { const id=Number(sessionStorage.getItem(this.key(userId)+'.order'));return Number.isSafeInteger(id)&&id>0?id:null; } catch { return null; }
+  }
+  attachOrder(userId:number,id:number) {
+    sessionStorage.setItem(this.key(userId)+'.order',String(id));
+  }
   clear(userId: number) {
+    sessionStorage.removeItem(this.key(userId)+'.order');
     sessionStorage.removeItem(this.key(userId));
   }
 }

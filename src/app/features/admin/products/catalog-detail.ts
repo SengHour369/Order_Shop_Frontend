@@ -1,3 +1,4 @@
+import { CanAccessDirective } from '../../../core/auth/can-access.directive';
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
 import { Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
@@ -6,7 +7,7 @@ import { ProductImage } from '../../../shared/components/product-image';
 import { field, Row, text, when } from '../api/admin.api';
 @Component({
   selector: 'app-catalog-detail',
-  imports: [TranslatePipe, RouterLink, Icon, ProductImage],
+  imports: [CanAccessDirective, TranslatePipe, RouterLink, Icon, ProductImage],
   templateUrl: './catalog-detail.html',
   styleUrl: '../styles/details.css',
 })

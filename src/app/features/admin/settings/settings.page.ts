@@ -1,3 +1,6 @@
+import { PermissionService } from '../../../core/auth/permission.service';
+import { StorefrontAccessSettings } from './storefront-access-settings';
+import { PageAccessDenied } from '../../../shared/components/page-access-denied';
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
 import { Component, inject } from "@angular/core";
 import { FormsModule } from "@angular/forms";
@@ -8,8 +11,8 @@ import { Status } from "../../../shared/components/status";
 import { AdminApi } from "../api/admin.api";
 import { StoreSettings } from "../reports/report.models";
 @Component({
-  imports: [TranslatePipe, FormsModule, RouterLink, Status],
-  template: `
+  imports: [StorefrontAccessSettings, PageAccessDenied, TranslatePipe, FormsModule, RouterLink, Status],
+  template: `@if (accessDenied()) { <app-page-access-denied /> } @else {
     <section>
       <div class="adm-page-head">
         <div>
@@ -72,16 +75,20 @@ import { StoreSettings } from "../reports/report.models";
           </p>
         }
       </form>
+      @if (permissions.has('STOREFRONT_ACCESS_VIEW')) {
+        <app-storefront-access-settings />
+      }
       <article class="adm-panel" style="margin-top:16px">
         <h3>{{ "Account security" | translate }}</h3>
         <a class="adm-btn" routerLink="/account/security">{{ "Change password" | translate }}</a>
       </article>
     </section>
-  `,
+   }`,
 })
 export class AdminSettingsPage extends PageState {
   private api = inject(AdminApi);
-  canEdit = inject(AuthService).session()?.role === "ADMIN";
+  protected permissions = inject(PermissionService);
+  canEdit = ["ADMIN", "SUPER_ADMIN"].includes(inject(AuthService).session()?.role || "");
   settings: StoreSettings = {
     storeName: "",
     email: "",

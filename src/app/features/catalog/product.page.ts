@@ -1,3 +1,5 @@
+import { AuthService } from "../../core/auth/auth.service";
+import { StorefrontAccessService } from "../../core/storefront/storefront-access.service";
 import { Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CurrencyPipe } from '@angular/common';
@@ -5,6 +7,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CatalogApi } from './catalog.api';
 import { CartApi } from '../cart/cart.api';
+import { availableStock, originalPrice, sellingPrice, hasDiscount, discountPercent, promotionName } from '../../shared/utils/product-offer';
 import { Product, Sku } from '../../core/api/models';
 import { CustomerStore } from '../../core/stores/customer.store';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
@@ -21,6 +24,8 @@ import { ProductReviews } from './reviews/product-reviews';
 export class ProductPage extends PageState {
   private api = inject(CatalogApi);
   private cart = inject(CartApi);
+  private auth = inject(AuthService);
+  private access = inject(StorefrontAccessService);
   store = inject(CustomerStore);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -33,7 +38,12 @@ export class ProductPage extends PageState {
   ])]);
   imageIndex = signal(0);
   currentImage = computed(() => this.images()[this.imageIndex()]);
-  maxQuantity = computed(() => Math.max(0, Math.min(99, this.selected()?.quantity || 0)));
+  available = computed(() => availableStock(this.selected()));
+  maxQuantity = computed(() => Math.min(99, this.available()));
+  originalPrice = originalPrice;
+  sellingPrice = sellingPrice;
+  hasDiscount = hasDiscount;
+  promotionName = promotionName;
   highlights = computed(() => this.selected()?.attributes?.map(a => ({
     name: a.name, value: a.attributes.map(v => v.value).join(', '),
   })).filter(a => a.value) || []);
@@ -48,7 +58,7 @@ export class ProductPage extends PageState {
     if (sku) {
       rows.push({ name: 'SKU', values: [sku.sku] });
       if (sku.barcode) rows.push({ name: 'Barcode', values: [sku.barcode] });
-      rows.push({ name: 'Availability', values: [this.product()?.is_active && sku.quantity > 0 ? 'In Stock' : 'Out of Stock'] });
+      rows.push({ name: 'Availability', values: [this.product()?.is_active && availableStock(sku) > 0 ? 'In Stock' : 'Out of Stock'] });
     }
     return rows;
   });
@@ -58,12 +68,7 @@ export class ProductPage extends PageState {
     return [{ rows: rows.slice(0, midpoint), offset: 0 }, { rows: rows.slice(midpoint), offset: midpoint }]
       .filter(column => column.rows.length > 0);
   });
-  discount = computed(() => {
-    const sku = this.selected();
-    const original = sku?.originalPrice ?? sku?.price ?? 0;
-    const price = sku?.finalPrice ?? sku?.price ?? 0;
-    return original > price && original > 0 ? Math.round((1 - price / original) * 100) : 0;
-  });
+  discount = computed(() => discountPercent(this.selected()));
   quantity = 1;
   tab = signal('details');
   tabs = [
@@ -108,6 +113,7 @@ export class ProductPage extends PageState {
   }
   add(buy: boolean) {
     if (!this.canPurchase()) return;
+    if (!this.auth.session() && this.access.settings()?.guestCart === false) {void this.router.navigate(['/auth'],{queryParams:{returnUrl:'/shop/'+this.product()?.id}});return;}
     this.run(this.cart.add(this.skuId(), this.quantity), cart => {
       this.store.cartCount.set(cart.total_items);
       if (buy) void this.router.navigate(['/checkout']);

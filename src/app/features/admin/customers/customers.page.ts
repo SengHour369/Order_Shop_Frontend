@@ -1,3 +1,6 @@
+import { ConfirmDialog } from '../../../shared/components/confirm-dialog';
+import { PageAccessDenied } from '../../../shared/components/page-access-denied';
+import { CanAccessDirective } from '../../../core/auth/can-access.directive';
 import { DatePipe } from "@angular/common";
 import { PermissionService } from "../../../core/auth/permission.service";
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
@@ -11,7 +14,7 @@ import { Icon } from "../../../shared/components/icon";
 import { Status } from "../../../shared/components/status";
 import { AdminApi, field, Row, text, tone, usd, when } from "../api/admin.api";
 @Component({
-  imports: [DatePipe, Status, RouterLink, FormsModule, Icon],
+  imports: [ConfirmDialog, PageAccessDenied, CanAccessDirective, DatePipe, Status, RouterLink, FormsModule, Icon],
   templateUrl: "./customers-reference.html",
   styleUrls: ["./groups.css", "./customers-list.css"],
 })
@@ -41,7 +44,18 @@ export class CustomersPage extends PageState {
   newCount(){return this.rows().filter(row=>{const date=this.date(row);return date&&Date.now()-Date.parse(date)<=30*86400000;}).length;}
   totalMetric(...keys:string[]){const values=this.rows().map(row=>field(row,...keys));return !values.length||values.some(v=>v===''||v===null||v===undefined||!Number.isFinite(Number(v)))?'—':values.reduce<number>((sum,v)=>sum+Number(v),0);}
   totalSpent(){const value=this.totalMetric('total_spent','totalSpent');return value==='—'?value:usd(value);}
-  setStatus(row:Row){if(this.busy()||!this.access.has('USER_MANAGE')||!confirm(this.active(row)?'Block this customer?':'Activate this customer?'))return;this.run(this.api.customerStatus(Number(row['id']),this.active(row)?'BLK':'ACT'),()=>{this.menuId=0;this.load();});}
+  readonly statusConfirmation = signal<{ id: number; name: string; block: boolean } | null>(null);
+  setStatus(row: Row) {
+    if (this.busy() || !this.access.has('USER_MANAGE')) return;
+    this.menuId = 0;
+    this.statusConfirmation.set({ id: Number(row['id']), name: String(field(row, 'fullName', 'full_name', 'username') || 'this customer'), block: this.active(row) });
+  }
+  confirmStatus(confirmed: boolean) {
+    const pending = this.statusConfirmation();
+    this.statusConfirmation.set(null);
+    if (!confirmed || !pending || this.busy() || !this.access.has('USER_MANAGE')) return;
+    this.run(this.api.customerStatus(pending.id, pending.block ? 'BLK' : 'ACT'), () => this.load());
+  }
   totalCount = computed(() => this.rows().length);
   activeCount = computed(
     () => this.rows().filter((row) => this.active(row)).length,
@@ -78,7 +92,7 @@ export class CustomersPage extends PageState {
 
 }
 @Component({
-  imports: [TranslatePipe, Status, RouterLink, Icon],
+  imports: [ PageAccessDenied, CanAccessDirective, TranslatePipe, Status, RouterLink, Icon],
   templateUrl: "./customer-detail.html",
   styleUrl: "../styles/details.css",
 })

@@ -1,8 +1,11 @@
+@if (accessDenied()) {
+  <app-page-access-denied />
+} @else {
 <section class="return-detail">
     <div class="adm-page-head">
       <div>
         <h2>{{ "Return Details" | translate }}</h2>
-        <p><a routerLink="/admin/returns">{{ "Returns" | translate }}</a> · {{ id }}</p>
+        <p><a routerLink="/admin/returns" *appCanRoute="'/admin/returns'">{{ "Returns" | translate }}</a> · {{ id }}</p>
       </div>
     </div>
     <app-status [busy]="busy()" [error]="error()" [message]="message()" />
@@ -83,7 +86,7 @@
           <article class="adm-panel">
             <h3>Action Panel</h3>
             @if (statusOf(current) === "REQUESTED") {
-              <form class="adm-form full" (ngSubmit)="$event.preventDefault()">
+              <form class="adm-form full" (ngSubmit)="$event.preventDefault()" *appCanAny="['RETURN_APPROVE', 'RETURN_REJECT']">
                 <label>
                   Remark
                   <span class="adm-optional">(Optional for approval)</span>
@@ -104,7 +107,7 @@
                     type="button"
                     [disabled]="busy()"
                     (click)="act('approve')"
-                  >
+                   *appCan="'RETURN_APPROVE'">
                     Approve Return
                   </button>
                   <button
@@ -112,13 +115,13 @@
                     type="button"
                     [disabled]="busy()"
                     (click)="act('reject')"
-                  >
+                   *appCan="'RETURN_REJECT'">
                     Reject Return
                   </button>
                 </div>
               </form>
             } @else if (statusOf(current) === "APPROVED") {
-              <form class="adm-form full" (ngSubmit)="act('receive')">
+              <form class="adm-form full" (ngSubmit)="act('receive')" *appCan="'RETURN_RECEIVE'">
                 <label>
                   Remark
                   <span class="adm-req">*</span>
@@ -143,14 +146,14 @@
                 type="button"
                 [disabled]="busy()"
                 (click)="act('inspect/start')"
-              >
+               *appCan="'RETURN_INSPECT'">
                 Start Inspection
               </button>
               <p class="adm-help">
                 Next step: mark inspection as Passed or Failed.
               </p>
             } @else if (statusOf(current) === "INSPECTING") {
-              <form class="adm-form full" (ngSubmit)="$event.preventDefault()">
+              <form class="adm-form full" (ngSubmit)="$event.preventDefault()" *appCan="'RETURN_INSPECT'">
                 <label>
                   Remark
                   <span class="adm-req">*</span>
@@ -171,7 +174,7 @@
                     type="button"
                     [disabled]="busy()"
                     (click)="act('inspect/complete', true)"
-                  >
+                   *appCan="'RETURN_INSPECT'">
                     Mark Passed
                   </button>
                   <button
@@ -179,7 +182,7 @@
                     type="button"
                     [disabled]="busy()"
                     (click)="act('inspect/complete', false)"
-                  >
+                   *appCan="'RETURN_INSPECT'">
                     Mark Failed
                   </button>
                 </div>
@@ -260,3 +263,4 @@
       </div>
     }
   </section>
+}

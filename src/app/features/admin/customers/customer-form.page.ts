@@ -1,3 +1,5 @@
+import { PageAccessDenied } from '../../../shared/components/page-access-denied';
+import { CanAccessDirective } from '../../../core/auth/can-access.directive';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
@@ -8,7 +10,7 @@ import { Status } from '../../../shared/components/status';
 import { Icon } from '../../../shared/components/icon';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { AdminApi, field, Row } from '../api/admin.api';
-@Component({imports:[FormsModule,RouterLink,Status,Icon,TranslatePipe],templateUrl:'./customer-form.html',styleUrls:['../settings/user-edit.css','./customer-form.css']})
+@Component({imports: [PageAccessDenied, CanAccessDirective, FormsModule,RouterLink,Status,Icon,TranslatePipe],templateUrl:'./customer-form.html',styleUrls:['../settings/user-edit.css','./customer-form.css']})
 export class CustomerFormPage extends PageState {
   private api=inject(AdminApi);
   private router=inject(Router);

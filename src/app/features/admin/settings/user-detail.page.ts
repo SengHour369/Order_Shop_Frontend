@@ -1,3 +1,5 @@
+import { PageAccessDenied } from '../../../shared/components/page-access-denied';
+import { CanAccessDirective } from '../../../core/auth/can-access.directive';
 import { Component, DestroyRef, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -8,13 +10,15 @@ import { Icon } from '../../../shared/components/icon';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { AdminApi, field, Row, text } from '../api/admin.api';
 @Component({
-  imports: [RouterLink, Status, Icon, TranslatePipe],
+  imports: [PageAccessDenied, CanAccessDirective, RouterLink, Status, Icon, TranslatePipe],
   templateUrl: './user-detail.html',
   styleUrl: './user-detail.css',
 })
 export class UserDetailPage extends PageState {
   private api = inject(AdminApi);
   private route = inject(ActivatedRoute);
+  customerDetail = this.route.snapshot?.data?.['customerDetail'] === true;
+  backLink() { return this.customerDetail ? '/admin/customers' : '/admin/users'; }
   user = signal<Row | null>(null);
   activity = signal<Row[]>([]);
   activityUnavailable = signal(false);
@@ -66,7 +70,7 @@ export class UserDetailPage extends PageState {
     if(!value)return '—';const date=new Date(String(value));if(Number.isNaN(date.getTime()))return '—';
     return new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}).format(date).replace(/(\d{4}), /,'$1 ');
   }
-  formattedId(){return 'USR-'+String(this.id).padStart(6,'0');}
+  formattedId(){return (this.customerDetail ? 'CUST-' : 'USR-')+String(this.id).padStart(6,'0');}
   language(){const value=String(field(this.user()||{},'language'));return ({'en-US':'English (US)','km-KH':'ខ្មែរ (Cambodia)'} as Record<string,string>)[value]||value||'Not configured';}
   fullName() { return text(field(this.user() || {}, 'fullName', 'full_name', 'name', 'username')); }
   names() {

@@ -3,15 +3,15 @@
     <div>
 <h2>{{ kind() }} Details</h2>
 <nav class="detail-crumbs" aria-label="Breadcrumb">
-<a routerLink="/admin">{{ "Dashboard" | translate }}</a>
+<a routerLink="/admin" *appCanRoute="'/admin'">{{ "Dashboard" | translate }}</a>
 <span>›</span>
-<a [routerLink]="base()">{{ plural() }}</a>
+<a [routerLink]="base()" *appCanRoute="base()">{{ plural() }}</a>
 <span>›</span>{{ text(row()['name']) }}</nav>
 </div>
     <div class="detail-actions">
-      <a class="detail-button" [routerLink]="base()">
+      <a class="detail-button" [routerLink]="base()" *appCanRoute="base()">
 <app-icon name="arrow-left" /> Back to {{ plural() }}</a>
-      <a class="detail-button primary" [class.blue]="kind() === 'Category'" [routerLink]="[base(), 'edit', row()['id']]">
+      <a class="detail-button primary" [class.blue]="kind() === 'Category'" [routerLink]="[base(), 'edit', row()['id']]" *appCanRoute="[base(), 'edit', row()['id']]">
 <app-icon name="edit" /> Edit {{ kind() }}</a>
     </div>
   </header>

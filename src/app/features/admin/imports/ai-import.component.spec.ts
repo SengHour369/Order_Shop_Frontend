@@ -24,7 +24,6 @@ describe('Excel import workflow',()=>{
  it('cancels stale preview responses and does not edit a previously selected batch after a failed load',()=>{const {page}=setup();const stale=new Subject<any>();api.preview.mockReturnValueOnce(stale).mockReturnValueOnce(throwError(()=>({status:404})));page.load(id,1);page.load(other);stale.next({...data(),batch:{...data().batch,id:other}});expect(page.preview()).toBeNull();expect(page.selectedId()).toBe(other);expect(page.fresh()).toBe(false);page.action('validate');expect(api.action).not.toHaveBeenCalled();});
  it('keeps successful pagination and filter state on read failure',()=>{const {page}=setup();api.preview.mockReturnValueOnce(throwError(()=>({status:503})));page.paginate(1);expect(page.page).toBe(0);expect(page.fresh()).toBe(false);api.preview.mockReturnValueOnce(of(data()));page.changeFilter('EDITED');expect(api.preview).toHaveBeenLastCalledWith(id,0,'EDITED');expect(page.filter).toBe('EDITED');});
  it('loads assigned execution history for reviewer-only staff and never exposes upload',()=>{grants.delete('IMPORT_UPLOAD');const {f}=setup('executions');expect(api.list).toHaveBeenCalledWith('executions',0,true);expect(f.nativeElement.querySelector('input[type=file]')).toBeNull();});
- it('rejects invalid files and prevents unauthorized uploads',()=>{const {page}=setup();const input:any={files:[new File(['data'],'macro.xlsm')],value:'x'};page.upload({target:input} as any);expect(api.upload).not.toHaveBeenCalled();input.files=[new File(['data'],'safe.xlsx')];grants.delete('IMPORT_UPLOAD');page.upload({target:input} as any);expect(api.upload).not.toHaveBeenCalled();});
  it('does not show execution for an uploader or an unassigned actor',()=>{api.preview.mockReturnValue(of(data('APPROVED')));const {page}=setup();expect(page.canExecute()).toBe(false);session.set({id:2});expect(page.canExecute()).toBe(true);grants.delete('IMPORT_REVIEW');expect(page.canExecute()).toBe(false);});
  it('ignores stale history responses after batch selection changes',()=>{const {page}=setup();const pending=new Subject<any>();api.executions.mockReturnValueOnce(pending);page.history();page.load(other);pending.next({rows:[{resourceId:'stale'}]});expect(page.executionHistory()).toBeNull();expect(page.historyLoading()).toBe(false);});
  it('fails safely when the deployed API has an incompatible preview contract',()=>{const p:any=data();delete p.summary;api.preview.mockReturnValueOnce(of(p));const {page,f}=setup();expect(page.preview()).toBeNull();expect(page.fresh()).toBe(false);expect(f.nativeElement.textContent).toContain('older import API');page.action('validate');expect(api.action).not.toHaveBeenCalled();});
@@ -40,10 +39,7 @@ describe('Excel import workflow',()=>{
   api.mapping.mockImplementation(()=>{p.sheets[0].confirmed=true;p.rows.content[0].valuesJson='{"name":"Excel value","status":"true"}';return of({...p.batch,revision:3});});page.confirm(p.sheets[0]);
   expect(page.rowValues['row']).toEqual({name:'Corrected value',status:'true'});page.saveAll();expect(api.edit).toHaveBeenCalledWith(p.batch,'row',{name:'Corrected value',status:'true'});
  });
- it('analyzes newly uploaded workbooks without silently confirming mappings',()=>{
-  const {page}=setup();const file=new File(['workbook'],'categories.xlsx');page.upload({target:{files:[file],value:'selected'}} as any);
-  expect(api.upload).toHaveBeenCalledWith(file);expect(api.action).toHaveBeenCalledWith(data().batch,'analyze');expect(api.mapping).not.toHaveBeenCalled();
- });
+ it('does not expose workbook uploads or template downloads',()=>{const {f}=setup();expect(f.nativeElement.querySelector('input[accept=".xlsx,.xls"]')).toBeNull();expect(f.nativeElement.querySelector('#import-templates')).toBeNull();});
  it('adds editable draft rows, removes discarded drafts and saves new rows to the backend',()=>{
   const {page}=setup();api.addRow=vi.fn((batch:any,sheet:string,id:string,values:any)=>of({batch:{...batch,revision:3},row:{...data().rows.content[0],id,valuesJson:JSON.stringify(values)}}));
   page.addRow();const draft=page.draftRows()[0];expect(page.visibleRows()).toHaveLength(2);expect(page.hasDrafts()).toBe(true);
@@ -80,14 +76,14 @@ describe('Excel import workflow',()=>{
  });
  it('skips selected visible rows sequentially using each returned revision',()=>{
   const p=data('SUBMITTED');p.rows.content.push({...p.rows.content[0],id:'row-2',rowNumber:3});api.preview.mockReturnValue(of(p));
-  const {page}=setup('review');page.toggleVisibleRows();expect(page.reviewSelection()).toHaveLength(2);
+  session.set({id:2});const {page}=setup('review');page.toggleVisibleRows();expect(page.reviewSelection()).toHaveLength(2);
   api.skip.mockReturnValueOnce(of({...p.batch,revision:3})).mockReturnValueOnce(of({...p.batch,revision:4}));page.skipSelected();
   expect(api.skip.mock.calls[0][0].revision).toBe(2);expect(api.skip.mock.calls[1][0].revision).toBe(3);
   expect(api.skip.mock.calls.map((call:any[])=>call[1].id)).toEqual(['row','row-2']);expect(page.selectedRows().size).toBe(0);
  });
  it('stops a selected-row update on conflict and requires reload before retrying',()=>{
   const p=data('SUBMITTED');p.rows.content.push({...p.rows.content[0],id:'row-2',rowNumber:3});api.preview.mockReturnValue(of(p));
-  const {page}=setup('review');page.toggleVisibleRows();api.skip.mockReturnValueOnce(throwError(()=>({status:409})));page.skipSelected();
+  session.set({id:2});const {page}=setup('review');page.toggleVisibleRows();api.skip.mockReturnValueOnce(throwError(()=>({status:409})));page.skipSelected();
   expect(api.skip).toHaveBeenCalledTimes(1);expect(page.fresh()).toBe(false);page.skipSelected();expect(api.skip).toHaveBeenCalledTimes(1);
   expect(page.preview()?.rows.content[0].skipped).toBe(false);
  });

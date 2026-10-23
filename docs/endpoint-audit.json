@@ -37,6 +37,33 @@
   },
   {
     "method": "GET",
+    "path": "/api/v1/storefront/access-settings",
+    "source": "admin-service/src/main/java/com/example/eshop/admin/controller/StorefrontAccessController.java",
+    "clients": [
+      "src/app/core/storefront/storefront-access.service.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/admin/storefront/access-settings",
+    "source": "admin-service/src/main/java/com/example/eshop/admin/controller/StorefrontAccessController.java",
+    "clients": [
+      "src/app/features/admin/settings/storefront-access-settings.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/admin/storefront/access-settings",
+    "source": "admin-service/src/main/java/com/example/eshop/admin/controller/StorefrontAccessController.java",
+    "clients": [
+      "src/app/features/admin/settings/storefront-access-settings.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
     "path": "/api/ai/admin/info",
     "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiAdminInfoController.java",
     "clients": [
@@ -66,6 +93,24 @@
     "method": "PATCH",
     "path": "/api/ai/admin/conversations/{id}",
     "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiAdminWorkspaceController.java",
+    "clients": [
+      "src/app/features/assistant/assistant.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/ai/visual-search",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiController.java",
+    "clients": [
+      "src/app/features/assistant/assistant.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/ai/tools/{tool}",
+    "source": "ai-service/src/main/java/com/example/eshop/ai/controller/AiController.java",
     "clients": [
       "src/app/features/assistant/assistant.api.ts"
     ],
@@ -551,9 +596,30 @@
     "status": "Adapter present; live verification required"
   },
   {
+    "method": "POST",
+    "path": "/internal/commerce/guest/contact-code",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/GuestContactMailController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "POST",
+    "path": "/internal/notifications/guest-email",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/GuestOrderMailController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
     "method": "GET",
     "path": "/internal/authorization/import-reviewers/{id}",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/ImportReviewerController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/authorization/api-access",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/InternalApiAccessController.java",
     "clients": [],
     "status": "Excluded: service-to-service API"
   },
@@ -607,10 +673,8 @@
     "method": "POST",
     "path": "/api/v1/public/verify",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/LoginController.java",
-    "clients": [
-      "src/app/core/auth/auth.service.ts"
-    ],
-    "status": "Adapter present; live verification required"
+    "clients": [],
+    "status": "Review required"
   },
   {
     "method": "POST",
@@ -625,10 +689,8 @@
     "method": "POST",
     "path": "/api/v1/public/email/username/login",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/LoginController.java",
-    "clients": [
-      "src/app/core/auth/auth.service.ts"
-    ],
-    "status": "Adapter present; live verification required"
+    "clients": [],
+    "status": "Review required"
   },
   {
     "method": "POST",
@@ -643,10 +705,8 @@
     "method": "POST",
     "path": "/api/v1/public/logout",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/LoginController.java",
-    "clients": [
-      "src/app/core/auth/auth.service.ts"
-    ],
-    "status": "Adapter present; live verification required"
+    "clients": [],
+    "status": "Review required"
   },
   {
     "method": "POST",
@@ -695,23 +755,45 @@
   },
   {
     "method": "POST",
+    "path": "/api/v1/public/second-factor",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/SecondFactorController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "POST",
     "path": "/api/v1/public/session/login",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/SessionController.java",
-    "clients": [],
+    "clients": [
+      "src/app/core/auth/auth.service.ts"
+    ],
     "status": "Excluded: alternative cookie-session protocol; app uses bearer tokens"
   },
   {
     "method": "POST",
     "path": "/api/v1/public/session/verify",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/SessionController.java",
-    "clients": [],
+    "clients": [
+      "src/app/core/auth/auth.service.ts"
+    ],
+    "status": "Excluded: alternative cookie-session protocol; app uses bearer tokens"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/public/session/second-factor",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/SessionController.java",
+    "clients": [
+      "src/app/core/auth/auth.service.ts"
+    ],
     "status": "Excluded: alternative cookie-session protocol; app uses bearer tokens"
   },
   {
     "method": "POST",
     "path": "/api/v1/public/session/refresh",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/SessionController.java",
-    "clients": [],
+    "clients": [
+      "src/app/core/auth/auth.service.ts"
+    ],
     "status": "Excluded: alternative cookie-session protocol; app uses bearer tokens"
   },
   {
@@ -789,6 +871,60 @@
     "method": "POST",
     "path": "/api/v1/user/count",
     "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserController.java",
+    "clients": [
+      "src/app/features/admin/api/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/user/{id}/details",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserEditorController.java",
+    "clients": [
+      "src/app/features/admin/api/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/user/{id}/details/activity",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserEditorController.java",
+    "clients": [
+      "src/app/features/admin/api/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/user/editor-options",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserEditorController.java",
+    "clients": [
+      "src/app/features/admin/api/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/user/{id}/editor",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserEditorController.java",
+    "clients": [
+      "src/app/features/admin/api/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/user/{id}/editor",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserEditorController.java",
+    "clients": [
+      "src/app/features/admin/api/admin.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/user/{id}/editor/photo",
+    "source": "auth-service/src/main/java/com/example/eshop/auth/controller/UserEditorController.java",
     "clients": [
       "src/app/features/admin/api/admin.api.ts"
     ],
@@ -1194,6 +1330,13 @@
     "status": "Adapter present; live verification required"
   },
   {
+    "method": "GET",
+    "path": "/api/v1/products/sku/{id}",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/CheckoutProductController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
     "method": "POST",
     "path": "/api/v1/inventory",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/InventoryController.java",
@@ -1434,6 +1577,54 @@
     "status": "Adapter present; live verification required"
   },
   {
+    "method": "GET",
+    "path": "/api/v1/storefront/products/{id}/reviews",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductReviewController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/products/{id}/reviews",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductReviewController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "POST",
+    "path": "/internal/commerce/guest/reviews",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductReviewController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/products/{id}/reviews",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductReviewController.java",
+    "clients": [
+      "src/app/features/catalog/reviews/product-reviews.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/admin/guest-reviews",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductReviewController.java",
+    "clients": [
+      "src/app/features/admin/settings/guest-review-moderation.page.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/admin/guest-reviews/{id}",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductReviewController.java",
+    "clients": [
+      "src/app/features/admin/settings/guest-review-moderation.page.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
     "method": "POST",
     "path": "/api/v1/product-scanner/scan",
     "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/ProductScannerController.java",
@@ -1567,6 +1758,52 @@
       "src/app/features/catalog/catalog.api.ts"
     ],
     "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/storefront/categories",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/StorefrontProductController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/storefront/categories/name",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/StorefrontProductController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/storefront/categories/{id}",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/StorefrontProductController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/storefront/products",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/StorefrontProductController.java",
+    "clients": [
+      "src/app/features/catalog/catalog.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/storefront/products/{id}",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/StorefrontProductController.java",
+    "clients": [
+      "src/app/features/catalog/catalog.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/storefront/skus/{id}",
+    "source": "catalog-service/src/main/java/com/example/eshop/catalog/controller/StorefrontProductController.java",
+    "clients": [],
+    "status": "Review required"
   },
   {
     "method": "POST",
@@ -1801,6 +2038,41 @@
   },
   {
     "method": "GET",
+    "path": "/internal/ai/shopping/cart",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/AiShoppingController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "POST",
+    "path": "/internal/ai/shopping/cart/{action}",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/AiShoppingController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/ai/shopping/checkout-preview",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/AiShoppingController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/ai/shopping/reviews/{id}",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/AiShoppingController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "POST",
+    "path": "/internal/ai/shopping/orders/{id}",
+    "source": "order-service/src/main/java/com/example/eshop/order/controller/AiShoppingController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "GET",
     "path": "/api/v1/cancelations/summary",
     "source": "order-service/src/main/java/com/example/eshop/order/controller/CancelationController.java",
     "clients": [
@@ -1848,28 +2120,22 @@
     "method": "POST",
     "path": "/api/v1/cart/user/id/items",
     "source": "order-service/src/main/java/com/example/eshop/order/controller/CartController.java",
-    "clients": [
-      "src/app/features/cart/cart.api.ts"
-    ],
-    "status": "Adapter present; live verification required"
+    "clients": [],
+    "status": "Review required"
   },
   {
     "method": "POST",
     "path": "/api/v1/cart/user/id/items/cartItemId",
     "source": "order-service/src/main/java/com/example/eshop/order/controller/CartController.java",
-    "clients": [
-      "src/app/features/cart/cart.api.ts"
-    ],
-    "status": "Adapter present; live verification required"
+    "clients": [],
+    "status": "Review required"
   },
   {
     "method": "POST",
     "path": "/api/v1/cart/user/userId/items/cartItemId",
     "source": "order-service/src/main/java/com/example/eshop/order/controller/CartController.java",
-    "clients": [
-      "src/app/features/cart/cart.api.ts"
-    ],
-    "status": "Adapter present; live verification required"
+    "clients": [],
+    "status": "Review required"
   },
   {
     "method": "POST",
@@ -2188,6 +2454,143 @@
   },
   {
     "method": "GET",
+    "path": "/api/v1/guest/cart",
+    "source": "order-service/src/main/java/com/example/eshop/order/guest/GuestCartController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/guest/cart/items",
+    "source": "order-service/src/main/java/com/example/eshop/order/guest/GuestCartController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/guest/cart/items/{id}",
+    "source": "order-service/src/main/java/com/example/eshop/order/guest/GuestCartController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/guest/cart/items",
+    "source": "order-service/src/main/java/com/example/eshop/order/guest/GuestCartController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/guest/cart/items/{id}",
+    "source": "order-service/src/main/java/com/example/eshop/order/guest/GuestCartController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/guest/contact/code",
+    "source": "order-service/src/main/java/com/example/eshop/order/guest/GuestContactController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/guest/contact/verify",
+    "source": "order-service/src/main/java/com/example/eshop/order/guest/GuestContactController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/commerce/guest-orders/{id}/notice",
+    "source": "order-service/src/main/java/com/example/eshop/order/guest/GuestNoticeController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/guest/checkout/preview",
+    "source": "order-service/src/main/java/com/example/eshop/order/guest/GuestOrderController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/guest/orders",
+    "source": "order-service/src/main/java/com/example/eshop/order/guest/GuestOrderController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/guest/orders",
+    "source": "order-service/src/main/java/com/example/eshop/order/guest/GuestOrderController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/guest/orders/{id}/access",
+    "source": "order-service/src/main/java/com/example/eshop/order/guest/GuestOrderController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/guest/orders/{id}",
+    "source": "order-service/src/main/java/com/example/eshop/order/guest/GuestOrderController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/guest/orders/{id}/payments",
+    "source": "order-service/src/main/java/com/example/eshop/order/guest/GuestOrderController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/guest/orders/{id}/payment-image",
+    "source": "order-service/src/main/java/com/example/eshop/order/guest/GuestOrderController.java",
+    "clients": [
+      "src/app/core/storefront/guest.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/guest/orders/{id}/payment-status",
+    "source": "order-service/src/main/java/com/example/eshop/order/guest/GuestOrderController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/guest/reviews",
+    "source": "order-service/src/main/java/com/example/eshop/order/guest/GuestReviewController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/guest/session",
+    "source": "order-service/src/main/java/com/example/eshop/order/guest/GuestSessionController.java",
+    "clients": [
+      "src/app/core/storefront/guest.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/guest/session",
+    "source": "order-service/src/main/java/com/example/eshop/order/guest/GuestSessionController.java",
+    "clients": [],
+    "status": "Review required"
+  },
+  {
+    "method": "GET",
     "path": "/api/v1/payments/orders/{id}/qr/image",
     "source": "payment-service/src/main/java/com/example/eshop/payment/automation/PaymentAutomationController.java",
     "clients": [],
@@ -2206,6 +2609,20 @@
     "source": "payment-service/src/main/java/com/example/eshop/payment/automation/PaymentAutomationController.java",
     "clients": [],
     "status": "Review required"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/commerce/guest-orders/{id}/qr/image",
+    "source": "payment-service/src/main/java/com/example/eshop/payment/automation/PaymentAutomationController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/commerce/guest-orders/{id}/qr",
+    "source": "payment-service/src/main/java/com/example/eshop/payment/automation/PaymentAutomationController.java",
+    "clients": [],
+    "status": "Excluded: service-to-service API"
   },
   {
     "method": "GET",
@@ -2308,6 +2725,15 @@
     "source": "payment-service/src/main/java/com/example/eshop/payment/controller/PaymentController.java",
     "clients": [
       "src/app/features/admin/api/admin.api.ts",
+      "src/app/features/payments/payments.api.ts"
+    ],
+    "status": "Adapter present; live verification required"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/payments/methods",
+    "source": "payment-service/src/main/java/com/example/eshop/payment/controller/PaymentMethodsController.java",
+    "clients": [
       "src/app/features/payments/payments.api.ts"
     ],
     "status": "Adapter present; live verification required"

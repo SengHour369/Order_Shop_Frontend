@@ -1,3 +1,5 @@
+import { workflowUnsavedGuard } from './features/admin/ai-automation/workflows.guard';
+import { storefrontGuard } from "./core/storefront/storefront-access.service";
 import { permissionGuard } from "./core/auth/permission.service";
 import { customerAssistantGuard } from "./core/auth/customer-assistant.guard";
 import { adminGuard } from "./core/auth/admin.guard";
@@ -5,6 +7,9 @@ import { Routes } from "@angular/router";
 import { authGuard } from "./core/auth/auth.guard";
 import { staffGuard } from "./core/auth/staff.guard";
 export const routes: Routes = [
+  {path:"checkout/payment/:id",canActivate:[authGuard],title:"Payment · E-Shop",loadComponent:()=>import("./features/payments/checkout-payment.page").then(m=>m.CheckoutPaymentPage)},
+  {path: "guest/orders", title: "Guest orders · E-Shop", canActivate: [storefrontGuard("guestOrderTracking")], loadComponent: () => import("./features/guest/guest-orders.page").then(m => m.GuestOrdersPage)},
+  {path: "guest/orders/:id", title: "Guest order · E-Shop", loadComponent: () => import("./features/guest/guest-orders.page").then(m => m.GuestOrdersPage)},
   {
     path: "auth/keycloak/callback",
     title: "Keycloak Sign In · E-Shop",
@@ -32,30 +37,31 @@ export const routes: Routes = [
   },
   {
     path: "shop",
+    canActivate: [storefrontGuard("guestBrowsing")],
     title: "Products · E-Shop",
     loadComponent: () =>
       import("./features/catalog/catalog.page").then((m) => m.CatalogPage),
   },
   {
     path: "shop/:id",
-    canActivate: [authGuard],
+    canActivate: [storefrontGuard("guestBrowsing")],
     title: "Product Details · E-Shop",
     loadComponent: () =>
       import("./features/catalog/product.page").then((m) => m.ProductPage),
   },
   {
     path: "cart",
-    canActivate: [authGuard],
+    canActivate: [storefrontGuard("guestCart")],
     title: "My Cart · E-Shop",
     loadComponent: () =>
       import("./features/cart/cart.page").then((m) => m.CartPage),
   },
   {
     path: "checkout",
-    canActivate: [authGuard],
+    canActivate: [storefrontGuard("guestCheckout")],
     title: "Checkout · E-Shop",
     loadComponent: () =>
-      import("./features/checkout/checkout.page").then((m) => m.CheckoutPage),
+      import("./features/guest/checkout-entry").then((m) => m.CheckoutEntry),
   },
   {
     path: "account",
@@ -183,8 +189,8 @@ export const routes: Routes = [
     canActivate: [authGuard, customerAssistantGuard],
     title: "Assistant · E-Shop",
     loadComponent: () =>
-      import("./features/assistant/assistant.page").then(
-        (m) => m.AssistantPage,
+      import("./features/assistant/customer-chat/shopping-assistant.page").then(
+        (m) => m.ShoppingAssistantPage,
       ),
   },
   {
@@ -204,9 +210,12 @@ export const routes: Routes = [
     children: [
       {path: "access-denied", loadComponent: () => import("./features/admin/settings/access-denied.page").then(m => m.AccessDeniedPage)},
       {path:'branches',title:'Branches · ShopAdmin',loadComponent:()=>import('./features/admin/imports/branches.page').then(m=>m.BranchesPage)},
+      {path:'review-authorization',data:{mine:false},title:'Review Authorization · ShopAdmin',loadComponent:()=>import('./features/admin/imports/approval-requests.page').then(m=>m.ApprovalRequestsPage)},
+      {path:'my-requests',data:{mine:true},title:'My Requests · ShopAdmin',loadComponent:()=>import('./features/admin/imports/approval-requests.page').then(m=>m.ApprovalRequestsPage)},
       ...([
-        ['imports', 'upload'], ['import-approvals', 'review'], ['import-executions', 'executions'],
-      ] as const).map(([path, importMode]) => ({path, data:{importMode}, title:'Excel Imports · ShopAdmin', loadComponent:()=>import('./features/admin/imports/ai-imports.page').then(m=>m.AiImportsPage)})),
+        ['import-executions', 'executions'],
+      ] as const).map(([path, importMode]) => ({path, data:{importMode}, title:'Request Executions · ShopAdmin', loadComponent:()=>import('./features/admin/imports/ai-imports.page').then(m=>m.AiImportsPage)})),
+      { path: "ai-automation", canActivate: [adminGuard], canDeactivate: [workflowUnsavedGuard], title: "AI Automation · E-Shop", loadComponent: () => import("./features/admin/ai-automation/workflows.page").then(m => m.WorkflowsPage) },
       {
         path: "automation", canActivate: [adminGuard], title: "Payment Automation · E-Shop", loadComponent: () => import("./features/admin/automation/automation.page").then(m => m.AutomationPage),
       },
@@ -332,10 +341,11 @@ export const routes: Routes = [
       },
       {
         path: "customers/:id",
-        title: "Customer · ShopAdmin",
+        title: "Customer Details · ShopAdmin",
+        data: { customerDetail: true },
         loadComponent: () =>
-          import("./features/admin/customers/customers.page").then(
-            (m) => m.CustomerDetailPage,
+          import("./features/admin/settings/user-detail.page").then(
+            (m) => m.UserDetailPage,
           ),
       },
       {
@@ -515,6 +525,10 @@ export const routes: Routes = [
         loadComponent: () =>
           import("./features/admin/reports/reports.page").then((m) => m.ReportsPage),
       },
+      {path: "live-tests", title: "Live Tests · ShopAdmin", loadComponent: () => import("./features/admin/live-tests/live-tests.page").then(m => m.LiveTestsPage)},
+      {path: "storefront-access", title: "Storefront Access · ShopAdmin", loadComponent: () => import("./features/admin/settings/storefront-access-settings").then(m => m.StorefrontAccessSettings)},
+      {path: "guest-activity", title: "Guest Activity · ShopAdmin", data: {guestActivity:true}, loadComponent: () => import("./features/admin/settings/operations.page").then(m => m.OperationsPage)},
+      {path: "guest-reviews", title: "Review Moderation · ShopAdmin", loadComponent: () => import("./features/admin/settings/guest-review-moderation.page").then(m => m.GuestReviewModerationPage)},
       {
         path: "settings",
         title: "Settings · ShopAdmin",

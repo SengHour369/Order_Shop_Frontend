@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AdminApi } from '../api/admin.api';
 import { OrderDetailPage } from './orders.page';
@@ -11,10 +11,10 @@ describe('Order detail service composition', () => {
       orderItems: vi.fn(() => of([{ id: 2, quantity: 1 }])),
       customer: vi.fn(() => of({ id: 7, fullName: 'Test Customer', email: 'test@example.test' })),
       address: vi.fn(() => of({ id: 9, address_line1: 'Street 1', city: 'Phnom Penh', country: 'Cambodia' })),
-      paymentByOrder: vi.fn(() => paymentFails ? throwError(() => new Error('Unavailable')) : of({ id: 55, status: 'PENDING', amount: 120 })),
+      paymentByOrder: vi.fn(() => paymentFails ? throwError(() => new Error('Unavailable')) : of({ id: 55, status: 'PENDING', amount: 120, payment_date: '2026-10-18T10:00:00' })),
     };
     TestBed.configureTestingModule({ providers: [
-      { provide: AdminApi, useValue: api },
+      provideRouter([]), { provide: AdminApi, useValue: api },
       { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: '42' })) } },
     ] });
     return { page: TestBed.runInInjectionContext(() => new OrderDetailPage()), api };
@@ -52,6 +52,46 @@ describe('Order detail service composition', () => {
     expect(page.optionalDiscount(page.items()[0])).toBe('-$15.00');
     expect(page.optionalMoney('')).toBe('—');
     expect(page.optionalMoney(0)).toBe('$0.00');
+  });
+
+  it('renders the reference card layout and hides unavailable shipping fields', () => {
+    create();
+    const fixture = TestBed.createComponent(OrderDetailPage);
+    fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelectorAll('.order-overview > .admin-order-card')).toHaveLength(4);
+    expect(element.querySelectorAll('.order-content > .admin-order-card')).toHaveLength(4);
+    expect(element.querySelector('.order-number')?.textContent).toContain('42');
+    expect(element.textContent).not.toContain('Tracking No.');
+    expect(element.textContent).not.toContain('Shipping Method');
+    expect(element.textContent).not.toContain('Paid On');
+    expect(element.textContent).toContain('Test Customer');
+    expect(element.textContent).not.toContain('Sarah Johnson');
+  });
+
+  it('isolates the detail cards and discount cells from storefront layout classes', () => {
+    create();
+    const conflictingStyles = document.createElement('style');
+    conflictingStyles.textContent = '.order-card { display: grid; grid-template-columns: 1fr 1fr 1fr; } .discount { position: absolute; } .total { display: flex; }';
+    document.head.appendChild(conflictingStyles);
+    try {
+      const fixture = TestBed.createComponent(OrderDetailPage);
+      fixture.detectChanges();
+      const root = fixture.nativeElement as HTMLElement;
+      expect(root.querySelectorAll('.order-card, .discount, .total')).toHaveLength(0);
+      expect(root.querySelectorAll('.admin-order-card')).toHaveLength(8);
+      expect(getComputedStyle(root.querySelector('.admin-order-card')!).display).toBe('block');
+      expect(root.querySelector('.admin-order-discount')).not.toBeNull();
+    } finally {
+      conflictingStyles.remove();
+    }
+  });
+
+  it('marks failed timeline events as failures rather than successful milestones', () => {
+    const { page } = create();
+    const events = page.timeline({ status: 'FAILED', order_date: '2026-10-18T10:00:00', updated_at: '2026-10-18T10:01:00' });
+    expect(events[0].failed).toBe(false);
+    expect(events[1].failed).toBe(true);
   });
 
   it('uses real payment and status history events without inventing shipping events', () => {

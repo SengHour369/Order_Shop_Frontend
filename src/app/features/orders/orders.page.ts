@@ -1,5 +1,6 @@
+import { ChatOrder } from '../assistant/chat-order';
 import { TranslatePipe } from "../../core/i18n/translate.pipe";
-import { Component, inject, signal } from "@angular/core";
+import { Component, inject, input, signal } from "@angular/core";
 import { CurrencyPipe, DatePipe } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { RouterLink } from "@angular/router";
@@ -12,7 +13,9 @@ import { SignInCard } from "../../shared/components/sign-in-card";
 import { PageState } from "../../shared/utils/page-state";
 import { Status } from "../../shared/components/status";
 @Component({
-  imports: [TranslatePipe, 
+  selector: "app-customer-orders",
+  styleUrl: "./orders-embedded.css",
+  imports: [ChatOrder, TranslatePipe,
     CurrencyPipe,
     DatePipe,
     FormsModule,
@@ -22,7 +25,23 @@ import { Status } from "../../shared/components/status";
     SignInCard,
     Status,
   ],
-  template: `<div class="page-heading">
+  template: `@if (embedded()) {
+    <section class="embedded-orders" aria-label="My orders">
+      <header><span class="embedded-orders-icon"><app-icon name="cart" /></span><div><h3>My Orders</h3><p>Manage and view your orders.</p></div></header>
+      @if (!auth.session()) {<app-sign-in-card action="view your orders" path="/account/orders" />}
+      @else {
+        <div class="embedded-filters"><label><app-icon name="search" /><input aria-label="Search orders on this page" [(ngModel)]="search" placeholder="Search order number or status on this page…" /></label><select aria-label="Order status" [ngModel]="status" (ngModelChange)="filter($event)" [disabled]="busy()">@for(tab of tabs; track tab.value){<option [value]="tab.value">{{tab.label}}</option>}</select><input type="date" aria-label="Order date on this page" [(ngModel)]="date" /><button type="button" (click)="resetFilters()" [disabled]="busy()">Reset</button></div>
+        <app-status [busy]="busy()" [error]="error()" />
+        @if(error()){<button type="button" (click)="load()" [disabled]="busy()">Retry</button>}
+        <div class="embedded-table-wrap"><table><thead><tr><th>Order No.</th><th>Date</th><th>Items</th><th>Total Amount</th><th>Payment Method</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+          @for(order of filtered();track order.id){<tr><td><button type="button" class="order-number" (click)="selectedId.set(order.id)">{{order.order_number}}</button></td><td>{{order.order_date | date:'mediumDate'}}</td><td>{{order.items?.length ?? 0}} items</td><td>{{order.total_amount | currency:'USD'}}</td><td>{{order.paymentMethod || '—'}}</td><td><span class="embedded-status" [class.delivered]="order.status === 'DELIVERED' || order.status === 'COMPLETED'" [class.processing]="order.status === 'PROCESSING' || order.status === 'SHIPPED'" [class.cancelled]="order.status === 'CANCELLED' || order.status === 'FAILED'">{{order.status}}</span></td><td><button type="button" (click)="selectedId.set(order.id)">View Details</button></td></tr>}
+          @empty{<tr><td colspan="7">{{busy() ? 'Loading orders…' : 'No matching orders on this page.'}}</td></tr>}
+        </tbody></table></div>
+        <nav class="embedded-pagination" aria-label="Order pages"><button type="button" [disabled]="page === 0 || busy()" (click)="page = page - 1; load()">Previous</button><span aria-live="polite">{{page + 1}} / {{pages || 1}}</span><button type="button" [disabled]="page + 1 >= pages || busy()" (click)="page = page + 1; load()">Next</button></nav>
+        @if(selectedId(); as id){<section class="embedded-detail"><div class="embedded-detail-heading"><h3>Order Details</h3><button type="button" (click)="selectedId.set(null)" aria-label="Close order details">Close</button></div><app-chat-order [orderId]="id" [language]="language()" /></section>}
+      }
+    </section>
+  } @else {<div class="page-heading">
       <div>
         <h1>{{ "My Orders" | translate }}</h1>
         <p>Track, manage and view all your orders in one place.</p><a routerLink="/account/returns">{{ 'My Returns' | translate }}</a>
@@ -158,9 +177,13 @@ import { Status } from "../../shared/components/status";
           {{ "Next" | translate }}
         </button>
       </div>
-    }`,
+    } }`,
 })
 export class OrdersPage extends PageState {
+  embedded = input(false);
+  language = input("en");
+  date = "";
+  resetFilters() { this.search = ""; this.date = ""; this.selectedId.set(null); this.filter(""); }
   api = inject(OrdersApi);
   auth = inject(AuthService);
   orders = signal<Order[]>([]);
@@ -187,6 +210,7 @@ export class OrdersPage extends PageState {
   }
   filter(value: string) {
     this.status = value;
+    this.selectedId.set(null);
     this.page = 0;
     this.load();
   }
@@ -200,7 +224,8 @@ export class OrdersPage extends PageState {
   filtered() {
     const q = this.search.toLowerCase();
     return this.orders().filter((o) =>
-      (o.order_number || "").toLowerCase().includes(q),
+      ((o.order_number || "").toLowerCase().includes(q) || (o.status || "").toLowerCase().includes(q))
+      && (!this.date || o.order_date?.slice(0,10) === this.date),
     );
   }
 }

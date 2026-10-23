@@ -1,3 +1,6 @@
+@if (accessDenied()) {
+  <app-page-access-denied />
+} @else {
 <section class="refund-ui">
   <header class="refund-heading">
     <div class="detail-heading">
@@ -5,14 +8,14 @@
         class="refund-btn icon"
         routerLink="/admin/refunds"
         aria-label="Back to refunds"
-        >‹</a
+         *appCanRoute="'/admin/refunds'">‹</a
       >
       <div>
         <h2>{{ "Refund Details" | translate }}</h2>
         <div class="refund-crumbs">
-          <a routerLink="/admin">{{ "Dashboard" | translate }}</a><span>›</span
-          ><a routerLink="/admin/returns">{{ "Returns" | translate }}</a><span>›</span
-          ><a routerLink="/admin/refunds">{{ "Refunds" | translate }}</a><span>›</span
+          <a routerLink="/admin" *appCanRoute="'/admin'">{{ "Dashboard" | translate }}</a><span>›</span
+          ><a routerLink="/admin/returns" *appCanRoute="'/admin/returns'">{{ "Returns" | translate }}</a><span>›</span
+          ><a routerLink="/admin/refunds" *appCanRoute="'/admin/refunds'">{{ "Refunds" | translate }}</a><span>›</span
           ><span>{{ id }}</span>
         </div>
       </div>
@@ -34,7 +37,7 @@
         @if (moreOpen) {
           <div class="refund-menu">
             <button (click)="load(); moreOpen = false">Refresh details</button
-            ><button (click)="download()">Download refund record</button>
+            ><button (click)="download()" *appCan="'REFUND_EXPORT'">Download refund record</button>
           </div>
         }
       </div>
@@ -77,7 +80,7 @@
           ><strong>{{ text(field(current, "order_no", "orderNo")) }}</strong>
           @if (field(order(), "id")) {
             <a [routerLink]="['/admin/orders', field(order(), 'id')]"
-              >View Order →</a
+               *appCanRoute="['/admin/orders', field(order(), 'id')]">View Order →</a
             >
           }
         </div>
@@ -201,7 +204,7 @@
                 <a
                   class="refund-btn small"
                   [routerLink]="['/admin/orders', field(order(), 'id')]"
-                  >{{ "View Order" | translate }}</a
+                   *appCanRoute="['/admin/orders', field(order(), 'id')]">{{ "View Order" | translate }}</a
                 >
               }
             </header>
@@ -255,7 +258,7 @@
                 <a
                   class="refund-btn small"
                   [routerLink]="['/admin/customers', field(customer(), 'id')]"
-                  ><app-icon name="edit" />View Customer</a
+                   *appCanRoute="['/admin/customers', field(customer(), 'id')]"><app-icon name="edit" />View Customer</a
                 >
               }
             </header>
@@ -410,7 +413,7 @@
                 Download the refund record, related order, payment and status
                 history.
               </p>
-              <button class="refund-btn" (click)="download()">
+              <button class="refund-btn" (click)="download()" *appCan="'REFUND_EXPORT'">
                 <app-icon name="list" />Download Record
               </button>
             </div>
@@ -488,7 +491,7 @@
             <header>
               <h3>Shipping &amp; Return</h3>
               <a class="refund-btn small" routerLink="/admin/returns"
-                >{{ "Return Requests" | translate }}</a
+                 *appCanRoute="'/admin/returns'">{{ "Return Requests" | translate }}</a
               >
             </header>
             <dl class="info-list">
@@ -572,6 +575,7 @@
                 class="refund-btn small"
                 disabled
                 title="Notes can be submitted as a remark when processing or cancelling a pending refund."
+                *appCanAny="['REFUND_PROCESS', 'REFUND_CANCEL']"
               >
                 + Add Note
               </button>
@@ -594,18 +598,18 @@
                 class="refund-btn danger"
                 [disabled]="!canAct()"
                 (click)="action = 'cancel'"
-              >
+               *appCan="'REFUND_CANCEL'">
                 <app-icon name="close" />{{ "Reject" | translate }}</button
               ><a
                 class="refund-btn approve"
                 routerLink="/admin/returns"
                 title="Approval is managed through Return Requests."
-                ><app-icon name="check" />{{ "Approve" | translate }}</a
+                 *appCan="['RETURN_VIEW', 'RETURN_APPROVE']"><app-icon name="check" />{{ "Approve" | translate }}</a
               ><button
                 class="refund-btn primary"
                 [disabled]="!canAct()"
                 (click)="action = 'process'"
-              >
+               *appCan="'REFUND_PROCESS'">
                 <app-icon name="arrow" />Process Refund
               </button>
             </div>
@@ -619,7 +623,7 @@
     </div>
     @if (action) {
       <div class="refund-modal-backdrop">
-        <form class="refund-modal" (ngSubmit)="submit()">
+        <form class="refund-modal" (ngSubmit)="submit()" *appCan="action === 'process' ? 'REFUND_PROCESS' : 'REFUND_CANCEL'">
           <header>
             <h3>
               {{ action === "process" ? "Process Refund" : "Reject Refund" }}
@@ -668,3 +672,5 @@
     }
   }
 </section>
+
+}

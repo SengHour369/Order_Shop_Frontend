@@ -11,3 +11,11 @@
 /ai-training-data/*.partial
 
 .cache/
+
+# Local Grafana credentials
+/deploy/grafana/.env
+
+# Jenkins CI output
+reports/
+frontend-dist.tar.gz
+.npm-cache/

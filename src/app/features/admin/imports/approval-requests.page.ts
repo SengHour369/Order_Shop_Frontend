@@ -1,0 +1,46 @@
+import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { AiImportsApi, ImportBatch, ImportPreview, ImportRow, ImportAction } from './ai-imports.api';
+import { PermissionService } from '../../../core/auth/permission.service';
+import { AuthService } from '../../../core/auth/auth.service';
+import { ImportValuesComponent, ImportActivityComponent, importLabel } from './import-readable-details';
+import { approvalChanges } from './approval-diff';
+@Component({imports:[DatePipe,FormsModule,RouterLink,ImportValuesComponent,ImportActivityComponent],templateUrl:'./approval-requests.html',styleUrl:'./approval-requests.css'})
+export class ApprovalRequestsPage {
+ private api=inject(AiImportsApi);private route=inject(ActivatedRoute);private auth=inject(AuthService);access=inject(PermissionService);private lifetime=inject(DestroyRef);
+ mine=this.route.snapshot.data['mine']===true;readonly busy=signal(false);readonly error=signal('');readonly message=signal('');readonly rows=signal<ImportBatch[]>([]);readonly counts=signal<Record<string,number>>({});readonly detail=signal<ImportPreview|null>(null);readonly history=signal<unknown>(null);readonly selected=signal<Set<string>>(new Set());
+ page=0;pages=0;total=0;search='';status=this.mine?'':'SUBMITTED';source='';entity='';tab='Details';reason='';reviewerId:number|null=null;fieldSearch='';rowPage=0;rowFilter='';
+ readonly tabs=['Details','Changes','Validation','Attachments','History'];readonly statuses=['','SUBMITTED','CHANGES_REQUESTED','APPROVED','REJECTED','COMPLETED','DRAFT','VALIDATED','INVALID','PROCESSING','PARTIAL_SUCCESS','FAILED'];readonly sources=['EXCEL_IMPORT','MANUAL_CREATE','MANUAL_UPDATE','AI_ASSISTANT'];readonly entities=['PRODUCT','PRODUCT_SKU','CATEGORY','BRANCH','INVENTORY','PROMOTION'];label=importLabel;
+ constructor(){this.route.queryParamMap.pipe(takeUntilDestroyed(this.lifetime)).subscribe(params=>{const id=params.get('batch');void this.run(async()=>{await this.readList();if(id)await this.readDetail(id);});});}
+ async run(action:()=>Promise<void>){if(this.busy())return;this.busy.set(true);this.error.set('');this.message.set('');try{await action();}catch(e:unknown){const fault=e as {status?:number;error?:{message?:string;detail?:string}};this.error.set(fault.status===409?'This request changed. Reload its current revision before continuing.':fault.error?.message??fault.error?.detail??(e instanceof Error?e.message:'Request failed. Check live service availability and permissions.'));}finally{this.busy.set(false);}}
+ private async readList(){const result=await firstValueFrom(this.api.requests(this.mine,this.page,{search:this.search.trim(),status:this.status,source:this.source,entity:this.entity}));this.rows.set(result.items);this.total=result.total;this.pages=result.totalPages;this.counts.set(result.counts);this.selected.set(new Set());}
+ load(){return this.run(()=>this.readList());}
+ filter(){this.page=0;void this.load();}
+ pick(status:string){this.status=status;this.filter();}
+ private async readDetail(id:string){const preview=await firstValueFrom(this.api.preview(id,this.rowPage,this.rowFilter));this.detail.set(preview);this.reviewerId=preview.batch.assignedReviewerId;this.history.set(await firstValueFrom(this.api.history(id)));}
+ open(id:string){this.rowPage=0;this.rowFilter='';this.tab='Details';this.reason='';return this.run(()=>this.readDetail(id));}
+ close(){this.detail.set(null);this.history.set(null);void this.load();}
+ reload(){const detail=this.detail();return detail?this.run(()=>this.readDetail(detail.batch.id)):this.load();}
+ authUserId(){return this.auth.session()?.id;}
+ canEdit(batch:ImportBatch){const user=this.auth.session()?.id;return batch.ownerId===user?this.access.has('IMPORT_UPLOAD')&&!['SUBMITTED','APPROVED','PROCESSING','COMPLETED','PARTIAL_SUCCESS','FAILED','REJECTED'].includes(batch.status):this.access.has('IMPORT_REVIEW')&&batch.assignedReviewerId===user&&!['PROCESSING','COMPLETED','PARTIAL_SUCCESS','FAILED','REJECTED'].includes(batch.status);}
+ canReview(batch:ImportBatch){const user=this.auth.session()?.id;return batch.status==='SUBMITTED'&&batch.assignedReviewerId===user&&batch.ownerId!==user&&batch.lastEditorId!==user&&this.access.has('IMPORT_REVIEW');}
+ canApprove(batch:ImportBatch){return this.canReview(batch)&&this.access.has('IMPORT_APPROVE')&&this.access.has('IMPORT_EXECUTE');}
+ canExecute(batch:ImportBatch){return ['APPROVED','PROCESSING','PARTIAL_SUCCESS','FAILED'].includes(batch.status)&&batch.reviewerId===this.auth.session()?.id&&['IMPORT_APPROVE','IMPORT_EXECUTE','IMPORT_REVIEW'].every(p=>this.access.has(p));}
+ changes(row:ImportRow){const sheet=this.detail()?.sheets.find(sheet=>sheet.id===row.sheetId);const query=this.fieldSearch.toLowerCase();return approvalChanges(row.currentValues,row.valuesJson,!!sheet?.tool?.endsWith('_CREATE')).filter(change=>!query||change.field.toLowerCase().includes(query));}
+ toggle(batch:ImportBatch){this.selected.update(ids=>{const next=new Set(ids);if(next.has(batch.id))next.delete(batch.id);else next.add(batch.id);return next;});}
+ async decide(action:ImportAction,batch=this.detail()?.batch){if(!batch)return;if(['approve','reject','request-changes'].includes(action)&&(!this.canReview(batch)||!this.reason.trim())){this.error.set('Enter a review reason before deciding.');return;}if(action==='approve'&&!this.canApprove(batch)||action==='execute'&&!this.canExecute(batch))return;
+  return this.run(async()=>{let result=await firstValueFrom(this.api.action(batch,action,action==='submit'?{reviewerId:this.reviewerId}:['approve','reject','request-changes'].includes(action)?{reason:this.reason.trim()}:{}));if(action==='approve'&&result.status==='APPROVED')result=await firstValueFrom(this.api.action(result,'execute'));await this.readDetail(result.id);this.message.set('Server status: '+this.label(result.status)+'.');});
+ }
+ bulk(action:'approve'|'reject'){const targets=this.rows().filter(row=>this.selected().has(row.id));if(!targets.length||!this.reason.trim()){this.error.set('Select requests and enter a decision reason.');return;}if(targets.some(row=>action==='approve'?!this.canApprove(row):!this.canReview(row))){this.error.set('Every selected request must be assigned to you and permit this action.');return;}
+  return this.run(async()=>{let done=0;try{for(const batch of targets){let result=await firstValueFrom(this.api.action(batch,action,{reason:this.reason.trim()}));if(action==='approve'&&result.status==='APPROVED')result=await firstValueFrom(this.api.action(result,'execute'));done++;if(action==='approve'&&!['COMPLETED','PROCESSING'].includes(result.status))throw new Error('Execution requires review');}}finally{await this.readList();this.message.set(`${done} decision responses received. Review each request's actual execution status.`);}});
+ }
+ pageRows(delta:number){const detail=this.detail();if(!detail)return;const target=this.rowPage+delta;if(target<0||target>=detail.rows.totalPages)return;this.rowPage=target;return this.run(()=>this.readDetail(detail.batch.id));}
+ reviewReason(){const history=this.history() as {approvals?:{decision:string;reason:string}[]}|null;return history?.approvals?.filter(item=>item.decision==='CHANGES_REQUESTED').at(-1)?.reason??'';}
+ downloadImage(id:string){const detail=this.detail();if(!detail)return;return this.run(async()=>{const blob=await firstValueFrom(this.api.image(detail.batch.id,id));const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='reviewed-product-image.png';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});}
+ validationSummary(){const detail=this.detail();if(!detail)return '';const counts=detail.summary.statuses;return `${counts['VALID']??0} valid · ${counts['INVALID']??0} invalid · ${counts['DUPLICATE']??0} duplicate · ${counts['UNVALIDATED']??0} awaiting validation`;}
+ async download(kind:'original'|'report'){const detail=this.detail();if(!detail)return;return this.run(async()=>{const blob=await firstValueFrom(this.api.download(detail.batch.id,kind));const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=kind==='original'?'source-workbook.bin':'approval-report.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});}
+}

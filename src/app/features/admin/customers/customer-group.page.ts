@@ -1,3 +1,5 @@
+import { PageAccessDenied } from '../../../shared/components/page-access-denied';
+import { CanAccessDirective } from '../../../core/auth/can-access.directive';
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -9,7 +11,7 @@ import { Icon } from '../../../shared/components/icon';
 import { Status } from '../../../shared/components/status';
 import { PermissionService } from '../../../core/auth/permission.service';
 import { AdminApi, field, Row, text, when, usd } from '../api/admin.api';
-@Component({ imports: [FormsModule, RouterLink, Icon, Status, NgTemplateOutlet], templateUrl: './customer-group.html', styleUrl: './customer-group.css' })
+@Component({ imports: [PageAccessDenied, CanAccessDirective, FormsModule, RouterLink, Icon, Status, NgTemplateOutlet], templateUrl: './customer-group.html', styleUrl: './customer-group.css' })
 export class CustomerGroupPage extends PageState {
   access = inject(PermissionService);
   private api = inject(AdminApi); private route = inject(ActivatedRoute); private router = inject(Router);
@@ -31,7 +33,7 @@ export class CustomerGroupPage extends PageState {
   }
   load() {
     this.group.set(null); this.createdId = 0; this.assignments.clear(); this.chosen.set(new Set());
-    this.run(forkJoin({ group: this.id ? this.api.group(this.id) : of(null), functions: this.api.allPermissionRows('functions'), permissions: this.id ? this.api.allPermissionRows('group-permissions', 1, String(this.id)) : of([] as Row[]) }), result => {
+    this.run(forkJoin({ group: this.id ? this.api.group(this.id) : of(null), functions: this.access.has('FUNC_VIEW') ? this.api.allPermissionRows('functions') : of([] as Row[]), permissions: this.id && this.access.has('GRP_PERM_VIEW') ? this.api.allPermissionRows('group-permissions', 1, String(this.id)) : of([] as Row[]) }), result => {
       this.group.set(result.group); this.functions.set(result.functions);
       for (const row of result.permissions) if (row['is_active'] === true) this.assignments.set(Number(row['func_id']), Number(row['group_permission_id']));
       this.chosen.set(new Set(this.assignments.keys()));

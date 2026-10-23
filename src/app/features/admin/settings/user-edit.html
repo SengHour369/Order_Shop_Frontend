@@ -1,6 +1,9 @@
+@if (accessDenied()) {
+  <app-page-access-denied />
+} @else {
 <section class="user-editor">
-  <form #editForm="ngForm" (ngSubmit)="save()">
-    <header class="editor-toolbar"><a class="editor-button" routerLink="/admin/users"><app-icon name="arrow-left" />Back to Users</a><div><a class="editor-button" routerLink="/admin/users">{{ 'Cancel' | translate }}</a><button class="editor-button primary" [disabled]="busy() || !user() || editForm.invalid">Save Changes</button><input #photoInput type="file" hidden accept="image/jpeg,image/png" (change)="choosePhoto($event)" /></div></header>
+  <form #editForm="ngForm" (ngSubmit)="save()" *appCan="'USER_MANAGE'">
+    <header class="editor-toolbar"><a class="editor-button" routerLink="/admin/users" *appCanRoute="'/admin/users'"><app-icon name="arrow-left" />Back to Users</a><div><a class="editor-button" routerLink="/admin/users" *appCanRoute="'/admin/users'">{{ 'Cancel' | translate }}</a><button class="editor-button primary" [disabled]="busy() || !user() || editForm.invalid">Save Changes</button><input #photoInput type="file" hidden accept="image/jpeg,image/png" (change)="choosePhoto($event)" /></div></header>
     <app-status [busy]="busy()" [error]="error()" [message]="message()" />
     @if (user(); as current) {
       <fieldset class="editor-form-fields" [disabled]="busy()"><div class="editor-columns">
@@ -22,7 +25,7 @@
             </div>
 
           </article>
-          <article class="editor-card security-card"><h3>Security &amp; Authentication</h3><p>Manage user authentication and security settings.</p><label class="security-label">Password</label><div class="reset-password"><button type="button" class="editor-button blue" (click)="resetPassword()" [disabled]="busy()"><app-icon name="refresh" />Reset Password</button><small>Send a password reset link to the user's saved email</small></div><div class="two-factor"><div><strong>Two-Factor Authentication</strong><p>Require an email verification code when this user signs in.</p></div><button type="button" role="switch" aria-label="Require two-factor authentication" [attr.aria-checked]="twoFactorRequired" class="switch" [class.enabled]="twoFactorRequired" [disabled]="busy()" (click)="twoFactorRequired = !twoFactorRequired"><span></span></button></div></article>
+          <article class="editor-card security-card"><h3>Security &amp; Authentication</h3><p>Manage user authentication and security settings.</p><label class="security-label">Password</label><div class="reset-password"><button type="button" class="editor-button blue" (click)="resetPassword()" [disabled]="busy()" *appCan="'USER_MANAGE'"><app-icon name="refresh" />Reset Password</button><small>Send a password reset link to the user's saved email</small></div><div class="two-factor"><div><strong>Two-Factor Authentication</strong><p>Require an email verification code when this user signs in.</p></div><button type="button" role="switch" aria-label="Require two-factor authentication" [attr.aria-checked]="twoFactorRequired" class="switch" [class.enabled]="twoFactorRequired" [disabled]="busy()" (click)="twoFactorRequired = !twoFactorRequired"><span></span></button></div></article>
         </div>
         <div class="editor-column">
           <article class="editor-card account-card"><h3>Account Status</h3><p>Manage the user's account status and role.</p><label class="section-label" for="user-active">Status <em>*</em></label><div class="account-switch"><button id="user-active" type="button" role="switch" [attr.aria-checked]="active" [attr.aria-label]="active ? 'Deactivate user' : 'Activate user'" class="switch" [class.enabled]="active" [disabled]="busy()" (click)="active = !active"><span></span></button><div><strong>{{ active ? 'Active' : 'Inactive' }}</strong><small>{{ active ? 'Active users can access the system' : 'This user is not active' }}</small></div></div><label class="account-field">Role <em>*</em><select name="roleId" [(ngModel)]="roleId" (ngModelChange)="chooseRole()" required><option [ngValue]="0" disabled>Select role</option>@for (role of rows('roles'); track role['id']) {<option [ngValue]="role['id']">{{ role['name'] }}</option>}</select><small>Define user role and system access level</small></label><label class="account-field">Language<select name="language" [(ngModel)]="language"><option value="en-US">English (US)</option><option value="km-KH">ខ្មែរ (Cambodia)</option></select><small>Select the preferred language</small></label></article>
@@ -39,3 +42,5 @@
     }
   </form>
 </section>
+
+}

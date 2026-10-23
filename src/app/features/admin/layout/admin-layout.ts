@@ -1,7 +1,8 @@
+import { CanAccessDirective } from '../../../core/auth/can-access.directive';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
 import { NavigationEnd } from '@angular/router';
-import { PermissionService, isStaffWorkflowRoute } from "../../../core/auth/permission.service";
+import { PermissionService } from "../../../core/auth/permission.service";
 import { FloatingAssistant } from '../../assistant/floating/floating-assistant';
 import { LanguageSelect } from "../../../core/i18n/language-select";
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
@@ -16,10 +17,11 @@ import {
 import { AuthService } from "../../../core/auth/auth.service";
 import { Icon } from "../../../shared/components/icon";
 const groups = [
-  { label:'Excel Imports', items:[
-    {path:'/admin/imports',label:'Upload & Analyze',icon:'upload',exact:true},
-    {path:'/admin/import-approvals',label:'Pending Excel Imports',icon:'check',exact:true},
-    {path:'/admin/import-executions',label:'Import Executions',icon:'list',exact:true},
+  {label:'Automation',items:[{path:'/admin/ai-automation',label:'AI Automation',icon:'robot',exact:true}]},
+  { label:'Approvals', items:[
+    {path:'/admin/my-requests',label:'My Requests',icon:'list',exact:true},
+    {path:'/admin/review-authorization',label:'Review Authorization',icon:'check',exact:true},
+    {path:'/admin/import-executions',label:'Request Executions',icon:'list',exact:true},
     {path:'/admin/branches',label:'Branches & Access',icon:'bank',exact:true},
   ]},
   {
@@ -165,6 +167,10 @@ const groups = [
   {
     label: "Settings",
     items: [
+      {path:"/admin/live-tests",label:"Live Tests",icon:"list",exact:false},
+      {path:"/admin/storefront-access",label:"Storefront Access",icon:"settings",exact:false},
+      {path:"/admin/guest-activity",label:"Guest Activity",icon:"list",exact:false},
+      {path:"/admin/guest-reviews",label:"Review Moderation",icon:"star",exact:false},
       {
         path: "/admin/groups",
         label: "Access Groups",
@@ -199,9 +205,9 @@ const groups = [
   },
 ];
 @Component({
-  imports: [FloatingAssistant, LanguageSelect, TranslatePipe, RouterOutlet, RouterLink, RouterLinkActive, Icon, FormsModule],
+  imports: [CanAccessDirective, FloatingAssistant, LanguageSelect, TranslatePipe, RouterOutlet, RouterLink, RouterLinkActive, Icon, FormsModule],
   styles: [`.ai-subnav{display:grid;padding:0 8px 8px 38px;gap:3px}.ai-subnav a{font-size:12px;padding:8px 12px;color:#64749a;text-decoration:none;border-radius:6px}.ai-subnav a.active{color:#0866ff;background:#eaf3ff}.adm-nav button.adm-link{width:100%;border:0;background:#eff6ff;color:#0866ff;cursor:pointer;text-align:left}`],
-  template: `<div class="adm admin-refresh" [class.transaction-detail-layout]="isTransactionDetail()" [class.order-detail-layout]="isOrderDetail()" [class.user-edit-layout]="isUserEdit() || isCustomerCreate()" [class.user-detail-layout]="isUserDetail()" [class.customer-group-layout]="isCustomerGroupScreen()">
+  template: `<div class="adm admin-refresh admin-unified-layout">
     @if (mobile()) {
       <button
         class="adm-overlay"
@@ -215,18 +221,18 @@ const groups = [
       [class.open]="mobile()"
     >
       <div class="adm-brand">
-        <span class="adm-mark"><app-icon [name]="isUserReference() ? 'bag' : 'cart'" /></span>
-        <strong>ShopAdmin</strong>@if(isUserReference()){<button class="user-editor-menu" type="button" aria-label="Toggle sidebar" (click)="collapsed.set(!collapsed())"><app-icon name="menu" /></button>}
+        <span class="adm-mark"><app-icon name="bag" /></span>
+        <strong>ShopAdmin</strong><button class="user-editor-menu" type="button" aria-label="Toggle sidebar" (click)="collapsed.set(!collapsed())"><app-icon name="menu" /></button>
       </div>
       <nav class="adm-nav">
         @for (group of groups(); track group.label) {
           @if (group.label === 'AI Assistant') {
-            @if (auth.session()?.role === 'ADMIN') {
+            @if (access.allowsMenu('/admin/assistant')) {
               <button class="adm-link" (click)="aiExpanded.set(!aiExpanded())" [attr.aria-expanded]="aiExpanded()"><app-icon name="robot" /><span>{{ "AI Assistant" | translate }}</span><app-icon name="down" /></button>
               @if (aiExpanded() && !collapsed()) {
                 <div class="ai-subnav" aria-label="AI Assistant sections">
                   @for (section of aiSections; track section[0]) {
-                    <a routerLink="/admin/assistant" [queryParams]="{ view: section[0] }" routerLinkActive="active" (click)="mobile.set(false)">{{ (section[1]) | translate }}</a>
+                    <a routerLink="/admin/assistant" [queryParams]="{ view: section[0] }" routerLinkActive="active" (click)="mobile.set(false)" *appCanRoute="'/admin/assistant'">{{ (section[1]) | translate }}</a>
                   }
                 </div>
               }
@@ -240,7 +246,7 @@ const groups = [
               [routerLinkActiveOptions]="{ exact: item.exact }"
               [title]="item.label | translate"
               (click)="mobile.set(false)"
-            >
+             *appCanRoute="item.path">
               <app-icon [name]="item.icon" /><span>{{ (item.label) | translate }}</span>
             </a>
           }
@@ -279,11 +285,12 @@ const groups = [
             <div class="adm-crumbs">
               <span>{{ "Dashboard" | translate }}</span>
               @if (title() !== "Dashboard") {
-                <span>›</span>@if (title() === 'Notification Details') {<a routerLink="/admin/notifications">Notifications</a><span>›</span>}@if (isCustomerGroupScreen() && !isAccessGroupCreate()) {<a routerLink="/admin/customers">Customers</a><span>›</span><a routerLink="/admin/customer-groups">Customer Groups</a><span>›</span>}@if (isCustomerGroupsList()) {<a routerLink="/admin/customers">Customers</a><span>›</span>}@if (isCustomerCreate()) {<a routerLink="/admin/customers">Customers</a><span>›</span>}@if (isUserEdit() || isUserDetail()) {<a routerLink="/admin/users">{{ "Users & Roles" | translate }}</a><span>›</span>}@if (isOrderDetail()) {<a routerLink="/admin/orders">{{ "Orders" | translate }}</a><span>›</span>}@if (isTransactionDetail()) {<a routerLink="/admin/transactions">{{ "Transactions" | translate }}</a><span>›</span>}<span>{{ (title()) | translate }}</span>
+                <span>›</span>@if (title() === 'Notification Details') {<a routerLink="/admin/notifications" *appCanRoute="'/admin/notifications'">Notifications</a><span>›</span>}@if (isCustomerGroupScreen() && !isAccessGroupCreate()) {<a routerLink="/admin/customers" *appCanRoute="'/admin/customers'">Customers</a><span>›</span><a routerLink="/admin/customer-groups" *appCanRoute="'/admin/customer-groups'">Customer Groups</a><span>›</span>}@if (isCustomerGroupsList()) {<a routerLink="/admin/customers" *appCanRoute="'/admin/customers'">Customers</a><span>›</span>}@if (isCustomerCreate() || isCustomerDetail()) {<a routerLink="/admin/customers" *appCanRoute="'/admin/customers'">Customers</a><span>›</span>}@if (isUserEdit() || isUserDetail()) {<a routerLink="/admin/users" *appCanRoute="'/admin/users'">{{ "Users & Roles" | translate }}</a><span>›</span>}@if (isOrderDetail()) {<a routerLink="/admin/orders" *appCanRoute="'/admin/orders'">{{ "Orders" | translate }}</a><span>›</span>}@if (isTransactionDetail()) {<a routerLink="/admin/transactions" *appCanRoute="'/admin/transactions'">{{ "Transactions" | translate }}</a><span>›</span>}<span>{{ (title()) | translate }}</span>
               }
             </div>
           </div>
         </div>
+        @if (access.allows("/admin/products") || access.allows("/admin/orders") || access.allows("/admin/customers") || access.allows("/admin/transactions") || access.allows("/admin/refunds")) {
         <form class="adm-search" (ngSubmit)="search()">
           <app-icon name="search" />
           <input
@@ -297,14 +304,17 @@ const groups = [
             ) | translate"
           />
         </form>
+        }
         <div style="display:flex;align-items:center;gap:8px">
           <app-language-select />
+          @if (access.allowsMenu("/admin/notifications")) {
           <a
             class="adm-icon-btn"
             routerLink="/admin/notifications"
             [attr.aria-label]='"Notifications" | translate'
-            ><app-icon name="bell"
+             *appCanRoute="'/admin/notifications'"><app-icon name="bell"
           /></a>
+          }
           <span
             class="adm-hide-sm"
             style="width:1px;height:24px;background:#e2e8f0"
@@ -329,9 +339,11 @@ const groups = [
                   <strong>{{ auth.session()?.username }}</strong
                   ><br />{{ auth.session()?.email }}
                 </p>
+                @if (access.allowsMenu("/admin/settings")) {
                 <a routerLink="/admin/settings" (click)="menu.set(false)"
-                  >{{ "Settings" | translate }}</a
+                   *appCanRoute="'/admin/settings'">{{ "Settings" | translate }}</a
                 >
+                }
                 <button class="danger" (click)="logout()">{{ "Log out" | translate }}</button>
               </div>
             }
@@ -339,7 +351,7 @@ const groups = [
         </div>
       </header>
       <div class="adm-body"><router-outlet /></div>
-      @if(auth.session()?.role === 'ADMIN' && access.allows('/admin/assistant')) {<app-floating-assistant/>}
+      @if(access.allowsMenu('/admin/assistant')) {<app-floating-assistant/>}
     </div>
   </div>`,
 })
@@ -349,7 +361,7 @@ export class AdminLayout {
   access = inject(PermissionService);
   private currentUrl = toSignal(this.router.events.pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd), map(event => event.urlAfterRedirects)), {initialValue:this.router.url});
   groups = computed(() => groups.map(group => ({...group, items: group.items.filter(item =>
-    (!this.isUserReference() || ['/admin','/admin/orders','/admin/returns','/admin/cancellations','/admin/payments','/admin/refunds','/admin/transactions','/admin/customers','/admin/customer-groups','/admin/products','/admin/categories','/admin/brands','/admin/sales-report','/admin/payment-report','/admin/tax-report','/admin/settings','/admin/users','/admin/notifications'].includes(item.path)) && this.access.allows(item.path) && (['ADMIN','MANAGER'].includes(this.auth.session()?.role||'') || isStaffWorkflowRoute(item.path)) && (!["/admin/users", "/admin/activity", "/admin/promotions", "/admin/groups"].includes(item.path) || this.auth.session()?.role === "ADMIN")
+    this.access.allowsMenu(item.path)
   )})).filter(group => group.items.length));
   aiExpanded = signal(true);
   aiSections = [['chat','Chat Bot'],['control','Control Center'],['conversations','Conversations'],['executions','Tool Execution'],['tools','Tools'],['permissions','Permissions'],['settings','Settings']];
@@ -361,7 +373,8 @@ export class AdminLayout {
   isCustomerGroupScreen() { return this.router.url.startsWith("/admin/customer-groups/") || this.router.url.startsWith("/admin/groups/"); }
   isUserDetail() { return /^\/admin\/users\/\d+\/?(?:\?|$)/.test(this.currentUrl()); }
   isCustomerGroupsList() { return this.currentUrl().split('?')[0] === "/admin/customer-groups"; }
-  isUserReference() { return this.currentUrl().split('?')[0] === "/admin/customers" || this.currentUrl().split('?')[0] === "/admin/customer-groups" || this.isUserEdit() || this.isUserDetail() || this.isCustomerCreate(); }
+
+  isCustomerDetail() { return /^\/admin\/customers\/\d+\/?(?:[?#]|$)/.test(this.currentUrl()); }
   isCustomerCreate() { return this.currentUrl().startsWith("/admin/customers/add"); }
   isUserEdit() { return this.currentUrl().startsWith("/admin/users/edit/"); }
   isOrderDetail() { return /^\/admin\/orders\/\d+\/?(?:\?|$)/.test(this.router.url); }
@@ -372,25 +385,17 @@ export class AdminLayout {
   search() {
     const q = this.query.trim();
     if (!q) return;
-    if (this.isTransactionDetail() || /^txn|^tx-/i.test(q)) {
-      void this.router.navigate(["/admin/transactions"], { queryParams: { q } });
-      return;
-    }
-    if (this.isRefund() || /^ref/i.test(q)) {
-      void this.router.navigate(["/admin/refunds"], { queryParams: { q } });
-      return;
-    }
-    if (/^ord/i.test(q) || /^\d{4,}$/.test(q)) {
-      void this.router.navigate(["/admin/orders"], { queryParams: { q } });
-      return;
-    }
-    if (q.includes("@")) {
-      void this.router.navigate(["/admin/customers"], { queryParams: { q } });
-      return;
-    }
-    void this.router.navigate(["/admin/products"], { queryParams: { q } });
+    const preferred = this.isTransactionDetail() || /^txn|^tx-/i.test(q) ? '/admin/transactions'
+      : this.isRefund() || /^ref/i.test(q) ? '/admin/refunds'
+      : /^ord/i.test(q) || /^\d{4,}$/.test(q) ? '/admin/orders'
+      : q.includes('@') ? '/admin/customers' : '/admin/products';
+    const destination = [preferred, '/admin/products', '/admin/orders', '/admin/customers']
+      .find(path => this.access.allows(path));
+    if (destination) void this.router.navigate([destination], { queryParams: { q } });
   }
+
   title() {
+    if (this.isCustomerDetail()) return "Customer Details";
     if (this.isCustomerCreate()) return "Add Customer";
     if (this.router.url.startsWith('/admin/notifications/')) return 'Notification Details';
     if (this.router.url.startsWith('/admin/groups/')) return this.router.url.includes('/add') ? 'Create Group' : this.router.url.includes('/edit/') ? 'Edit Group' : 'Group Details';

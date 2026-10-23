@@ -10,7 +10,7 @@ describe('Group and user assignments', () => {
   const api = {
     allGroups: vi.fn(() => of([])), allPermissionRows: vi.fn(() => of([])),
     saveGroup: vi.fn(() => of({group_id:12})), createPermissionRow: vi.fn((_resource: string, _params: Record<string, number>) => of({})),
-    createCustomer: vi.fn(() => of({id:1})),
+    createCustomer: vi.fn(() => of({id:1})), userEditorOptions: vi.fn(() => of({roles:[],groups:[]})), updateUserEditor: vi.fn(() => of({id:1})),
   };
   beforeEach(() => {
     vi.clearAllMocks();
@@ -18,6 +18,7 @@ describe('Group and user assignments', () => {
     TestBed.configureTestingModule({providers:[provideRouter([]), {provide:AdminApi,useValue:api},
       {provide:PermissionService,useValue:{has:()=>true,allows:()=>true}}]});
     vi.spyOn(TestBed.inject(Router),'navigateByUrl').mockResolvedValue(true);
+    vi.spyOn(TestBed.inject(Router),'navigate').mockResolvedValue(true);
   });
   it('creates a group with real request fields and assigns selected functions', () => {
     const page = TestBed.createComponent(AccessGroupsPage).componentInstance;
@@ -36,11 +37,11 @@ describe('Group and user assignments', () => {
     expect(api.saveGroup).toHaveBeenCalledTimes(1);
     expect(api.createPermissionRow.mock.calls.map(call => call[1])).toEqual([{groupId:12,funcId:701},{groupId:12,funcId:702},{groupId:12,funcId:702}]);
   });
-  it('includes selected groups and direct permissions in user creation', () => {
+  it('includes selected customer groups and roles in user creation', () => {
     const page = TestBed.createComponent(CustomerFormPage).componentInstance;
     Object.assign(page,{firstName:'Test',lastName:'User',email:'user@example.test',phone:'+85512345678',username:'test-user',password:'test-password',roleId:2});
-    page.chosenGroups=new Set([12]); page.chosenPermissions=new Set([702]); page.save();
-    expect(api.createCustomer).toHaveBeenCalledWith(expect.objectContaining({group_ids:[12],permission_ids:[702],role_ids:[2]}));
+    page.groupIds=[12]; page.save();
+    expect(api.createCustomer).toHaveBeenCalledWith(expect.objectContaining({group_ids:[12],permission_ids:[],role_ids:[2]}));
     expect(page.password).toBe('');
   });
 });

@@ -37,7 +37,7 @@ describe("Backend contracts", () => {
   afterEach(() => http.verify());
   it("preserves the login DTO field casing", () => {
     auth.login("shopper", "password").subscribe();
-    const request = http.expectOne("/api/v1/public/email/username/login");
+    const request = http.expectOne("/api/v1/public/session/login");
     expect(request.request.body).toEqual({
       CriteriaValue: "shopper",
       Password: "password",

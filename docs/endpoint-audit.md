@@ -8,10 +8,15 @@ Generated from current Spring controller annotations and Angular HTTP call sites
 | GET | `/api/v1/admin/session` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | GET | `/api/v1/admin/settings` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | PUT | `/api/v1/admin/settings` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
+| GET | `/api/v1/storefront/access-settings` | Adapter present; live verification required | [storefront-access.service.ts](../src/app/core/storefront/storefront-access.service.ts) |
+| GET | `/api/v1/admin/storefront/access-settings` | Adapter present; live verification required | [storefront-access-settings.ts](../src/app/features/admin/settings/storefront-access-settings.ts) |
+| PUT | `/api/v1/admin/storefront/access-settings` | Adapter present; live verification required | [storefront-access-settings.ts](../src/app/features/admin/settings/storefront-access-settings.ts) |
 | GET | `/api/ai/admin/info` | Adapter present; live verification required | [assistant.api.ts](../src/app/features/assistant/assistant.api.ts) |
 | GET | `/api/ai/admin/conversations` | Adapter present; live verification required | [assistant.api.ts](../src/app/features/assistant/assistant.api.ts) |
 | GET | `/api/ai/admin/conversations/{id}` | Adapter present; live verification required | [assistant.api.ts](../src/app/features/assistant/assistant.api.ts) |
 | PATCH | `/api/ai/admin/conversations/{id}` | Adapter present; live verification required | [assistant.api.ts](../src/app/features/assistant/assistant.api.ts) |
+| POST | `/api/ai/visual-search` | Adapter present; live verification required | [assistant.api.ts](../src/app/features/assistant/assistant.api.ts) |
+| POST | `/api/ai/tools/{tool}` | Adapter present; live verification required | [assistant.api.ts](../src/app/features/assistant/assistant.api.ts) |
 | POST | `/api/ai/confirm/{id}` | Adapter present; live verification required | [assistant.api.ts](../src/app/features/assistant/assistant.api.ts) |
 | POST | `/api/ai/chat` | Review required |  |
 | POST | `/api/ai/admin/chat` | Review required |  |
@@ -72,26 +77,31 @@ Generated from current Spring controller annotations and Angular HTTP call sites
 | POST | `/api/v1/group-permissions/create` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | POST | `/api/v1/group-permissions/update` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | POST | `/api/v1/group-permissions/delete` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
+| POST | `/internal/commerce/guest/contact-code` | Excluded: service-to-service API |  |
+| POST | `/internal/notifications/guest-email` | Excluded: service-to-service API |  |
 | GET | `/internal/authorization/import-reviewers/{id}` | Excluded: service-to-service API |  |
+| GET | `/internal/authorization/api-access` | Excluded: service-to-service API |  |
 | GET | `/internal/authorization/me` | Excluded: service-to-service API |  |
 | GET | `/api/v1/user/access` | Adapter present; live verification required | [permission.service.ts](../src/app/core/auth/permission.service.ts) |
 | GET | `/internal/authorization/users/{id}/active` | Excluded: service-to-service API |  |
 | GET | `/internal/ai/users` | Excluded: service-to-service API |  |
 | POST | `/internal/notifications/email` | Excluded: service-to-service API |  |
 | POST | `/api/v1/public/register` | Adapter present; live verification required | [account.page.ts](../src/app/features/account/account.page.ts) |
-| POST | `/api/v1/public/verify` | Adapter present; live verification required | [auth.service.ts](../src/app/core/auth/auth.service.ts) |
+| POST | `/api/v1/public/verify` | Review required |  |
 | POST | `/api/v1/public/resend` | Adapter present; live verification required | [account.page.ts](../src/app/features/account/account.page.ts) |
-| POST | `/api/v1/public/email/username/login` | Adapter present; live verification required | [auth.service.ts](../src/app/core/auth/auth.service.ts) |
+| POST | `/api/v1/public/email/username/login` | Review required |  |
 | POST | `/api/v1/public/refresh` | Adapter present; live verification required | [auth.service.ts](../src/app/core/auth/auth.service.ts) |
-| POST | `/api/v1/public/logout` | Adapter present; live verification required | [auth.service.ts](../src/app/core/auth/auth.service.ts) |
+| POST | `/api/v1/public/logout` | Review required |  |
 | POST | `/api/v1/public/forgot-password` | Adapter present; live verification required | [account.page.ts](../src/app/features/account/account.page.ts), [security.page.ts](../src/app/features/account/security.page.ts), [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | POST | `/api/v1/public/reset-password` | Adapter present; live verification required | [account.page.ts](../src/app/features/account/account.page.ts) |
 | GET | `/api/v1/public/reset-password-page` | Excluded: backend HTML page; Angular supplies reset form |  |
 | POST | `/api/v1/public/check-user` | Adapter present; live verification required | [auth.service.ts](../src/app/core/auth/auth.service.ts) |
 | POST | `/api/v1/public/accounts/register` | Adapter present; live verification required | [auth.service.ts](../src/app/core/auth/auth.service.ts) |
-| POST | `/api/v1/public/session/login` | Excluded: alternative cookie-session protocol; app uses bearer tokens |  |
-| POST | `/api/v1/public/session/verify` | Excluded: alternative cookie-session protocol; app uses bearer tokens |  |
-| POST | `/api/v1/public/session/refresh` | Excluded: alternative cookie-session protocol; app uses bearer tokens |  |
+| POST | `/api/v1/public/second-factor` | Review required |  |
+| POST | `/api/v1/public/session/login` | Excluded: alternative cookie-session protocol; app uses bearer tokens | [auth.service.ts](../src/app/core/auth/auth.service.ts) |
+| POST | `/api/v1/public/session/verify` | Excluded: alternative cookie-session protocol; app uses bearer tokens | [auth.service.ts](../src/app/core/auth/auth.service.ts) |
+| POST | `/api/v1/public/session/second-factor` | Excluded: alternative cookie-session protocol; app uses bearer tokens | [auth.service.ts](../src/app/core/auth/auth.service.ts) |
+| POST | `/api/v1/public/session/refresh` | Excluded: alternative cookie-session protocol; app uses bearer tokens | [auth.service.ts](../src/app/core/auth/auth.service.ts) |
 | POST | `/api/v1/public/session/logout` | Excluded: alternative cookie-session protocol; app uses bearer tokens |  |
 | POST | `/api/v1/user/create` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | POST | `/api/v1/user/id` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
@@ -101,6 +111,12 @@ Generated from current Spring controller annotations and Angular HTTP call sites
 | POST | `/api/v1/user/id/update` | Blocked: backend @PathVariable id is missing from mapping | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | POST | `/api/v1/user/id/delete` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | POST | `/api/v1/user/count` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
+| GET | `/api/v1/user/{id}/details` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
+| GET | `/api/v1/user/{id}/details/activity` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
+| GET | `/api/v1/user/editor-options` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
+| GET | `/api/v1/user/{id}/editor` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
+| PUT | `/api/v1/user/{id}/editor` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
+| POST | `/api/v1/user/{id}/editor/photo` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | POST | `/api/v1/user-groups/get/all` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | POST | `/api/v1/user-groups/get/id` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | POST | `/api/v1/user-groups/create` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
@@ -149,6 +165,7 @@ Generated from current Spring controller annotations and Angular HTTP call sites
 | GET | `/api/v1/category-icons/get/all` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | GET | `/api/v1/category-icons/id` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | POST | `/api/v1/category-icons/upload` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
+| GET | `/api/v1/products/sku/{id}` | Review required |  |
 | POST | `/api/v1/inventory` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | POST | `/api/v1/inventory/all` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | POST | `/api/v1/inventory/id` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
@@ -175,6 +192,12 @@ Generated from current Spring controller annotations and Angular HTTP call sites
 | PUT | `/api/v1/products/update` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | POST | `/api/v1/products/update/status` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | POST | `/api/v1/products/delete` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
+| GET | `/api/v1/storefront/products/{id}/reviews` | Review required |  |
+| GET | `/api/v1/products/{id}/reviews` | Review required |  |
+| POST | `/internal/commerce/guest/reviews` | Excluded: service-to-service API |  |
+| POST | `/api/v1/products/{id}/reviews` | Adapter present; live verification required | [product-reviews.ts](../src/app/features/catalog/reviews/product-reviews.ts) |
+| GET | `/api/v1/admin/guest-reviews` | Adapter present; live verification required | [guest-review-moderation.page.ts](../src/app/features/admin/settings/guest-review-moderation.page.ts) |
+| PUT | `/api/v1/admin/guest-reviews/{id}` | Adapter present; live verification required | [guest-review-moderation.page.ts](../src/app/features/admin/settings/guest-review-moderation.page.ts) |
 | POST | `/api/v1/product-scanner/scan` | Adapter present; live verification required | [scanner.api.ts](../src/app/features/scanner/scanner.api.ts) |
 | POST | `/api/v1/product-scanner/recognize` | Adapter present; live verification required | [scanner.api.ts](../src/app/features/scanner/scanner.api.ts) |
 | POST | `/api/v1/admin/promotions` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
@@ -190,6 +213,12 @@ Generated from current Spring controller annotations and Angular HTTP call sites
 | POST | `/api/v1/admin/promotions/{id}/disable` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | GET | `/api/v1/promotions/active` | Adapter present; live verification required | [catalog.api.ts](../src/app/features/catalog/catalog.api.ts) |
 | GET | `/api/v1/promotions/{id}/products` | Adapter present; live verification required | [catalog.api.ts](../src/app/features/catalog/catalog.api.ts) |
+| GET | `/api/v1/storefront/categories` | Review required |  |
+| GET | `/api/v1/storefront/categories/name` | Review required |  |
+| GET | `/api/v1/storefront/categories/{id}` | Review required |  |
+| GET | `/api/v1/storefront/products` | Adapter present; live verification required | [catalog.api.ts](../src/app/features/catalog/catalog.api.ts) |
+| GET | `/api/v1/storefront/products/{id}` | Adapter present; live verification required | [catalog.api.ts](../src/app/features/catalog/catalog.api.ts) |
+| GET | `/api/v1/storefront/skus/{id}` | Review required |  |
 | POST | `/api/v1/subcategories/get/all` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | POST | `/api/v1/subcategories/create` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | POST | `/api/v1/subcategories/update` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
@@ -219,14 +248,19 @@ Generated from current Spring controller annotations and Angular HTTP call sites
 | GET | `/internal/ai/orders/summary` | Excluded: service-to-service API |  |
 | GET | `/internal/ai/returns` | Excluded: service-to-service API |  |
 | GET | `/internal/ai/returns/admin` | Excluded: service-to-service API |  |
+| GET | `/internal/ai/shopping/cart` | Excluded: service-to-service API |  |
+| POST | `/internal/ai/shopping/cart/{action}` | Excluded: service-to-service API |  |
+| GET | `/internal/ai/shopping/checkout-preview` | Excluded: service-to-service API |  |
+| GET | `/internal/ai/shopping/reviews/{id}` | Excluded: service-to-service API |  |
+| POST | `/internal/ai/shopping/orders/{id}` | Excluded: service-to-service API |  |
 | GET | `/api/v1/cancelations/summary` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | POST | `/api/v1/cancelations/list` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | GET | `/api/v1/cancelations/{orderNo}` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | POST | `/api/v1/cart/user/id` | Adapter present; live verification required | [cart.api.ts](../src/app/features/cart/cart.api.ts) |
 | POST | `/api/v1/cart/user/id/get-or-create` | Adapter present; live verification required | [cart.api.ts](../src/app/features/cart/cart.api.ts) |
-| POST | `/api/v1/cart/user/id/items` | Adapter present; live verification required | [cart.api.ts](../src/app/features/cart/cart.api.ts) |
-| POST | `/api/v1/cart/user/id/items/cartItemId` | Adapter present; live verification required | [cart.api.ts](../src/app/features/cart/cart.api.ts) |
-| POST | `/api/v1/cart/user/userId/items/cartItemId` | Adapter present; live verification required | [cart.api.ts](../src/app/features/cart/cart.api.ts) |
+| POST | `/api/v1/cart/user/id/items` | Review required |  |
+| POST | `/api/v1/cart/user/id/items/cartItemId` | Review required |  |
+| POST | `/api/v1/cart/user/userId/items/cartItemId` | Review required |  |
 | POST | `/api/v1/cart/user/userId/clear` | Adapter present; live verification required | [cart.api.ts](../src/app/features/cart/cart.api.ts) |
 | GET | `/api/v1/returns/user` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts), [after-sales.api.ts](../src/app/features/after-sales/after-sales.api.ts), [customer-returns.api.ts](../src/app/features/orders/returns/customer-returns.api.ts) |
 | GET | `/api/v1/returns/user/{returnId}` | Adapter present; live verification required | [customer-returns.api.ts](../src/app/features/orders/returns/customer-returns.api.ts) |
@@ -261,9 +295,30 @@ Generated from current Spring controller annotations and Angular HTTP call sites
 | POST | `/api/v1/returns/{returnId}/receive` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | POST | `/api/v1/returns/{returnId}/inspect/start` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | POST | `/api/v1/returns/{returnId}/inspect/complete` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
+| GET | `/api/v1/guest/cart` | Review required |  |
+| POST | `/api/v1/guest/cart/items` | Review required |  |
+| PATCH | `/api/v1/guest/cart/items/{id}` | Review required |  |
+| DELETE | `/api/v1/guest/cart/items` | Review required |  |
+| DELETE | `/api/v1/guest/cart/items/{id}` | Review required |  |
+| POST | `/api/v1/guest/contact/code` | Review required |  |
+| POST | `/api/v1/guest/contact/verify` | Review required |  |
+| GET | `/internal/commerce/guest-orders/{id}/notice` | Excluded: service-to-service API |  |
+| POST | `/api/v1/guest/checkout/preview` | Review required |  |
+| POST | `/api/v1/guest/orders` | Review required |  |
+| GET | `/api/v1/guest/orders` | Review required |  |
+| POST | `/api/v1/guest/orders/{id}/access` | Review required |  |
+| GET | `/api/v1/guest/orders/{id}` | Review required |  |
+| POST | `/api/v1/guest/orders/{id}/payments` | Review required |  |
+| GET | `/api/v1/guest/orders/{id}/payment-image` | Adapter present; live verification required | [guest.api.ts](../src/app/core/storefront/guest.api.ts) |
+| GET | `/api/v1/guest/orders/{id}/payment-status` | Review required |  |
+| POST | `/api/v1/guest/reviews` | Review required |  |
+| POST | `/api/v1/guest/session` | Adapter present; live verification required | [guest.api.ts](../src/app/core/storefront/guest.api.ts) |
+| DELETE | `/api/v1/guest/session` | Review required |  |
 | GET | `/api/v1/payments/orders/{id}/qr/image` | Review required |  |
 | GET | `/api/v1/payments/orders/{id}/qr` | Review required |  |
 | POST | `/api/v1/payments/orders/{id}/verify` | Review required |  |
+| GET | `/internal/commerce/guest-orders/{id}/qr/image` | Excluded: service-to-service API |  |
+| GET | `/internal/commerce/guest-orders/{id}/qr` | Excluded: service-to-service API |  |
 | GET | `/internal/commerce/payments/{id}` | Excluded: service-to-service API |  |
 | POST | `/api/v1/bakong/get-qr-image` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts), [payments.api.ts](../src/app/features/payments/payments.api.ts) |
 | POST | `/api/v1/bakong/check-transaction` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts), [payments.api.ts](../src/app/features/payments/payments.api.ts) |
@@ -276,6 +331,7 @@ Generated from current Spring controller annotations and Angular HTTP call sites
 | POST | `/api/v1/payments/order` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | POST | `/api/v1/payments/transaction` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | POST | `/api/v1/payments/user/history` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts), [payments.api.ts](../src/app/features/payments/payments.api.ts) |
+| GET | `/api/v1/payments/methods` | Adapter present; live verification required | [payments.api.ts](../src/app/features/payments/payments.api.ts) |
 | GET | `/api/v1/payments/reports/monthly` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | POST | `/api/v1/payment-transactions/get/all` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | GET | `/api/v1/payment-transactions/{id}` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |

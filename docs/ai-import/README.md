@@ -1,3 +1,5 @@
+> Retired on 2026-10-21: Excel workbook uploads, template downloads, and Excel-specific routes have been removed from the frontend and AI service. The notes below describe the former feature. Manual and AI approval requests still use the shared staging workflow.
+
 # AI Excel import, review and execution
 
 The actual Angular dashboard is at `D:/fronend_order`. The existing Spring/FastAPI implementation is at `D:/spring boot/E-Shop`. [Gap analysis](gap-analysis.md) records the inspection completed before UI changes.

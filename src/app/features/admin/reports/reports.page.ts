@@ -1,3 +1,4 @@
+import { PageAccessDenied } from '../../../shared/components/page-access-denied';
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
 import { Component, inject, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
@@ -21,8 +22,8 @@ const MONTHS = [
   "Dec",
 ];
 @Component({
-  imports: [TranslatePipe, FormsModule, Status],
-  template: `
+  imports: [PageAccessDenied, TranslatePipe, FormsModule, Status],
+  template: `@if (accessDenied()) { <app-page-access-denied /> } @else {
     <section>
       <div class="adm-page-head">
         <div>
@@ -133,7 +134,7 @@ const MONTHS = [
         </article>
       }
     </section>
-  `,
+   }`,
 })
 export class ReportsPage extends PageState {
   private api = inject(AdminApi);

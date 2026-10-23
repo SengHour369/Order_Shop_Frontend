@@ -1,5 +1,7 @@
+import { PageAccessDenied } from '../../../shared/components/page-access-denied';
+import { CanAccessDirective } from '../../../core/auth/can-access.directive';
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
-import { Component, inject, signal } from "@angular/core";
+import { Component, inject, input, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import {
@@ -16,7 +18,6 @@ import {
 import { PageState } from "../../../shared/utils/page-state";
 import { Status } from "../../../shared/components/status";
 import { Icon } from "../../../shared/components/icon";
-import { ProductImage } from "../../../shared/components/product-image";
 import {
   AdminApi,
   InventorySummary,
@@ -34,20 +35,20 @@ import {
 } from "./stock-workflow";
 
 @Component({
-  imports: [TranslatePipe, FormsModule, RouterLink, Status, Icon, ProductImage],
+  selector: "app-admin-inventory",
+  imports: [PageAccessDenied, CanAccessDirective, TranslatePipe, FormsModule, RouterLink, Status, Icon],
   templateUrl: "./inventory-reference.html",
   styleUrls: ["../styles/reference.css", "../styles/operations.css"],
 })
 export class InventoryReferencePage extends PageState {
+  embedded = input(false);
+  initialStockStatus = input("");
   private api = inject(AdminApi);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   action: StockAction | null = null;
   rows = signal<Row[]>([]);
   summary = signal<InventorySummary | null>(null);
-  selected = signal<Row | null>(null);
-  history = signal<Row[]>([]);
-  detailTab = "Stock Detail";
   page = 1;
   size = 10;
   pages = 1;
@@ -66,9 +67,9 @@ export class InventoryReferencePage extends PageState {
   text = text;
   when = when;
   stock = stockQuantity;
-  constructor() {
-    super();
-    const path = this.router.url.split("?")[0];
+  ngOnInit() {
+    const path = this.embedded() ? "" : this.router.url.split("?")[0];
+    if (this.embedded()) this.status = this.initialStockStatus();
     this.action = path.endsWith("/stock-in")
       ? "in"
       : path.endsWith("/stock-out")
@@ -133,28 +134,6 @@ export class InventoryReferencePage extends PageState {
   go(delta: number) {
     this.page = Math.max(1, Math.min(this.pages, this.page + delta));
     this.load();
-  }
-  inspect(row: Row) {
-    this.selected.set(row);
-    this.detailTab = "Stock Detail";
-    this.history.set([]);
-    this.run(
-      forkJoin({
-        item: this.api.inventoryItem(Number(row["id"])),
-        history: this.api.inventoryHistory(Number(row["id"])),
-        product: this.api
-          .product(Number(row["product_id"]))
-          .pipe(catchError(() => of({} as Row))),
-      }),
-      (result) => {
-        this.selected.set({
-          ...result.item,
-          image_url: field(result.product, "main_image", "image_url"),
-          product: result.product,
-        });
-        this.history.set(result.history.items);
-      },
-    );
   }
   add(row: Row) {
     if (this.lines.some((line) => line.row["id"] === row["id"])) return;

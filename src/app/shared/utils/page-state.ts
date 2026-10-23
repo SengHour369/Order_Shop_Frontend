@@ -4,6 +4,7 @@ import { Observable, Subscription } from "rxjs";
 export class PageState {
   busy = signal(false);
   error = signal("");
+  accessDenied = signal(false);
   message = signal("");
   private ticket = 0;
   private request?: Subscription;
@@ -14,6 +15,7 @@ export class PageState {
     const ticket = ++this.ticket;
     this.busy.set(true);
     this.error.set("");
+    this.accessDenied.set(false);
     this.message.set("");
     this.request = source.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (value) => {
@@ -23,8 +25,11 @@ export class PageState {
       },
       error: (e) => {
         if (ticket !== this.ticket) return;
+        this.accessDenied.set(e.status === 403);
         this.error.set(
-          e.status === 0
+          e.status === 403
+            ? "You do not have permission to access this page or perform this action. Please contact your administrator."
+            : e.status === 0
             ? "Cannot reach the shop. Please try again shortly."
             : e.error?.message ||
                 e.message ||

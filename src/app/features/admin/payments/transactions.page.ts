@@ -1,3 +1,5 @@
+import { PageAccessDenied } from '../../../shared/components/page-access-denied';
+import { CanAccessDirective } from '../../../core/auth/can-access.directive';
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
 import { Component, computed, DestroyRef, inject, signal } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
@@ -50,7 +52,7 @@ export function transactionCsv(rows: Row[]) {
 }
 
 @Component({
-  imports: [TranslatePipe, Status, FormsModule, RouterLink, Icon],
+  imports: [PageAccessDenied, CanAccessDirective, TranslatePipe, Status, FormsModule, RouterLink, Icon],
   templateUrl: "./transactions-list.html",
   styleUrl: "./transactions-list.css",
 })
@@ -201,7 +203,7 @@ export class TransactionsPage extends PageState {
   }
 }
 @Component({
-  imports: [TranslatePipe, Status, RouterLink, FormsModule, Icon],
+  imports: [PageAccessDenied, CanAccessDirective, TranslatePipe, Status, RouterLink, FormsModule, Icon],
   templateUrl: "./transaction-detail.html",
   styleUrl: "./transaction-detail.css",
 })

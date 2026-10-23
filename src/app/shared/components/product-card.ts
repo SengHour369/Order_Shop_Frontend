@@ -1,7 +1,9 @@
+import { StorefrontAccessService } from "../../core/storefront/storefront-access.service";
 import { TranslatePipe } from "../../core/i18n/translate.pipe";
 import { Component, computed, input, inject, signal } from "@angular/core";
 import { CurrencyPipe } from "@angular/common";
 import { Router, RouterLink } from "@angular/router";
+import { availableStock, originalPrice, sellingPrice, hasDiscount, discountPercent, promotionName } from "../utils/product-offer";
 import { Product, Sku } from "../../core/api/models";
 import { AuthService } from "../../core/auth/auth.service";
 import { CustomerStore } from "../../core/stores/customer.store";
@@ -47,16 +49,21 @@ import { Icon } from "./icon";
     </p>
     <div class="product-price">
       @if (sku(); as s) {
-        <strong>{{ s.finalPrice ?? s.price | currency: "USD" }}</strong>
-        @if (s.finalPrice !== undefined && s.finalPrice < s.price) {
-          <del>{{ s.price | currency: "USD" }}</del>
+        <strong>{{ sellingPrice(s) | currency: "USD" }}</strong>
+        @if (hasDiscount(s)) {
+          <del>{{ originalPrice(s) | currency: "USD" }}</del>
         }
       }
     </div>
+    @if (promotionName(sku())) { <p class="product-promotion">{{ promotionName(sku()) }}</p> }
+    <p class="product-stock" [class.unavailable]="!product().is_active || available() === 0">
+      {{ (product().is_active && available() > 0 ? 'In Stock' : 'Out of Stock') | translate }}
+      · {{ 'Available stock' | translate }}: {{ product().is_active ? available() : 0 }}
+    </p>
     <button
       class="primary compact"
       [disabled]="
-        busy() || !product().is_active || !sku() || (sku()?.quantity ?? 0) < 1
+        busy() || !product().is_active || !sku() || available() < 1
       "
       (click)="add()"
     >
@@ -76,31 +83,37 @@ export class ProductCard {
   auth = inject(AuthService);
   store = inject(CustomerStore);
   cart = inject(CartApi);
+  private access = inject(StorefrontAccessService);
   router = inject(Router);
   busy = signal(false);
   message = signal("");
   imageFailed = signal(false);
-  discount() {
-    const s = this.sku();
-    return s && s.price > 0 && s.finalPrice !== undefined
-      ? Math.max(0, Math.round(((s.price - s.finalPrice) / s.price) * 100))
-      : 0;
-  }
+  available = computed(() => availableStock(this.sku()));
+  originalPrice = originalPrice;
+  sellingPrice = sellingPrice;
+  hasDiscount = hasDiscount;
+  promotionName = promotionName;
+  discount() { return discountPercent(this.sku()); }
   save() {
     if (!this.store.toggle(this.product()))
       this.message.set("Could not save on this browser.");
   }
   add() {
+    if (this.busy()) return;
+    const sku = this.sku();
+    if (!sku || !this.product().is_active || availableStock(sku) < 1) return;
+    this.busy.set(true);
     if (!this.auth.session()) {
-      void this.router.navigate(["/auth"], {
-        queryParams: { returnUrl: "/shop/" + this.product().id },
-      });
+      this.access.load().subscribe({next: settings => {
+        if (settings.guestCart) this.addToCart(sku.id);
+        else {this.busy.set(false);void this.router.navigate(['/auth'],{queryParams:{returnUrl:'/cart'}});}
+      },error:()=>{this.busy.set(false);this.message.set('Guest access is unavailable. Please try again.');}});
       return;
     }
-    const sku = this.sku();
-    if (!sku || !this.product().is_active || sku.quantity < 1) return;
-    this.busy.set(true);
-    this.cart.add(sku.id).subscribe({
+    this.addToCart(sku.id);
+  }
+  private addToCart(id:number) {
+    this.cart.add(id).subscribe({
       next: (c) => {
         this.store.cartCount.set(c.total_items);
         this.message.set("Added to cart");

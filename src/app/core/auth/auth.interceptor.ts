@@ -15,11 +15,12 @@ let refresh$: Observable<Session> | null = null;
 export const authInterceptor: HttpInterceptorFn = (request, next) => {
   const auth = inject(AuthService);
   const api = request.url.startsWith(environment.apiBaseUrl + "/api/");
+  if (api) request = request.clone({withCredentials: true});
   const publicPath =
     request.url.includes("/public/") && !request.url.endsWith("/public/logout");
   if (!api || publicPath || !auth.session()) return next(request);
   const original = auth.session()!;
-  const authorized = request.clone({
+  const authorized = original.token_type === "Cookie" ? request : request.clone({
     setHeaders: { Authorization: `Bearer ${auth.session()!.access_token}` },
   });
   return next(authorized).pipe(
@@ -33,13 +34,13 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
       );
       return refresh$.pipe(
         catchError((e) => {
-          if (auth.session()?.refresh_token === original.refresh_token)
+          if (original.token_type === "Cookie" ? auth.session() === original : auth.session()?.refresh_token === original.refresh_token)
             auth.clear();
           return throwError(() => e);
         }),
         switchMap((s) =>
           next(
-            request.clone({
+            s.token_type === "Cookie" ? request : request.clone({
               setHeaders: { Authorization: `Bearer ${s.access_token}` },
             }),
           ),

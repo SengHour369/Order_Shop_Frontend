@@ -59,4 +59,24 @@ See [integration status](docs/integration-status.md), [source endpoint audit](do
 
 ## Deployment
 
-The Dockerfile builds the app and serves it with nginx. Connect nginx to the backend `api-gateway` hostname or update `deploy/nginx.conf`. Use HTTPS at the ingress. Configure allowed origins for the deployed environment separately; the development proxy strips the local Origin header for the existing gateway allowlist. Do not configure the browser to call individual microservices.
+The Dockerfile builds the app and serves it with nginx. Connect nginx to the backend `api-gateway` hostname or update `deploy/nginx.conf`. Use HTTPS at the ingress. Configure allowed origins for the deployed environment separately; the development proxy preserves the browser Origin. Configure `GATEWAY_CORS_ORIGINS` on both gateway and auth service to include the frontend scheme, host, and exact port. Preview URLs with temporary ports (for example `http://172.18.0.1:37265`) also need their exact origin in the backend `.env.local` allowlist; restart auth-service and api-gateway after changing it. A new preview port needs a corresponding configuration update. Do not strip or rewrite the browser Origin to bypass this check. Local HTTP requires `AUTH_COOKIE_SECURE=false`; production HTTPS must use secure cookies. Do not configure the browser to call individual microservices.
+
+### Grafana monitoring
+
+See [Grafana deployment](deploy/grafana/README.md) for a standalone Compose setup with persistent storage, required admin credentials, a provisioned Prometheus datasource and a target-health dashboard. An existing, container-reachable Prometheus server is required.
+
+## Jenkins CI
+
+See [Jenkins setup](docs/ci/jenkins.md) for agent requirements, multibranch job configuration, test reports, artifacts, and optional Docker image builds.
+
+### Login fails after restarting or changing preview URL
+
+Check the exact URL used by the browser without sending credentials:
+
+```sh
+npm run check:auth -- http://172.18.0.1:37265
+```
+
+HTTP 401 from this check means the origin was accepted and no session cookie was supplied; it does not test the username/password. HTTP 403 indicates an origin/security rejection. Keep the browser's exact origin (scheme, host, and port) in `GATEWAY_CORS_ORIGINS` on both backend services. Preserve existing allowed origins and recreate **both** `api-gateway` and `auth-service` with the environment files used by your deployment. A plain container restart does not apply changed environment variables. A new temporary preview port requires an updated exact origin; use a stable frontend URL when possible.
+
+HTTP 502 indicates a proxy/backend connectivity failure. The Docker frontend nginx configuration resolves `api-gateway` through Docker DNS every five seconds so gateway recreation does not leave a stale upstream address. This configuration is included on the next frontend image build.

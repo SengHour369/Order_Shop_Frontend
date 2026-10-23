@@ -1,3 +1,5 @@
+import { PageAccessDenied } from '../../../shared/components/page-access-denied';
+import { CanAccessDirective } from '../../../core/auth/can-access.directive';
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
 import { Component, inject, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
@@ -142,7 +144,7 @@ export function related(api: AdminApi, refund: Row, loadReturn = false) {
 }
 
 @Component({
-  imports: [TranslatePipe, Status, RouterLink, FormsModule, Icon],
+  imports: [PageAccessDenied, CanAccessDirective, TranslatePipe, Status, RouterLink, FormsModule, Icon],
   templateUrl: "./refunds-list.html",
   styleUrls: ["./refunds.css", "./refunds-list.css"],
 })
@@ -315,7 +317,7 @@ export class RefundsPage extends PageState {
 }
 
 @Component({
-  imports: [TranslatePipe, Status, RouterLink, FormsModule, Icon],
+  imports: [PageAccessDenied, CanAccessDirective, TranslatePipe, Status, RouterLink, FormsModule, Icon],
   templateUrl: "./refund-detail.html",
   styleUrl: "./refunds.css",
 })

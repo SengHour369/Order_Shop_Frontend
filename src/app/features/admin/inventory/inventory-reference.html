@@ -1,10 +1,13 @@
+@if (accessDenied()) {
+  <app-page-access-denied />
+} @else {
 <section class="reference-page">
   <header class="adm-page-head">
     <div>
       <h2>{{ (title()) | translate }}</h2>
       <div class="adm-crumbs">
-        <a routerLink="/admin">{{ "Dashboard" | translate }}</a><span>›</span
-        ><a routerLink="/admin/inventory">{{ "Inventory" | translate }}</a><span>›</span
+        <a routerLink="/admin" *appCanRoute="'/admin'">{{ "Dashboard" | translate }}</a><span>›</span
+        ><a routerLink="/admin/inventory" *appCanRoute="'/admin/inventory'">{{ "Inventory" | translate }}</a><span>›</span
         >{{ action ? "Create " + title() : "All Inventory" }}
       </div>
     </div>
@@ -17,9 +20,9 @@
           <app-icon name="download" />{{ "Export" | translate }}
         </button>
         <a class="adm-btn adm-primary" routerLink="/admin/inventory/stock-in"
-          >＋ Stock In</a
+           *appCanRoute="'/admin/inventory/stock-in'">＋ Stock In</a
         >
-        <a class="adm-btn" routerLink="/admin/inventory/stock-out">{{ "Stock Out" | translate }}</a>
+        <a class="adm-btn" routerLink="/admin/inventory/stock-out" *appCanRoute="'/admin/inventory/stock-out'">{{ "Stock Out" | translate }}</a>
       </div>
     }
   </header>
@@ -55,7 +58,7 @@
         </div>
       </article>
     </div>
-    <div class="ops-work" [class.no-detail]="!selected()">
+    <div class="ops-work no-detail">
       <article class="adm-panel reference-table">
         <form class="reference-filters" (ngSubmit)="filter()">
           <input
@@ -117,13 +120,13 @@
             </thead>
             <tbody>
               @for (row of rows(); track row["id"]; let index = $index) {
-                <tr [class.selected-row]="selected()?.['id'] === row['id']">
+                <tr>
                   <td>{{ (page - 1) * size + index + 1 }}</td>
                   <td>
-                    <button class="text-link" (click)="inspect(row)">
+                    <div class="text-link">
                       <b>{{ text(row["product_name"]) }}</b
                       ><small>{{ text(row["description"]) }}</small>
-                    </button>
+                    </div>
                   </td>
                   <td>{{ text(row["sku"]) }}</td>
                   <td>{{ text(row["warehouse_location"]) }}</td>
@@ -141,18 +144,12 @@
                     >
                   </td>
                   <td>
-                    <button
-                      class="adm-btn icon"
-                      aria-label="View inventory"
-                      (click)="inspect(row)"
-                    >
-                      <app-icon name="eye" /></button
-                    ><a
+                    <a
                       class="adm-btn icon"
                       aria-label="Adjust stock"
                       routerLink="/admin/inventory/adjustments"
                       [queryParams]="{ id: row['id'] }"
-                      ><app-icon name="edit"
+                       *appCanRoute="'/admin/inventory/adjustments'"><app-icon name="edit"
                     /></a>
                   </td>
                 </tr>
@@ -198,117 +195,7 @@
           </div>
         </div>
       </article>
-      @if (selected(); as row) {
-        <aside class="adm-panel ops-detail">
-          <div class="adm-section-title">
-            <h3>Product Inventory Detail</h3>
-            <button
-              class="adm-btn icon"
-              aria-label="Close inventory details"
-              (click)="selected.set(null)"
-            >
-              ×
-            </button>
-          </div>
-          <div class="ops-profile">
-            <img
-              appProductImage
-              [src]="row['image_url'] || '/images/product-placeholder.svg'"
-              alt="Product"
-            />
-            <div>
-              <h3>{{ text(row["product_name"]) }}</h3>
-              <p>SKU: {{ text(row["sku"]) }}</p>
-              <a [routerLink]="['/admin/products/view', row['product_id']]"
-                >{{ "View product" | translate }}</a
-              >
-            </div>
-          </div>
-          <nav class="reference-tabs">
-            @for (
-              tab of ["Stock Detail", "Variants", "Movement History"];
-              track tab
-            ) {
-              <button
-                [class.active]="detailTab === tab"
-                (click)="detailTab = tab"
-              >
-                {{ (tab) | translate }}
-              </button>
-            }
-          </nav>
-          @if (detailTab === "Stock Detail") {
-            <div class="ops-metrics">
-              <div>
-                Total Stock<strong>{{ stock(row) }}</strong>
-              </div>
-              <div>
-                {{ "Reserved Stock" | translate }}<strong>{{ text(row["reserved_qty"]) }}</strong>
-              </div>
-              <div>
-                {{ "Available Stock" | translate }}<strong>{{ text(row["available_qty"]) }}</strong>
-              </div>
-              <div>
-                Low Stock Threshold<strong>{{
-                  text(row["low_stock_threshold"])
-                }}</strong>
-              </div>
-            </div>
-            <dl class="reference-info">
-              <dt>{{ "Warehouse" | translate }}</dt>
-              <dd>{{ text(row["warehouse_location"]) }}</dd>
-              <dt>Last Stock In</dt>
-              <dd>{{ when(row["last_restocked_at"]) }}</dd>
-              <dt>{{ "Last Updated" | translate }}</dt>
-              <dd>{{ when(row["updated_at"]) }}</dd>
-              <dt>{{ "Status" | translate }}</dt>
-              <dd>{{ text(row["stock_status"]).replaceAll("_", " ") }}</dd>
-            </dl>
-          } @else if (detailTab === "Variants") {
-            <p>View all variants and attributes for this product.</p>
-            <a
-              class="adm-btn"
-              [routerLink]="['/admin/products/view', row['product_id']]"
-              >View Product Variants</a
-            >
-          } @else {
-            <div class="ops-history">
-              @for (move of history(); track $index) {
-                <article>
-                  <b>{{
-                    text(field(move, "movement_type", "movementType"))
-                  }}</b>
-                  <p>
-                    {{ text(field(move, "quantity_change", "quantityChange")) }}
-                    units · {{ when(field(move, "created_at", "createdAt")) }}
-                  </p>
-                  <small>{{ text(field(move, "remark", "reason")) }}</small>
-                </article>
-              } @empty {
-                <p>No movement history found.</p>
-              }
-            </div>
-          }
-          <div class="adm-actions">
-            <a
-              class="adm-btn"
-              routerLink="/admin/inventory/adjustments"
-              [queryParams]="{ id: row['id'] }"
-              >Adjust Stock</a
-            ><a
-              class="adm-btn adm-primary"
-              routerLink="/admin/inventory/stock-in"
-              [queryParams]="{ id: row['id'] }"
-              >{{ "Stock In" | translate }}</a
-            ><a
-              class="adm-btn danger"
-              routerLink="/admin/inventory/stock-out"
-              [queryParams]="{ id: row['id'] }"
-              >{{ "Stock Out" | translate }}</a
-            >
-          </div>
-        </aside>
-      }
+
     </div>
   } @else {
     <nav class="ops-steps">
@@ -543,7 +430,7 @@
                           class="adm-btn icon danger"
                           [attr.aria-label]="('Remove ' + line.row['sku']) | translate"
                           (click)="remove(index)"
-                        >
+                         *appCan="'INVENTORY_ADJUST'">
                           <app-icon name="trash" />
                         </button>
                       }
@@ -583,7 +470,7 @@
       </div>
     }
     <footer class="ops-footer">
-      <a class="adm-btn" routerLink="/admin/inventory">{{ (step === 4 ? "View Inventory" : "Cancel") | translate }}</a>
+      <a class="adm-btn" routerLink="/admin/inventory" *appCanRoute="'/admin/inventory'">{{ (step === 4 ? "View Inventory" : "Cancel") | translate }}</a>
       <div class="adm-actions">
         @if (step > 1 && step < 4) {
           <button class="adm-btn" [disabled]="busy()" (click)="step = step - 1">
@@ -603,7 +490,7 @@
             class="adm-btn adm-primary"
             [disabled]="busy()"
             (click)="confirm()"
-          >
+           *appCan="'INVENTORY_ADJUST'">
             Confirm {{ (title()) | translate }}
           </button>
         } @else {
@@ -685,3 +572,5 @@
     </div>
   }
 </section>
+
+}

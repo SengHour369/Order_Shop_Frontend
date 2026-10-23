@@ -1,11 +1,11 @@
 <section class="purchase-panel" aria-label="Checkout in chat" [attr.aria-busy]="loading()">
-  <header><span class="purchase-icon"><app-icon name="bag" /></span><div><h3>{{ order() ? 'Your order' : reviewing() ? 'Confirm your order' : 'Your cart & checkout' }}</h3><p>Review every detail here in chat.</p></div></header>
+  <header><span class="purchase-icon"><app-icon name="bag" /></span><div><h3>{{ order() ? 'Your order' : reviewing() ? 'Confirm your order' : 'Create Order' }}</h3><p>Review every detail here in chat.</p></div></header>
   @if (!auth.session()) {
     <p>Sign in to select your cart, delivery address and payment method.</p><a (click)="navigate.emit()" class="purchase-primary" routerLink="/auth" [queryParams]="{returnUrl:'/'}">{{ "Sign in" | translate }}</a>
   } @else if (order(); as placed) {
     <div class="order-receipt"><app-icon name="check" /><strong>{{ placed.order_number }}</strong><span>{{ placed.status }}</span><b>{{ placed.total_amount | currency:'USD' }}</b></div>
     <p class="payment-note">Placing an order does not charge you. Online payment uses KHQR when enabled by the shop; only provider verification confirms payment.</p>
-    @if(placed.status === 'PENDING' && method !== 'CASH_ON_DELIVERY'){<app-payment-qr [orderId]="placed.id" />}
+    @if(placed.status === 'PENDING' && method !== 'CASH_ON_DELIVERY'){<app-payment-qr [chatLayout]="true" [orderNumber]="placed.order_number" [orderId]="placed.id" />}
     <button class="purchase-secondary" [disabled]="loading()" (click)="refreshPayments()">{{ "Refresh payment status" | translate }}</button>
     @for (transaction of transactions(); track transaction.id) {
       <div class="purchase-record"><strong>{{ transaction.payment_method }} · {{ transaction.transaction_no }}</strong><span>{{ transaction.status }} · {{ transaction.amount | currency:transaction.currency }}</span></div>
@@ -19,14 +19,17 @@
       <div class="payment-note">A checkout is already awaiting confirmation. Cart and payment edits are locked until its result is known.</div>
       <button class="purchase-primary" [disabled]="loading()" (click)="confirm()">{{ loading() ? 'Checking…' : 'Check order again' }}</button>
     } @else if (cart(); as current) {
+      <div class="checkout-grid"><section class="checkout-items"><h4>Order Items ({{current.items.length}})</h4>
       @for (item of current.items; track item.id) {
         <div class="purchase-item">@if (labels()[item.product_sku_id]; as label) { <img appProductImage [src]="label.image" [alt]="label.name" /> }<div><strong>{{ labels()[item.product_sku_id]?.name || ('SKU #'+item.product_sku_id) }}</strong><small>Quantity {{ item.quantity }}</small></div><b>{{ item.total_price | currency:'USD' }}</b>
           @if (!reviewing()) { <div class="item-controls"><button [disabled]="loading() || item.quantity <= 1" (click)="change(item,-1)" [attr.aria-label]="'Decrease quantity for SKU '+item.product_sku_id">−</button><span>{{ item.quantity }}</span><button [disabled]="loading() || item.quantity >= 999" (click)="change(item,1)" [attr.aria-label]="'Increase quantity for SKU '+item.product_sku_id">+</button><button class="remove-item" [disabled]="loading()" (click)="remove(item)" [attr.aria-label]="'Remove SKU '+item.product_sku_id"><app-icon name="trash" /></button></div> }
         </div>
       }
+      </section>
       @if (!current.items.length) { <p>Your cart is empty. Select a product above and add it to your cart.</p> }
       @if (current.items.length) {
-        <div class="purchase-total"><span>Order total</span><strong>{{ current.total_price | currency:'USD' }}</strong></div>
+        <aside class="checkout-summary"><h4>Order Summary</h4><div class="summary-count"><span>Items</span><strong>{{current.items.length}}</strong></div><div class="purchase-total"><span>Order total</span><strong>{{ current.total_price | currency:'USD' }}</strong></div>
+        </aside><section class="checkout-shipping">
         <label class="purchase-label" for="chat-delivery-address">{{ "Delivery address" | translate }}</label>
         @if (addresses().length) {
           <select id="chat-delivery-address" [(ngModel)]="addressId" [disabled]="loading() || reviewing()"><option [ngValue]="0" disabled>Choose an address</option>@for (address of addresses(); track address.id) { <option [ngValue]="address.id">{{ address.address_line1 }}, {{ address.city }}{{ address.is_default ? ' · Default' : '' }}</option> }</select>
@@ -42,14 +45,16 @@
             <button type="button" class="purchase-secondary" (click)="addingAddress.set(false)">{{text('Cancel','បោះបង់')}}</button>
           </fieldset>
         }
-        <fieldset [disabled]="loading() || reviewing()"><legend>Payment provider</legend><div class="payment-options">@for (provider of methods; track provider) { <label [class.chosen]="method===provider"><input type="radio" name="chat-payment" [value]="provider" [(ngModel)]="method" />{{ provider }}</label> }</div></fieldset>
-        <p class="payment-note"><app-icon name="lock" /> KHQR payment requires a separate transfer in your banking app. Confirming this order does not charge you.</p>
+        </section><section class="checkout-payment"><fieldset [disabled]="loading() || reviewing()"><legend>Payment provider</legend><div class="payment-options">@for (provider of methods; track provider) { <label [class.chosen]="method===provider"><input type="radio" name="chat-payment" [value]="provider" [(ngModel)]="method" />{{ provider }}</label> }</div></fieldset>
+        </section><div class="checkout-confirmation"><p class="payment-note"><app-icon name="lock" /> KHQR payment requires a separate transfer in your banking app. Confirming this order does not charge you.</p>
         @if (reviewing()) {
           <div class="confirmation-note">Please confirm the items, quantities, delivery address and total above.</div>
           <button class="purchase-primary" [disabled]="loading()" (click)="confirm()">{{ loading() ? 'Confirming…' : text('Confirm & Place Order','បញ្ជាក់ និងបញ្ជាទិញ') }}</button>
           <button class="purchase-secondary" [disabled]="loading()" (click)="edit()">{{text('Edit order','កែសម្រួលការបញ្ជាទិញ')}}</button>
         } @else { <button class="purchase-primary" [disabled]="loading() || !selectedAddress()" (click)="review()">{{text('Review order','ពិនិត្យការបញ្ជាទិញ')}}</button> }
+        </div>
       }
+      </div>
     } @else if (!loading()) { <button class="purchase-secondary" (click)="load()">Retry loading cart</button> }
   }
   @if (loading()) { <p role="status">{{ "Loading current details…" | translate }}</p> }

@@ -7,7 +7,11 @@ export const staffGuard: CanActivateFn = (_route, state) => {
   const auth=inject(AuthService), router=inject(Router),access=inject(PermissionService);
   if (["ADMIN", "MANAGER"].includes(auth.session()?.role || "")) return true;
   // A granted import role does not open any other admin module.
-  if (isStaffWorkflowRoute(state.url))
-    return access.load(true).pipe(map(ok=>ok&&access.allows(state.url)||router.createUrlTree(['/shop'])));
-  return router.createUrlTree(['/shop']);
+  return access.load(true).pipe(map(ok => {
+    const entry = ok && (access.isAdministrator() || isStaffWorkflowRoute(state.url));
+    if (entry && state.url.split(/[?#]/)[0].replace(/\/$/, '') === '/admin' && !access.allows(state.url)) {
+      return router.createUrlTree([access.landingPath()]);
+    }
+    return entry && access.allows(state.url) || router.createUrlTree(['/shop']);
+  }));
 };

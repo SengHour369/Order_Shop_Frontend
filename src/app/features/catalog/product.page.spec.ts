@@ -46,6 +46,20 @@ describe('Customer product details', () => {
     page.choose(product.skus[0]); page.product.set({ ...product, is_active: false }); page.add(false);
     expect(add).not.toHaveBeenCalled();
   });
+  it('limits purchases to available inventory and displays an applied promotion', () => {
+    const fixture = TestBed.createComponent(ProductPage);
+    const page = fixture.componentInstance;
+    page.product.set({ ...product, skus: [{ ...product.skus[0], quantity: 10,
+      inventory: { stock_qty: 10, reserved_qty: 8, available_qty: 2 },
+      promotion: { originalPrice: 249.99, finalPrice: 179.99, promotionApplied: true, promotionName: 'Weekend offer' },
+    }] });
+    fixture.detectChanges();
+    expect(page.maxQuantity()).toBe(2);
+    expect(fixture.nativeElement.querySelector('.product-stock').textContent).toContain('2');
+    expect(fixture.nativeElement.querySelector('.product-promotion').textContent).toContain('Weekend offer');
+    page.quantity = 3; page.add(false);
+    expect(add).not.toHaveBeenCalled();
+  });
   it('adds the selected SKU and navigates to checkout only after success', () => {
     const page = TestBed.createComponent(ProductPage).componentInstance;
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);

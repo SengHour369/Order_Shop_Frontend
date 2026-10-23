@@ -1,3 +1,6 @@
+@if (accessDenied()) {
+  <app-page-access-denied />
+} @else {
 <section class="dashboard-page">
   <div class="adm-page-head">
     <div>
@@ -18,31 +21,38 @@
   </div>
   <app-status [busy]="busy()" [error]="error()" />
   <div class="dashboard-metrics">
+    @if (access.has("REPORT_VIEW")) {
     <a class="adm-panel metric" routerLink="/admin/sales-report"
-      ><span class="metric-icon blue"><app-icon name="chart" /></span>
+       *appCanRoute="'/admin/sales-report'"><span class="metric-icon blue"><app-icon name="chart" /></span>
       <div>
         <span>Sales · {{ year }}</span
         ><strong>{{ monthly().length ? money(salesTotal()) : "—" }}</strong
         ><small>{{ currency || "No sales data" }}</small>
       </div></a
     >
+    }
+    @if (access.has("ORDER_VIEW_ALL")) {
     <a class="adm-panel metric" routerLink="/admin/orders"
-      ><span class="metric-icon green"><app-icon name="bag" /></span>
+       *appCanRoute="'/admin/orders'"><span class="metric-icon green"><app-icon name="bag" /></span>
       <div>
         <span>{{ "Total Orders" | translate }}</span
         ><strong>{{ orders()?.totalOrders ?? "—" }}</strong
         ><small>{{ "All time" | translate }}</small>
       </div></a
     >
+    }
+    @if (access.has("USER_MANAGE")) {
     <a class="adm-panel metric" routerLink="/admin/customers"
-      ><span class="metric-icon purple"><app-icon name="user" /></span>
+       *appCanRoute="'/admin/customers'"><span class="metric-icon purple"><app-icon name="user" /></span>
       <div>
         <span>{{ "Total Customers" | translate }}</span><strong>{{ customers() ?? "—" }}</strong
         ><small>Customer accounts</small>
       </div></a
     >
-    <a class="adm-panel metric" routerLink="/admin/products"
-      ><span class="metric-icon amber"><app-icon name="box" /></span>
+    }
+    @if (access.has("INVENTORY_VIEW")) {
+    <a class="adm-panel metric" routerLink="/admin/inventory"
+       *appCanRoute="'/admin/inventory'"><span class="metric-icon amber"><app-icon name="box" /></span>
       <div>
         <span>{{ "Total Products" | translate }}</span
         ><strong>{{ inventory()?.total_products ?? "—" }}</strong
@@ -50,15 +60,17 @@
       </div></a
     >
     <a class="adm-panel metric" routerLink="/admin/inventory"
-      ><span class="metric-icon rose"><app-icon name="bell" /></span>
+       *appCanRoute="'/admin/inventory'"><span class="metric-icon rose"><app-icon name="bell" /></span>
       <div>
         <span>{{ "Low Stock" | translate }}</span
         ><strong>{{ inventory()?.low_stock ?? "—" }}</strong
         ><small>{{ inventory()?.out_of_stock ?? "—" }} out of stock</small>
       </div></a
     >
+    }
   </div>
   <div class="dashboard-main-grid">
+    @if (access.has("REPORT_VIEW")) {
     <article class="adm-panel sales-panel">
       <div class="adm-section-title">
         <h3>Sales Overview</h3>
@@ -134,9 +146,11 @@
         </div>
       }
       <a class="panel-footer" routerLink="/admin/sales-report"
-        >View sales report <span>→</span></a
+         *appCanRoute="'/admin/sales-report'">View sales report <span>→</span></a
       >
     </article>
+    }
+    @if (access.has("ORDER_VIEW_ALL")) {
     <article class="adm-panel order-panel">
       <div class="adm-section-title">
         <h3>{{ "Order Status" | translate }}</h3>
@@ -164,19 +178,21 @@
         </div>
       </div>
       <a class="panel-footer" routerLink="/admin/orders"
-        >View all orders <span>→</span></a
+         *appCanRoute="'/admin/orders'">View all orders <span>→</span></a
       >
     </article>
+    }
+    @if (access.has("ORDER_VIEW_ALL")) {
     <article class="adm-panel recent-panel">
       <div class="adm-section-title">
         <h3>Recent Orders</h3>
-        <a routerLink="/admin/orders">{{ "View all" | translate }}</a>
+        <a routerLink="/admin/orders" *appCanRoute="'/admin/orders'">{{ "View all" | translate }}</a>
       </div>
       @for (order of recent(); track field(order, "id")) {
         <a
           class="recent-order"
           [routerLink]="['/admin/orders', field(order, 'id')]"
-          ><span class="order-mini-icon"><app-icon name="box" /></span>
+           *appCanRoute="['/admin/orders', field(order, 'id')]"><span class="order-mini-icon"><app-icon name="box" /></span>
           <div>
             <b>{{ text(field(order, "order_number", "orderNumber", "id")) }}</b
             ><small>{{ customerName(order) }}</small>
@@ -201,11 +217,13 @@
         </div>
       }
       <a class="panel-footer" routerLink="/admin/orders"
-        >Manage orders <span>→</span></a
+         *appCanRoute="'/admin/orders'">Manage orders <span>→</span></a
       >
     </article>
+    }
   </div>
   <div class="dashboard-bottom-grid">
+    @if (access.has("REPORT_VIEW")) {
     <article class="adm-panel">
       <div class="adm-section-title">
         <h3>Orders This Week</h3>
@@ -222,6 +240,8 @@
         }
       </div>
     </article>
+    }
+    @if (access.has("INVENTORY_VIEW")) {
     <article class="adm-panel">
       <div class="adm-section-title">
         <h3>Inventory Overview</h3>
@@ -242,23 +262,37 @@
         </div>
       </div>
       <a class="panel-footer" routerLink="/admin/inventory"
-        >View inventory <span>→</span></a
+         *appCanRoute="'/admin/inventory'">View inventory <span>→</span></a
       >
     </article>
+    }
+    @if (access.allows('/admin/products/add') || access.allows('/admin/inventory/stock-in') || access.allows('/admin/returns')) {
     <article class="adm-panel">
       <div class="adm-section-title">
         <h3>Quick Actions</h3>
         <app-icon name="grid" />
       </div>
       <div class="dashboard-actions">
-        <a routerLink="/admin/products/add"
-          ><app-icon name="plus" />{{ "Add product" | translate }}<span>→</span></a
-        ><a routerLink="/admin/inventory/stock-in"
-          ><app-icon name="box" />Increase stock<span>→</span></a
-        ><a routerLink="/admin/returns"
-          ><app-icon name="refresh" />Review returns<span>→</span></a
+        @if (access.allows("/admin/products/add")) {
+<a routerLink="/admin/products/add"
+           *appCanRoute="'/admin/products/add'"><app-icon name="plus" />{{ "Add product" | translate }}<span>→</span></a
         >
+        }
+        @if (access.has("INVENTORY_VIEW")) {
+          @if (access.allows("/admin/inventory/stock-in")) {
+<a routerLink="/admin/inventory/stock-in"
+             *appCanRoute="'/admin/inventory/stock-in'"><app-icon name="box" />Increase stock<span>→</span></a>
+        }
+        }
+        @if (access.allows("/admin/returns")) {
+<a routerLink="/admin/returns"
+           *appCanRoute="'/admin/returns'"><app-icon name="refresh" />Review returns<span>→</span></a
+        >
+        }
       </div>
     </article>
+    }
   </div>
 </section>
+
+}

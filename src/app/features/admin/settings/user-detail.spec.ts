@@ -3,16 +3,24 @@ import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AdminApi } from '../api/admin.api';
 import { UserDetailPage } from './user-detail.page';
-function setup() {
+function setup(customerDetail = false) {
   const api = {
     userDetails: vi.fn(() => of({ id: 7, fullName: 'John Doe', email: 'john@example.test', status: 'ACT' })),
     userDetailsActivity: vi.fn(() => of({ items: [{ actorId: '7', action: 'LOGIN_SUCCESS' }, { actorId: '8', action: 'LOGIN_FAILED' }, { actorId:'8',resourceType:'USER',resourceId:'7',action:'UPDATE' }] })),
     requestUserPasswordReset: vi.fn(() => of({})),
   };
-  TestBed.configureTestingModule({ providers: [{ provide: AdminApi, useValue: api }, { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: '7' })) } }] });
+  TestBed.configureTestingModule({ providers: [{ provide: AdminApi, useValue: api }, { provide: ActivatedRoute, useValue: { snapshot: {data: {customerDetail}}, paramMap: of(convertToParamMap({ id: '7' })) } }] });
   return { page: TestBed.runInInjectionContext(() => new UserDetailPage()), api };
 }
 describe('User details', () => {
+  afterEach(()=>TestBed.resetTestingModule());
+  it('uses customer navigation and identity while loading the full real profile',()=>{
+    const {page,api}=setup(true);
+    expect(page.backLink()).toBe('/admin/customers');
+    expect(page.formattedId()).toBe('CUST-000007');
+    expect(api.userDetails).toHaveBeenCalledWith(7);
+    expect(api.userDetailsActivity).toHaveBeenCalledWith(7);
+  });
   it('includes actions on the selected user and filters unrelated activity', () => {
     const { page, api } = setup();
     expect(api.userDetailsActivity).toHaveBeenCalledWith(7);
@@ -37,6 +45,19 @@ describe('User details', () => {
     expect(page.securityFields()).toContainEqual(['Session Active','1 active session']);
     expect(page.securityFields()).toContainEqual(['Two-Factor Authentication','Enabled']);
     expect(page.language()).toBe('English (US)');
+  });
+  it('shows a clear permission message without exposing internal API details', () => {
+    const { page, api } = setup();
+    api.userDetails.mockReturnValue(throwError(() => ({
+      status: 403,
+      error: { message: 'API not configured for permission check: GET /api/v1/user/43/details' },
+    })));
+    page.load(43);
+    expect(page.user()).toBeNull();
+    expect(page.error()).toContain('You do not have permission');
+    expect(page.error()).not.toContain('/api/');
+    expect(page.error()).not.toContain('API not configured');
+    expect(page.busy()).toBe(false);
   });
   it('resets the selected account password', () => {
     const { page, api } = setup(); page.resetPassword();

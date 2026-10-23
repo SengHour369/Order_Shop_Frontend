@@ -3,7 +3,9 @@ import { ApiClient } from "../../core/api/api-client";
 import { catchError, of, throwError, finalize, map } from "rxjs";
 import { conversationId as requestId } from '../../shared/utils/conversation-id';
 import { AssistantQuota } from './assistant-quota';
+import { ChatPresentation } from './chat-presentation';
 export interface AiResult {
+  presentation?: ChatPresentation;
   executionId: string | null;
   status: string;
   message: string;
@@ -12,6 +14,7 @@ export interface AiResult {
   errorCode?: string;
 }
 export interface ChatResponse {
+  presentation?: ChatPresentation;
   requestKey?:string;
   conversationId: string;
   cardType: string;
@@ -25,6 +28,10 @@ export interface AssistantInfo { provider: string; model: string; configured: bo
 export class AssistantApi {
   private api = inject(ApiClient);
   private quota = inject(AssistantQuota);
+  transcribe(audio: Blob, language: string) {
+    const body = new FormData(); body.append("audio", audio, "recording"); body.append("language", language);
+    return this.api.post<{text:string}>("/api/ai/voice/transcriptions", body);
+  }
   conversations() { return this.api.get<AdminChatSummary[]>('/api/ai/admin/conversations'); }
   conversation(id: string) { return this.api.get<AdminTranscript>('/api/ai/admin/conversations/' + encodeURIComponent(id)); }
   rename(id: string, title: string) { return this.api.patch<AdminTranscript>('/api/ai/admin/conversations/' + encodeURIComponent(id), { title }); }
@@ -41,7 +48,7 @@ export class AssistantApi {
       catchError(error => error.error?.status && typeof error.error.message === 'string' ? of(error.error as AiResult) : throwError(()=>error)));
   }
   confirm(id: string, conversationId:string|null=null) {
-    return this.api.http.post<AiResult>(this.api.url('/api/ai/confirm/' + encodeURIComponent(id)), {}).pipe(
+    return this.api.http.post<AiResult>(this.api.url('/api/ai/confirm/' + encodeURIComponent(id)), {}, {headers: conversationId ? {'X-Conversation-ID':conversationId} : {}}).pipe(
       catchError(error => error.error?.status && typeof error.error.message === 'string'
         ? of(error.error as AiResult) : throwError(() => error)),
     );
@@ -67,7 +74,7 @@ export class AssistantApi {
             ? of(body as ChatResponse)
             : throwError(() => error);
         }),
-        map(response=>({...response,requestKey:key})),
+        map(response=>({...response,result:{...response.result,presentation:response.presentation},requestKey:key})),
         finalize(()=>this.quota.refresh()),
       );
   }

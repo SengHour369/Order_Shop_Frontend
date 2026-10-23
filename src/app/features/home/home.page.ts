@@ -1,3 +1,5 @@
+import { of, switchMap } from 'rxjs';
+import { StorefrontAccessService } from '../../core/storefront/storefront-access.service';
 import { TranslatePipe } from "../../core/i18n/translate.pipe";
 import { Component, inject, signal } from "@angular/core";
 import { RouterLink } from "@angular/router";
@@ -16,6 +18,7 @@ import { Status } from "../../shared/components/status";
 export class HomePage extends PageState {
   auth = inject(AuthService);
   api = inject(CatalogApi);
+  private storefront = inject(StorefrontAccessService);
   products = signal<Product[]>([]);
   categories = [
     { name: "Electronics", icon: "laptop", tone: "lavender" },
@@ -30,8 +33,16 @@ export class HomePage extends PageState {
   ];
   constructor() {
     super();
-    if (this.auth.session())
-      this.run(this.api.list(), (r) =>
+    const products = this.auth.session() ? this.api.list() : this.storefront.load().pipe(
+      switchMap(settings => {
+        if (!settings.guestBrowsing) {
+          this.accessDenied.set(true);
+          return of({payload: [] as Product[]});
+        }
+        return this.api.list();
+      }),
+    );
+    this.run(products, (r) =>
         this.products.set(r.payload.slice(0, 5)),
       );
   }

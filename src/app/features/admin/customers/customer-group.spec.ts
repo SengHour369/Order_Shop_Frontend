@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AdminApi } from '../api/admin.api';
-import { PermissionService } from '../../../core/auth/permission.service';
+import { requiredPermissions, PermissionService } from '../../../core/auth/permission.service';
 import { CustomerGroupPage } from './customer-group.page';
 function setup() {
   const api = {
@@ -18,6 +18,21 @@ function setup() {
   return {page,api,router};
 }
 describe('Customer group screens',()=>{
+  it('renders group data for View-only access without edit controls or restricted requests', () => {
+    const grants = new Set(['USER_GROUP_VIEW']);
+    const api = { group: vi.fn(() => of({ group_id: 12, group_name: 'View-only group', group_code: 'VIEW', is_active: true })), allPermissionRows: vi.fn(() => of([])) };
+    TestBed.configureTestingModule({ providers: [provideRouter([]),
+      { provide: AdminApi, useValue: api },
+      { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: '12' })) } },
+      { provide: PermissionService, useValue: { has: (code: string) => grants.has(code), allows: (url: string) => requiredPermissions(url).every(code => grants.has(code)) } },
+    ] });
+    const fixture = TestBed.createComponent(CustomerGroupPage); fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('View-only group');
+    expect(fixture.nativeElement.textContent).not.toContain('Delete Group');
+    expect(fixture.nativeElement.textContent).not.toContain('Edit Group');
+    expect(fixture.nativeElement.querySelector('.permissions-card')).toBeNull();
+    expect(api.allPermissionRows).not.toHaveBeenCalled();
+  });
   it('saves real group fields and permission assignments',()=>{
     const {page,api,router}=setup();page.toggle(1);page.save();
     expect(api.saveGroup).toHaveBeenCalledWith({group_name:'VIP Customers',group_code:'VIP',description:'Premium benefits',type:'VIP',is_active:true,status:'ACT'},undefined);

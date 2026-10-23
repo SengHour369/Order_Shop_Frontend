@@ -1,3 +1,4 @@
+import { PermissionService } from '../../../core/auth/permission.service';
 import { TestBed } from "@angular/core/testing";
 import { provideRouter } from "@angular/router";
 import { provideHttpClient } from "@angular/common/http";
@@ -35,13 +36,34 @@ describe("Promotion UI integration", () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
-        provideRouter([]),
+        provideRouter([]), { provide: PermissionService, useValue: { has: () => true, allows: () => true } },
       ],
     });
     http = TestBed.inject(HttpTestingController);
   });
   afterEach(() => http.verify());
 
+  it("opens the list without the Create Promotion side panel", () => {
+    const fixture = TestBed.createComponent(PromotionsPage);
+    fixture.detectChanges();
+    http.expectOne("/api/v1/admin/promotions?page=1&size=20").flush({
+      code: "200", data: { content: [], totalElements: 0, totalPages: 1 },
+    });
+    fixture.detectChanges();
+    expect(fixture.componentInstance.editing()).toBe(false);
+    expect(fixture.nativeElement.querySelector('form.reference-stack')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.reference-columns')).toBeNull();
+    expect(fixture.nativeElement.querySelector('a[href="/admin/promotions/add"]')?.textContent).toContain('Create Promotion');
+    expect(fixture.nativeElement.textContent).not.toContain('Open full form');
+  });
+
+  it('embeds the actual create form and saves only after a human submits it',()=>{
+    const f=TestBed.createComponent(PromotionsPage);f.componentRef.setInput('embedded',true);f.detectChanges();
+    expect(f.nativeElement.querySelector('form.reference-stack')).toBeTruthy();http.expectNone('/api/v1/admin/promotions');
+    const saved=vi.fn();f.componentInstance.saved.subscribe(saved);f.componentInstance.draft={...draft};f.componentInstance.save();
+    http.expectOne('/api/v1/admin/promotions').flush({code:'200',data:{id:8,...draft,status:'DRAFT'}});
+    expect(saved).toHaveBeenCalledWith({id:8,status:'DRAFT'});http.expectNone('/api/v1/admin/promotions?page=1&size=20');
+  });
   it("rejects discounts over 100 percent and invalid time ranges", () => {
     expect(promotionError({ ...draft, discountValue: 101 })).toContain("100");
     expect(promotionError({ ...draft, endAt: draft.startAt })).toContain(
@@ -55,6 +77,7 @@ describe("Promotion UI integration", () => {
 
   it("sends every editable field and disables stacking when saving", () => {
     const fixture = TestBed.createComponent(PromotionsPage);
+    fixture.detectChanges();
     http.expectOne("/api/v1/admin/promotions?page=1&size=20").flush({
       code: "200",
       data: { content: [], totalElements: 0, totalPages: 0 },
@@ -84,6 +107,7 @@ describe("Promotion UI integration", () => {
 
   it("renders numeric SKU assignments and sends unique IDs", () => {
     const fixture = TestBed.createComponent(PromotionsPage);
+    fixture.detectChanges();
     http.expectOne("/api/v1/admin/promotions?page=1&size=20").flush({
       code: "200",
       data: { content: [], totalElements: 0, totalPages: 0 },
@@ -113,6 +137,7 @@ describe("Promotion UI integration", () => {
 
   it("keeps the saved promotion ID when SKU assignment fails so retry updates it", () => {
     const fixture = TestBed.createComponent(PromotionsPage);
+    fixture.detectChanges();
     http.expectOne("/api/v1/admin/promotions?page=1&size=20").flush({
       code: "200",
       data: { content: [], totalElements: 0, totalPages: 0 },
@@ -153,6 +178,7 @@ describe("Promotion UI integration", () => {
 
   it("validates wizard progress and previews capped discounts without negative prices", () => {
     const fixture = TestBed.createComponent(PromotionsPage);
+    fixture.detectChanges();
     http.expectOne("/api/v1/admin/promotions?page=1&size=20").flush({
       code: "200",
       data: { content: [], totalElements: 0, totalPages: 0 },

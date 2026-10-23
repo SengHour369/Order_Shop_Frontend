@@ -1,10 +1,21 @@
+import { ChatVoice } from '../../assistant/customer-chat/chat-voice';
+import { LiveVoice } from '../../assistant/customer-chat/live-voice';
+import { VoiceCall } from '../../assistant/customer-chat/voice-call';
+import { adminOrderPresentation } from '../../assistant/admin-order-presentation';
+import { ChatPresentation } from '../../assistant/chat-presentation';
+import { PromotionsPage } from '../promotions/promotions.page';
+import { parseProductInput } from '../products/product-form-assistance';
+import { ProductFormPage } from '../products/products.page';
+import { ChatUiRenderer } from '../../assistant/chat-ui-renderer';
+import { AssistantResult } from '../../assistant/assistant-result';
+import { CanAccessDirective } from '../../../core/auth/can-access.directive';
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
 import { RichMessage } from '../../assistant/rich-message';
 import { AssistantLauncherState } from '../../assistant/floating/launcher-state';
 import { Router } from '@angular/router';
 import { conversationId } from "../../../shared/utils/conversation-id";
-import { Component, DestroyRef, inject, signal } from '@angular/core';
-import { DatePipe, JsonPipe } from '@angular/common';
+import { Component, DestroyRef, inject, signal, viewChild } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -15,7 +26,6 @@ import { AssistantProductCard } from '../../assistant/assistant-product';
 import { AdminApi, Row } from '../api/admin.api';
 import { Icon } from '../../../shared/components/icon';
 import { AiImportComponent } from '../imports/ai-import.component';
-import { AiImportsApi } from '../imports/ai-imports.api';
 import { PermissionService } from '../../../core/auth/permission.service';
 
 interface ProductDraft {
@@ -26,15 +36,74 @@ interface Operation { title: string; status: string; time: Date; data?: unknown;
 type Turn = NonNullable<ReturnType<AssistantPage['current']>>['messages'][number];
 
 @Component({
-  imports: [RichMessage, TranslatePipe, FormsModule, DatePipe, JsonPipe, RouterLink, Icon, AssistantProductCard, AiImportComponent],
+  providers: [ChatVoice, LiveVoice],
+  imports: [VoiceCall, PromotionsPage, ProductFormPage, ChatUiRenderer, AssistantResult, CanAccessDirective, RichMessage, TranslatePipe, FormsModule, DatePipe, RouterLink, Icon, AssistantProductCard, AiImportComponent],
   templateUrl: './admin-assistant.html',
   styleUrl: './admin-assistant.css',
 })
 export class AdminAssistantPage extends AssistantPage {
+  override administrator=true;
+  readonly voice=inject(ChatVoice);
+  readonly live=inject(LiveVoice);
+  voiceLanguage='km';
+  openCall(){if(this.locked()||this.voice.pending())return;this.voice.reset();this.live.open();}
+  startCall(){
+    this.voice.reset();
+    void this.live.start(this.current()?.id||null,response=>{
+      const active=this.current();if(!active)return;
+      if(active.id!==response.conversationId)return;
+      active.messages.push({role:'assistant',text:response.result.message,time:new Date(),result:{...response.result,presentation:response.presentation},suggestions:response.suggestions});
+      this.current.set({...active});this.view.set('chat');this.scrollChat();
+    },id=>{
+      let active=this.current();
+      if(!active){active={localId:conversationId(),id,title:'Voice conversation',time:new Date(),messages:[]};this.conversations.update(rows=>[active!,...rows]);}
+      active.id=id;this.current.set({...active});
+    },'ADMIN');
+  }
+  recordVoice(){
+    if(this.locked()||this.live.isActive()||this.voice.pending())return;
+    if(this.voice.recording()){this.voice.finish();return;}
+    void this.voice.start(this.voiceLanguage,text=>{this.prompt=(this.prompt?this.prompt+' ':'')+text;this.language=this.voiceLanguage;});
+  }
+
   private launcher=inject(AssistantLauncherState);
   private assistantNavigation=inject(Router);
   historyOpen=signal(false);
+  historyWidth=signal(250);
+  historyResizing=signal(false);
+  private historyDrag: {pointerId:number;startX:number;width:number} | null = null;
+  private historyLimit(handle:HTMLElement) {
+    const available=handle.parentElement?.getBoundingClientRect().width || 1000;
+    return Math.max(180,Math.min(480,available <= 800 ? available * .86 : available - 360));
+  }
+  startHistoryResize(event:PointerEvent) {
+    if(event.button !== 0) return;
+    const handle=event.currentTarget as HTMLElement;
+    event.preventDefault();handle.setPointerCapture(event.pointerId);
+    this.historyDrag={pointerId:event.pointerId,startX:event.clientX,width:this.historyWidth()};
+    this.historyResizing.set(true);
+  }
+  moveHistoryResize(event:PointerEvent) {
+    const drag=this.historyDrag;if(!drag || event.pointerId !== drag.pointerId)return;
+    this.historyWidth.set(Math.round(Math.max(180,Math.min(this.historyLimit(event.currentTarget as HTMLElement),drag.width+event.clientX-drag.startX))));
+  }
+  stopHistoryResize(event:PointerEvent) {
+    if(this.historyDrag?.pointerId !== event.pointerId)return;
+    this.historyDrag=null;this.historyResizing.set(false);
+    const handle=event.currentTarget as HTMLElement;
+    if(handle.hasPointerCapture(event.pointerId))handle.releasePointerCapture(event.pointerId);
+  }
+  resizeHistoryKey(event:KeyboardEvent) {
+    if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+    event.preventDefault();
+    const maximum=this.historyLimit(event.currentTarget as HTMLElement);
+    const width=event.key==='Home'?180:event.key==='End'?maximum:this.historyWidth()+(event.key==='ArrowRight'?20:-20);
+    this.historyWidth.set(Math.round(Math.max(180,Math.min(maximum,width))));
+  }
   responseNotice=signal('');
+  orderPresentation = adminOrderPresentation;
+  openedOrder = signal<ChatPresentation|null>(null);
+  showOrderInChat(id:number){if(Number.isSafeInteger(id)&&id>0)this.openedOrder.set({schemaVersion:'1.0',blocks:[{kind:'orders.detail',entityId:id}]});}
   async copyResponse(text:string){try{await navigator.clipboard.writeText(text);this.responseNotice.set('Response copied');}catch{this.responseNotice.set('Copy unavailable. Select the response to copy it.');}}
   vote(turn:Turn,rating:'up'|'down'){
     if(!turn.requestKey)return;
@@ -42,18 +111,10 @@ export class AdminAssistantPage extends AssistantPage {
   }
   resultPending(result?:AiResult){return result?.status==='NEEDS_CONFIRMATION'||result?.status==='RUNNING'||!!(result?.data&&typeof result.data==='object'&&'confirmationId' in result.data);}
   regenerate(index:number){if(this.locked()||this.quota.exhausted())return;const turns=this.current()?.messages||[];const last=[...turns.slice(0,index)].reverse().find(t=>t.role==='user');if(last){this.prompt=last.text;this.send();}}
-  closeAssistant(){if(!this.locked()&&!this.draft()&&!this.stockOpen())void this.assistantNavigation.navigateByUrl(this.launcher.returnUrl.startsWith('/admin/assistant')?'/admin':this.launcher.returnUrl);}
+  closeAssistant(){this.voice.reset();this.live.close();if(!this.locked()&&!this.draft()&&!this.stockOpen()&&!this.promotionOpen())void this.assistantNavigation.navigateByUrl(this.launcher.returnUrl.startsWith('/admin/assistant')?'/admin':this.launcher.returnUrl);}
   importAccess=inject(PermissionService);
-  private importApi=inject(AiImportsApi);
   importBatchId=signal('');
-  attachAdminFile(event:Event) {
-    const input=event.target as HTMLInputElement; const file=input.files?.[0];
-    if (!file || this.locked()) return;
-    if (!/\.xlsx?$/i.test(file.name)) { this.attachText(event); return; }
-    input.value='';
-    if (!this.importAccess.has('IMPORT_UPLOAD')) {this.error.set('Excel import permission is required.'); return;}
-    this.run(this.importApi.upload(file),batch=>{this.importBatchId.set(batch.id);this.view.set('imports');});
-  }
+  attachAdminFile(event:Event) { this.attachText(event); }
   private assistantApi = inject(AssistantApi);
   private management = inject(AdminApi);
   private destroy = inject(DestroyRef);
@@ -67,12 +128,10 @@ export class AdminAssistantPage extends AssistantPage {
   confirming = signal(false);
   pollError = signal('');
   draft = signal<ProductDraft | null>(null);
-  draftStage = signal<'edit' | 'review'>('edit');
-  draftError = signal('');
-  categories = signal<Row[]>([]);
-  categoryError = signal('');
-  productFiles: File[] = [];
-  imageUrl = '';
+  productFormBusy = signal(false);
+  promotionOpen = signal(false);
+  promotionBusy = signal(false);
+  private productForm = viewChild(ProductFormPage);
   saving = signal(false);
   uncertain = signal(false);
   processing = signal('');
@@ -81,15 +140,22 @@ export class AdminAssistantPage extends AssistantPage {
   stockOpen = signal(false);
   stockReview = signal(false);
   sections = [['chat','Chat Bot'],['control','Control Center'],['conversations','Conversations'],['executions','Tool Execution'],['tools','Tools'],['permissions','Permissions'],['settings','Settings']];
+  actionIcon(action:string){return ({'Create product':'bag','Create promotion':'tag','Stock in':'box','Review order':'cart','Show low stock':'chart','Generate report':'file'} as Record<string,string>)[action]||'help';}
   quickPrompts = ['Create product', 'Create promotion', 'Stock in', 'Review order', 'Show low stock', 'Generate report'];
 
+  selectVoiceProduct(selection:{productId:number;skuId?:number}){void this.live.selectProduct(selection.productId,selection.skuId);}
   override ngOnInit() {
+    this.live.events$.pipe(takeUntilDestroyed(this.destroy)).subscribe(event=>{
+      const active=this.current();if(!active||event.conversationId!==active.id||!('turnId' in event))return;
+      let turn=active.messages.find(row=>row.voiceTurnId===event.turnId);
+      if(!turn){turn={role:event.type==='VOICE_TRANSCRIPT_UPDATED'?'user':'assistant',text:'',time:new Date(),voiceTurnId:event.turnId};active.messages.push(turn);}
+      turn.text+=event.text;this.current.set({...active});
+    });
     super.ngOnInit();
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroy)).subscribe(params => {
       const view = params.get('view') || 'chat';
       this.view.set(this.sections.some(section => section[0] === view) ? view : 'chat');
     });
-    this.destroy.onDestroy(() => { if (this.imageUrl) URL.revokeObjectURL(this.imageUrl); });
   }
   visibleConversations() {
     return this.conversationGroups().flatMap(group => group.items)
@@ -100,27 +166,33 @@ export class AdminAssistantPage extends AssistantPage {
   }
   shortcut(value: string) {
     if (this.locked()) return;
+    if (value === 'Create promotion') { this.startPromotion(); return; }
     if (value === 'Create product') { this.startProduct(); return; }
     if (value === 'Stock in') { this.stockOpen.set(true); this.stockReview.set(false); this.uncertain.set(false); return; }
     this.choose(({ 'Create promotion': 'Create a draft promotion', 'Review order': 'Show orders for today', 'Generate report': 'Show order counts by status' } as Record<string,string>)[value] || value);
   }
-  locked() { return this.busy() || this.saving() || this.confirming(); }
+  locked() { return this.busy() || this.saving() || this.confirming() || this.productFormBusy() || this.promotionBusy(); }
   override newConversation() {
     if (this.locked()) return;
-    this.resetProduct(); this.stockOpen.set(false); super.newConversation();
+    this.voice.reset();this.live.close();
+    this.openedOrder.set(null); this.resetProduct(); this.promotionOpen.set(false); this.stockOpen.set(false); super.newConversation();
   }
   override open(conversation: NonNullable<ReturnType<AssistantPage['current']>>) {
     if (this.locked()) return;
-    this.resetProduct(); this.stockOpen.set(false); super.open(conversation);
+    this.voice.reset();this.live.close();
+    this.openedOrder.set(null); this.resetProduct(); this.promotionOpen.set(false); this.stockOpen.set(false); super.open(conversation);
   }
   override send() {
-    if (this.locked() || this.draft() || this.stockOpen()) return;
+    if (this.locked() || this.stockOpen() || this.promotionOpen() || this.voice.recording() || this.voice.pending()) return;
+    if(/^\s*(?:please\s+)?(?:create|add)(?: a| new| a new)? (?:draft )?promotion\b/i.test(this.prompt)){const text=this.prompt;this.startPromotion(text);this.prompt='';return;}
+    if(this.draft()) { this.helpProductInput(); return; }
+    if(this.openKnownOrders())return;
     if (/^\s*(?:stock in|add stock)\b/i.test(this.prompt)) {
       this.stockQuantity = Number(this.prompt.match(/(?:stock in|add stock)\s+(\d+)/i)?.[1]) || null;
       this.inventoryId = Number(this.prompt.match(/inventory(?: record)?\s*#?\s*(\d+)/i)?.[1]) || null;
       this.stockOpen.set(true); this.stockReview.set(false); this.prompt = ''; return;
     }
-    if (/^\s*(?:create|add)(?: a| new| a new)? product\s*[.!]?\s*$/i.test(this.prompt)) {
+    if (/^\s*(?:please\s+)?(?:help\s+(?:me\s+)?(?:to\s+)?)?(?:(?:create|add)(?: a| new| a new)? product\b|បង្កើតផលិតផល)/i.test(this.prompt)) {
       const prompt = this.prompt;
       this.startProduct(prompt); this.prompt = ''; return;
     }
@@ -152,8 +224,9 @@ export class AdminAssistantPage extends AssistantPage {
     this.confirming.set(true); this.submitted.add(turn); this.error.set('');
     const operation: Operation = { title: turn.result?.intent || 'Confirmed action', status: 'RUNNING', time: new Date() };
     this.operations.update(rows => [operation, ...rows]);
-    this.assistantApi.confirm(id).pipe(takeUntilDestroyed(this.destroy)).subscribe({
+    this.assistantApi.confirm(id,this.current()?.id||null).pipe(takeUntilDestroyed(this.destroy)).subscribe({
       next: result => {
+        this.live.refreshAfterConfirmation();
         this.confirming.set(false); turn.result = result; turn.text = result.message;
         this.updateOperation(operation, result.status, result.data);
         if(result.status==='SUCCESS'&&result.intent==='ADMIN_IMPORT_DRAFT')this.openImportDraft(result);
@@ -204,8 +277,45 @@ export class AdminAssistantPage extends AssistantPage {
     operation.status = status; operation.data = data;
     this.operations.update(rows => [...rows]);
   }
-  startProduct(prompt = '') {
+  private openKnownOrders() {
+    const text=this.prompt.trim();
+    const list=text.match(/^(?:show|list|view)(?: me)?(?: all)? orders(?: (?:for )?(today))?[.!]?$/i);
+    const detail=text.match(/^(?:show|view|open)(?: me)?(?: the)? order(?: details?(?: for)?)?\s+((?:ORD-[\w-]+|anOrder_\d+))[.!]?$/i);
+    if(!list && !detail)return false;
+    let current=this.current();if(!current){current={localId:conversationId(),id:null,title:text.slice(0,80),time:new Date(),messages:[]};this.conversations.update(rows=>[current!,...rows]);}
+    current.messages.push({role:'user',text,time:new Date()});this.current.set({...current});this.prompt='';
+    const conversation=current;
+    const add=(result:AiResult)=>{conversation.messages.push({role:'assistant',text:result.message,time:new Date(),result});this.current.set({...conversation});};
+    if(list && !list[1]) {add({executionId:null,status:'SUCCESS',intent:'ADMIN_ORDER_LIST',message:'Orders are shown below. Choose View order to open details here.',data:null,presentation:{schemaVersion:'1.0',blocks:[{kind:'orders.list'}]}});return true;}
+    this.saving.set(true);
+    if(detail){
+      this.management.orderByNumber(detail[1].replace(/^anorder_/i,'anOrder_')).pipe(takeUntilDestroyed(this.destroy)).subscribe({next:order=>{this.saving.set(false);add({executionId:null,status:'SUCCESS',intent:'ORDER_GET',message:'Order details are shown below.',data:order});},error:()=>{this.saving.set(false);add({executionId:null,status:'FAILURE',message:'Could not retrieve that order. Check the order number and your access, then retry.',data:null});}});
+    }else{
+      const date=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Phnom_Penh',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+      this.assistantApi.tool('ADMIN_ORDER_LIST',{date}).pipe(takeUntilDestroyed(this.destroy)).subscribe({next:result=>{
+        this.saving.set(false);
+        if(result.status==='SUCCESS' && Array.isArray(result.data))add({...result,message:`Order results for ${date} are shown below. Choose View order to open details here.`,presentation:{schemaVersion:'1.0',blocks:[{kind:'orders.list',records:result.data,date}]}});
+        else add(result);
+      },error:()=>{this.saving.set(false);add({executionId:null,status:'FAILURE',message:'The order service could not retrieve today’s orders. Please retry.',data:null});}});
+    }
+    return true;
+  }
+  startPromotion(text='Create a draft promotion') {
+    if(this.locked())return;
+    if(this.draft()){this.responseNotice.set('Finish or cancel the open product form before creating a promotion.');return;}
+    this.view.set('chat');this.stockOpen.set(false);this.promotionOpen.set(true);
+    let current=this.current();if(!current){current={localId:conversationId(),id:null,title:text.slice(0,80),time:new Date(),messages:[]};this.conversations.update(rows=>[current!,...rows]);}
+    current.messages.push({role:'user',text,time:new Date()},{role:'assistant',text:'Complete the promotion form below. Nothing is saved until you submit the form.',time:new Date()});this.current.set({...current});
+  }
+  promotionSaved(result:{id:number;status:string}) {
+    this.promotionBusy.set(false);this.promotionOpen.set(false);
+    this.appendResult('Promotion saved.',result,'PROMOTION_GET');
+  }
+  startProduct(prompt = 'Create product') {
     if (this.locked()) return;
+    this.view.set('chat');
+    this.promotionOpen.set(false);
+    this.stockOpen.set(false);
     this.resetProduct();
     if (prompt) {
       let conversation = this.current();
@@ -213,69 +323,35 @@ export class AdminAssistantPage extends AssistantPage {
         conversation = { localId:conversationId(),id:null,title:prompt.slice(0,80),time:new Date(),messages:[] };
         this.conversations.update(rows => [conversation!, ...rows]);
       }
-      conversation.messages.push({ role:'user',text:prompt,time:new Date() });
+      conversation.messages.push({ role:'user',text:prompt,time:new Date() }, {role:'assistant',text:'The Create Product form is open. Tell me what to fill, for example: name Smart Watch Pro, price $199, stock 100. You can also edit the fields yourself.',time:new Date()});
       this.current.set({ ...conversation });
     }
-    const name = prompt.match(/product\s+(?:named\s+)?(.+?)(?:,|\s+price\b|$)/i)?.[1]?.trim() || '';
+    const parsed = parseProductInput(prompt).patch;
+    const name = parsed.name || prompt.match(/product\s+(?:named|called)\s+(.+?)(?:,|\s+price\b|$)/i)?.[1]?.trim() || '';
     const price = prompt.match(/(?:price\s*\$?\s*|\$)([\d,]+(?:\.\d{1,2})?)/i)?.[1];
     const quantity = prompt.match(/(?:stock|quantity)\s*(\d+)/i)?.[1];
     const warehouse = prompt.match(/\bat\s+([^,]+?)(?:\s+branch)?(?:\.|$)/i)?.[1]?.trim() || '';
-    this.draft.set({ name, price: price ? Number(price.replace(/,/g,'')) : null, quantity: quantity ? Number(quantity) : 0, warehouse, category: null, description: prompt, color: prompt.match(/color\s+([^,]+)/i)?.[1]?.trim() || '', storage: prompt.match(/storage\s+([^,]+)/i)?.[1]?.trim() || '' });
-    this.loadCategories();
+    this.draft.set({ name, price: parsed.price ?? (price ? Number(price.replace(/,/g,'')) : null), quantity: parsed.quantity ?? (quantity ? Number(quantity) : 0), warehouse: parsed.warehouse || warehouse, category: null, description: parsed.description || '', color: prompt.match(/color\s+([^,]+)/i)?.[1]?.trim() || '', storage: prompt.match(/storage\s+([^,]+)/i)?.[1]?.trim() || '' });
   }
-  loadCategories() {
-    this.categoryError.set('');
-    this.management.brands(1,'',100).pipe(takeUntilDestroyed(this.destroy)).subscribe({
-      next: page => this.categories.set(page.items),
-      error: () => this.categoryError.set('Catalog categories could not load. Retry before creating a product.'),
-    });
+  private helpProductInput() {
+    const text=this.prompt.trim(),form=this.productForm();
+    if(!text || !form)return;
+    const parsed=parseProductInput(text);
+    const result=form.applyChatInput(parsed.patch);
+    const missing=form.missingChatFields();
+    const explanation=[result.changed.length ? `Updated ${result.changed.join(', ')} in the form.` : 'Tell me the fields to fill, for example: name Smart Watch Pro, price $199, stock 100, category Wearables.',...parsed.issues,...result.issues,missing.length?`Still needed: ${missing.join(', ')}.`:'Review the form before submitting.', 'No product has been submitted. Upload images and choose your reviewer in the form.'].join(' ');
+    const current=this.current();if(current){current.messages.push({role:'user',text,time:new Date()},{role:'assistant',text:explanation,time:new Date()});this.current.set({...current});}
+    this.prompt='';
   }
-  files(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const files = Array.from(input.files || []); input.value = '';
-    if (!files.length) return;
-    if (files.length > 5 || files.some(file => !['image/jpeg','image/png','image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024)) {
-      this.draftError.set('Choose up to 5 JPG, PNG or WebP images, each under 5 MB.'); return;
-    }
-    if (this.imageUrl) URL.revokeObjectURL(this.imageUrl);
-    this.productFiles = files; this.imageUrl = URL.createObjectURL(files[0]); this.draftError.set('');
-  }
-  reviewProduct() {
-    const draft = this.draft();
-    if (!draft || this.locked()) return;
-    if (!draft.name.trim() || draft.name.length > 120 || !draft.category || !this.categories().some(row => Number(row['id']) === draft.category)
-      || draft.price === null || !Number.isFinite(draft.price) || draft.price <= 0 || !Number.isSafeInteger(draft.quantity) || draft.quantity < 0
-      || !draft.warehouse.trim() || !this.productFiles.length) {
-      this.draftError.set('Provide a name, category, positive price, whole stock quantity, warehouse and product image.'); return;
-    }
-    this.draftError.set(''); this.draftStage.set('review');
-  }
-  createProduct() {
-    const draft = this.draft();
-    if (!draft || this.draftStage() !== 'review' || this.locked() || this.uncertain()) return;
-    this.saving.set(true); this.processing.set('Creating product and initial inventory…');
-    const operation: Operation = { title: 'Create product: ' + draft.name, status: 'RUNNING', time: new Date() };
-    this.operations.update(rows => [operation, ...rows]);
-    this.management.createProduct({ name: draft.name.trim(), description: draft.description, is_active: true, sub_category_id: draft.category,
-      skus: [{ price: draft.price, quantity: draft.quantity, is_default: true, operatorProductAttribute: true, product_attributes: [['Color',draft.color],['Storage',draft.storage]].filter(([,value]) => value.trim()).map(([name,value]) => ({ name, attributes: [{ value: value.trim() }] })), inventory: { quantity: draft.quantity, warehouse_location: draft.warehouse.trim(), lowStockThreshold: 5 } }],
-    }, this.productFiles).pipe(takeUntilDestroyed(this.destroy)).subscribe({
-      next: product => {
-        this.updateOperation(operation, 'SUCCESS', product); this.saving.set(false); this.processing.set('');
-        this.appendResult('Product created successfully.', product, 'PRODUCT_CREATE'); this.resetProduct();
-      },
-      error: error => {
-        this.saving.set(false); this.processing.set('');
-        const uncertain = !error.status || error.status >= 500;
-        this.uncertain.set(uncertain); this.updateOperation(operation, uncertain ? 'UNKNOWN' : 'FAILURE');
-        this.draftError.set(uncertain ? 'The response was lost. Check Products before starting another creation; it may have completed.' : error.error?.message || error.message || 'Product creation failed. Review the details and retry.');
-      },
-    });
+  productRequestSaved(request:{id:string;status:string}) {
+    this.productFormBusy.set(false);
+    this.appendResult(request.status === 'DRAFT' ? 'Product request saved as a draft.' : 'Product request submitted for approval. The product is not live yet.', {requestId:request.id,status:request.status}, 'PRODUCT_REQUEST');
+    this.resetProduct();
   }
   resetProduct() {
-    this.draft.set(null); this.draftStage.set('edit'); this.draftError.set(''); this.productFiles = []; this.uncertain.set(false);
-    if (this.imageUrl) URL.revokeObjectURL(this.imageUrl); this.imageUrl = '';
+    this.draft.set(null);
+    this.productFormBusy.set(false);
   }
-  categoryName() { return String(this.categories().find(row => Number(row['id']) === this.draft()?.category)?.['name'] || ''); }
   reviewStock() {
     if (this.locked()) return;
     if (!Number.isSafeInteger(this.inventoryId) || Number(this.inventoryId) < 1 || !Number.isSafeInteger(this.stockQuantity) || Number(this.stockQuantity) < 1) {

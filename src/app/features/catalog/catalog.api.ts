@@ -1,3 +1,4 @@
+import { AuthService } from "../../core/auth/auth.service";
 import { inject, Injectable } from "@angular/core";
 import { map, switchMap } from "rxjs";
 import { ApiClient } from "../../core/api/api-client";
@@ -10,7 +11,9 @@ import {
 @Injectable({ providedIn: "root" })
 export class CatalogApi {
   private api = inject(ApiClient);
+  private auth = inject(AuthService);
   list(page = 1, search = "") {
+    if (!this.auth.session()) return this.api.get<CatalogPage<Product>>("/api/v1/storefront/products", {page, search});
     return this.api.data<CatalogPage<Product>>("/api/v1/products/get/all", {
       page,
       size: 12,
@@ -20,6 +23,7 @@ export class CatalogApi {
     });
   }
   category(name: string, page = 1) {
+    if (!this.auth.session()) return this.api.get<CatalogPage<Product>>("/api/v1/storefront/products", {page, category: name});
     return this.api
       .data<{ id: number }>("/api/v1/categories/name/", {}, { name })
       .pipe(
@@ -53,8 +57,9 @@ export class CatalogApi {
         }),
       );
   }
-  forSku(id: number) { return this.api.get<Product>("/api/v1/products/sku/" + id); }
+  forSku(id: number) { return this.api.get<Product>((this.auth.session() ? "/api/v1/products/sku/" : "/api/v1/storefront/skus/") + id); }
   detail(id: number) {
+    if (!this.auth.session()) return this.api.get<Product>("/api/v1/storefront/products/" + id);
     return this.api.data<Product>("/api/v1/products/get/all", {
       criteria_type: 5,
       criteria_value: String(id),

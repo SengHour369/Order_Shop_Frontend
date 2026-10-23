@@ -1,3 +1,5 @@
+import { PageAccessDenied } from '../../../shared/components/page-access-denied';
+import { CanAccessDirective } from '../../../core/auth/can-access.directive';
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
 import { Component, DestroyRef, inject, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
@@ -9,7 +11,7 @@ import { AdminApi, field, Row, text, usd, when } from "../api/admin.api";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { finalize } from "rxjs";
 @Component({
-  imports: [TranslatePipe, Status, FormsModule, Icon, RouterLink],
+  imports: [PageAccessDenied, CanAccessDirective, TranslatePipe, Status, FormsModule, Icon, RouterLink],
   templateUrl: "./bakong.html",
   styleUrl: "./bakong.css",
 })

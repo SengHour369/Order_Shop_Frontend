@@ -1,16 +1,19 @@
+@if (accessDenied()) {
+  <app-page-access-denied />
+} @else {
 <section class="detail-page">
   <header class="detail-head">
     <div>
 <h2>{{ "Product details" | translate }}</h2>
 <nav class="detail-crumbs" aria-label="Breadcrumb">
-<a routerLink="/admin">{{ "Dashboard" | translate }}</a>
+<a routerLink="/admin" *appCanRoute="'/admin'">{{ "Dashboard" | translate }}</a>
 <span>›</span>
-<a routerLink="/admin/products">{{ "Products" | translate }}</a>
+<a routerLink="/admin/products" *appCanRoute="'/admin/products'">{{ "Products" | translate }}</a>
 <span>›</span>{{ text(row()?.['name']) }}</nav>
 </div>
     <div class="detail-actions">
-<a class="detail-button" routerLink="/admin/products">
-<app-icon name="arrow-left" /> {{ "Back to Products" | translate }}</a>@if (row(); as product) { <a class="detail-button primary" [routerLink]="['/admin/products/edit', product['id']]">
+<a class="detail-button" routerLink="/admin/products" *appCanRoute="'/admin/products'">
+<app-icon name="arrow-left" /> {{ "Back to Products" | translate }}</a>@if (row(); as product) { <a class="detail-button primary" [routerLink]="['/admin/products/edit', product['id']]" *appCanRoute="['/admin/products/edit', product['id']]">
 <app-icon name="edit" /> {{ "Edit product" | translate }}</a> }</div>
   </header>
   <app-status [busy]="busy()" [error]="error()" [message]="message()" />
@@ -92,3 +95,5 @@
     </div>
   }
 </section>
+
+}

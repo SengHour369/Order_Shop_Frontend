@@ -1,11 +1,14 @@
+@if (accessDenied()) {
+  <app-page-access-denied />
+} @else {
 <section class="detail-page">
   <header class="detail-head">
 <div>
 <h2>{{ "Customer Detail" | translate }}</h2>
 <nav class="detail-crumbs" aria-label="Breadcrumb">
-<a routerLink="/admin">{{ "Dashboard" | translate }}</a>
+<a routerLink="/admin" *appCanRoute="'/admin'">{{ "Dashboard" | translate }}</a>
 <span>›</span>
-<a routerLink="/admin/customers">{{ "Customers" | translate }}</a>
+<a routerLink="/admin/customers" *appCanRoute="'/admin/customers'">{{ "Customers" | translate }}</a>
 <span>›</span>{{ row() ? customerName(row()!) : 'Customer' }}</nav>
 </div>
 </header>
@@ -43,7 +46,7 @@
 <app-status [busy]="ordersBusy()" [error]="ordersError()" />
         <div class="detail-history">@for (order of orders(); track order['id']) { <article>
 <div>
-<a [routerLink]="['/admin/orders', order['id']]">{{ text(field(order, 'order_number', 'orderNumber', 'id')) }}</a>
+<a [routerLink]="['/admin/orders', order['id']]" *appCanRoute="['/admin/orders', order['id']]">{{ text(field(order, 'order_number', 'orderNumber', 'id')) }}</a>
 <small>{{ when(field(order, 'order_date', 'orderDate', 'created_at')) }}@if (field(order, 'item_count', 'itemCount') !== '') { · {{ field(order, 'item_count', 'itemCount') }} items }</small>
 </div>
 <div>
@@ -61,3 +64,5 @@
     </div>
   }
 </section>
+
+}

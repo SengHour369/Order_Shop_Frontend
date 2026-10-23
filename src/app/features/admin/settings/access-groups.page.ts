@@ -1,3 +1,5 @@
+import { PageAccessDenied } from '../../../shared/components/page-access-denied';
+import { CanAccessDirective } from '../../../core/auth/can-access.directive';
 import { PermissionService } from "../../../core/auth/permission.service";
 import { PermissionPicker } from "./permission-picker";
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
@@ -10,7 +12,7 @@ import { Status } from "../../../shared/components/status";
 import { AdminApi, Row, when } from "../api/admin.api";
 
 @Component({
-  imports: [TranslatePipe, FormsModule, RouterLink, Status, PermissionPicker],
+  imports: [PageAccessDenied, CanAccessDirective, TranslatePipe, FormsModule, RouterLink, Status, PermissionPicker],
   templateUrl: "./access-groups.html",
   styleUrls: ["../styles/reference.css", "../styles/operations.css", "./access-groups.css"],
 })

@@ -1,3 +1,5 @@
+import { PageAccessDenied } from '../../../shared/components/page-access-denied';
+import { CanAccessDirective } from '../../../core/auth/can-access.directive';
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
 import { ProductImage } from "../../../shared/components/product-image";
 import { Component, inject, signal } from "@angular/core";
@@ -18,7 +20,7 @@ const returnStatuses = [
   "COMPLETED",
 ];
 @Component({
-  imports: [TranslatePipe, Status, RouterLink, FormsModule, Icon],
+  imports: [PageAccessDenied, CanAccessDirective, TranslatePipe, Status, RouterLink, FormsModule, Icon],
   templateUrl: "./returns-list.html",
   styleUrls: ["../styles/reference.css", "./returns-list.css"],
 })
@@ -311,7 +313,7 @@ export class ReturnsPage extends PageState {
   }
 }
 @Component({
-  imports: [TranslatePipe, Status, RouterLink, FormsModule],
+  imports: [PageAccessDenied, CanAccessDirective, TranslatePipe, Status, RouterLink, FormsModule],
   templateUrl: "./return-detail.html",
   styleUrl: "./return-detail.css",
 })

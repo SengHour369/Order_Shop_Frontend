@@ -1,0 +1,37 @@
+<section class="chat-order" aria-label="Current order details" [attr.aria-busy]="busy()">
+  @if(order(); as current){
+    <header class="order-heading">
+      <span class="order-symbol"><app-icon name="box" /></span>
+      <div><div class="order-title"><h3>{{t('Order','ការបញ្ជាទិញ')}} {{current.order_number}}</h3><span class="order-badge" [class.delivered]="current.status === 'DELIVERED' || current.status === 'COMPLETED'" [class.failed]="['CANCELLED','FAILED','REFUNDED'].includes(current.status)" role="status">{{current.status}}</span></div><p>{{t('Placed on','បានបញ្ជាទិញនៅ')}} {{current.order_date | date:'medium'}}</p></div>
+      <div class="order-header-actions"><button type="button" (click)="tracking.set(!tracking())" [attr.aria-expanded]="tracking()" [attr.aria-controls]="'order-tracking-' + current.id"><app-icon name="truck" />{{t('Track order','តាមដានការបញ្ជាទិញ')}}</button><a [routerLink]="['/account/orders',current.id]">{{t('View in Orders','មើលការបញ្ជាទិញ')}} <app-icon name="arrow" /></a></div>
+    </header>
+    <dl class="order-facts">
+      <div><dt><app-icon name="card" />{{t('Payment method','វិធីទូទាត់')}}</dt><dd>{{current.paymentMethod || t('Not available','មិនមានព័ត៌មាន')}}</dd></div>
+      <div><dt><app-icon name="card" />{{t('Total amount','ចំនួនទឹកប្រាក់សរុប')}}</dt><dd>{{current.total_amount | currency:'USD'}}</dd></div>
+      <div><dt><app-icon name="bag" />{{t('Items','មុខទំនិញ')}}</dt><dd>{{current.items?.length ?? 0}} {{t('items','មុខ')}}</dd></div>
+    </dl>
+    <div class="order-panels" [class.with-address]="address() || addressError()">
+      @if(address(); as shipping){<section class="shipping-address"><h4><app-icon name="pin" />{{t('Shipping address','អាសយដ្ឋានដឹកជញ្ជូន')}}</h4><address>@if(shipping.recipient_name){<strong>{{shipping.recipient_name}}</strong><br/>}{{shipping.address_line1}}<br/>{{shipping.city}} {{shipping.zip_code}}<br/>{{shipping.country}}</address></section>}
+      @else if(addressError()){<section><h4>{{t('Shipping address','អាសយដ្ឋានដឹកជញ្ជូន')}}</h4><p role="status">{{addressError()}}</p></section>}
+      <section class="payment-information"><h4><app-icon name="card" />{{t('Payment information','ព័ត៌មានទូទាត់')}}</h4><dl><div><dt>{{t('Payment method','វិធីទូទាត់')}}</dt><dd>{{current.paymentMethod || '—'}}</dd></div><div><dt>{{t('Amount','ទឹកប្រាក់')}}</dt><dd>{{current.total_amount | currency:'USD'}}</dd></div></dl><button type="button" (click)="payment.set(!payment())" [attr.aria-expanded]="payment()">{{t('Check payment status','ពិនិត្យស្ថានភាពទូទាត់')}}</button></section>
+      <section class="shipping-status"><h4><app-icon name="truck" />{{t('Shipping status','ស្ថានភាពដឹកជញ្ជូន')}}</h4><strong>{{current.status}}</strong><p>{{t('Courier details have not been provided.','មិនមានព័ត៌មានលម្អិតអំពីអ្នកដឹកជញ្ជូន។')}}</p></section>
+    </div>
+    @if(tracking()) {<section [id]="'order-tracking-' + current.id" class="timeline"><h4>{{t('Order timeline','ដំណើរការបញ្ជាទិញ')}}</h4>
+        @if(!['CANCELLED','FAILED','REFUNDED','CHECKOUT_PENDING'].includes(current.status)){<app-order-progress [status]="current.status" />}
+        <ol><li><span class="event-dot"></span><div><strong>{{t('Order placed','បានបញ្ជាទិញ')}}</strong><time>{{current.order_date | date:'medium'}}</time></div></li>
+          @if(current.updated_at){<li><span class="event-dot"></span><div><strong>{{t('Last updated','បានធ្វើបច្ចុប្បន្នភាព')}}</strong><time>{{current.updated_at | date:'medium'}}</time></div></li>}
+        </ol><small>{{t('Status is provided by the shop.','ស្ថានភាពត្រូវបានផ្តល់ដោយហាង។')}}</small>
+      </section>}
+    <section class="order-line-items"><h4>{{t('Order items','មុខទំនិញបញ្ជាទិញ')}} ({{current.items?.length ?? 0}})</h4>
+      <div class="items-and-totals"><div class="items-table-wrap"><table><thead><tr><th>{{t('Product','ផលិតផល')}}</th><th>{{t('Price','តម្លៃ')}}</th><th>{{t('Quantity','ចំនួន')}}</th><th>{{t('Subtotal','សរុបរង')}}</th></tr></thead><tbody>
+        @for(item of current.items || [];track item.id){<tr><td><div class="item-identity"><span class="item-symbol"><app-icon name="box" /></span><div><strong>SKU #{{item.product_sku_id}}</strong><small>{{t('Product variant','ប្រភេទផលិតផល')}}</small></div></div></td><td>{{item.unit_price | currency:'USD'}}</td><td>{{item.quantity}}</td><td>{{item.total_price | currency:'USD'}}</td></tr>}
+        @empty{<tr><td colspan="4">{{t('No item details available.','មិនមានព័ត៌មានលម្អិតទំនិញ។')}}</td></tr>}
+      </tbody></table></div><aside class="order-totals" aria-label="Order totals">@if(current.items?.length){<div><span>{{t('Item subtotal','តម្លៃទំនិញសរុប')}}</span><strong>{{itemSubtotal() | currency:'USD'}}</strong></div>}<div class="grand-total"><span>{{t('Total amount','ចំនួនទឹកប្រាក់សរុប')}}</span><strong>{{current.total_amount | currency:'USD'}}</strong></div></aside></div>
+    </section>
+    <footer class="order-actions"><a class="primary" [routerLink]="['/account/orders',current.id]"><app-icon name="list" />{{t('View full order','មើលការបញ្ជាទិញពេញលេញ')}}</a><button type="button" [disabled]="busy()" (click)="load()"><app-icon name="refresh" />{{t('Refresh order','ធ្វើបច្ចុប្បន្នភាពការបញ្ជាទិញ')}}</button><button type="button" [disabled]="busy()" (click)="payment.set(!payment())" [attr.aria-expanded]="payment()"><app-icon name="card" />{{t('Payment status','ស្ថានភាពការទូទាត់')}}</button></footer>
+    @if(current.status==='PENDING'){<button class="cancel-request" type="button" [disabled]="busy()" (click)="prepareCancel()">{{t('Request cancellation','ស្នើសុំបោះបង់')}}</button>}
+    @if(payment()){<div class="payment-panel"><app-payment-qr [chatLayout]="true" [orderId]="current.id" /></div>}
+    @if(confirmation()){<section class="confirmation" aria-label="Confirm cancellation"><p>Cancel order {{current.order_number}}?</p><button type="button" [disabled]="busy()" (click)="confirmCancel()">{{t('Confirm cancellation','បញ្ជាក់ការបោះបង់')}}</button><button type="button" [disabled]="busy()" (click)="confirmation.set(null)">{{t('Keep order','រក្សាការបញ្ជាទិញ')}}</button></section>}
+  } @else if(busy()){<p role="status">{{t('Loading order…','កំពុងផ្ទុកការបញ្ជាទិញ…')}}</p>}
+  @if(error()){<p class="order-error" role="alert">{{error()}}</p><button type="button" [disabled]="busy()" (click)="load()">{{t('Retry','ព្យាយាមម្តងទៀត')}}</button>}
+</section>

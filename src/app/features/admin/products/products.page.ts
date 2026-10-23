@@ -1,8 +1,13 @@
+import { ProductInputPatch } from './product-form-assistance';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { AiImportsApi } from '../imports/ai-imports.api';
+import { PageAccessDenied } from '../../../shared/components/page-access-denied';
+import { CanAccessDirective } from '../../../core/auth/can-access.directive';
 import { PermissionService } from "../../../core/auth/permission.service";
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
 import { ProductImage } from "../../../shared/components/product-image";
 import { ProductSelect } from "./product-select";
-import { Component, computed, inject, OnDestroy, signal } from "@angular/core";
+import { ChangeDetectorRef, Component, computed, DestroyRef, effect, inject, input, OnDestroy, output, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { forkJoin, switchMap, map, catchError, of } from "rxjs";
@@ -79,16 +84,17 @@ function attrText(attr: Row) {
     .join(", ");
 }
 @Component({
-  imports: [TranslatePipe, Status, RouterLink, FormsModule, Icon, ProductImage],
-  template: `<section>
+  selector: "app-admin-products-list",
+  imports: [PageAccessDenied, CanAccessDirective, TranslatePipe, Status, RouterLink, FormsModule, Icon, ProductImage],
+  template: `@if (accessDenied()) { <app-page-access-denied /> } @else { <section>
     <div class="adm-page-head">
       <div>
         <h2>{{ "Products" | translate }}</h2>
         <p>Manage your product inventory and pricing.</p>
       </div>
       <div class="adm-head-actions">
-        <a class="adm-btn adm-primary" [hidden]="!access.has('PRODUCT_CREATE')" routerLink="/admin/products/add"
-          ><app-icon name="plus" /> {{ "Add product" | translate }}</a
+        <a class="adm-btn adm-primary"  routerLink="/admin/products/add"
+           *appCanRoute="'/admin/products/add'"><app-icon name="plus" /> {{ "Add product" | translate }}</a
         >
       </div>
     </div>
@@ -181,17 +187,21 @@ function attrText(attr: Row) {
                 <td>{{ when(field(row, "created_at", "createdAt")) }}</td>
                 <td>{{ when(field(row, "updated_at", "updatedAt")) }}</td>
                 <td class="adm-actions">
+                  @if(embedded()){
+                    <button type="button" class="adm-btn icon" aria-label="Explain product in call" (click)="openProduct.emit(Number(field(row,'id')))"><app-icon name="eye"/></button>
+                  }@else{
                   <a
                     class="adm-btn icon"
                     [routerLink]="['/admin/products/view', field(row, 'id')]"
                     [attr.aria-label]='"View product" | translate'
-                    ><app-icon name="eye"
+                     *appCanRoute="['/admin/products/view', field(row, 'id')]"><app-icon name="eye"
                   /></a>
+                  }
                   <a
                     class="adm-btn icon"
                     [routerLink]="['/admin/products/edit', field(row, 'id')]"
-                    [hidden]="!access.has('PRODUCT_UPDATE')" [attr.aria-label]='"Edit product" | translate'
-                    ><app-icon name="edit"
+                     [attr.aria-label]='"Edit product" | translate'
+                     *appCanRoute="['/admin/products/edit', field(row, 'id')]"><app-icon name="edit"
                   /></a>
                   <button
                     class="adm-btn icon"
@@ -199,16 +209,16 @@ function attrText(attr: Row) {
                     [attr.aria-label]="
                       activeRow(row) ? 'Deactivate product' : 'Activate product'
                     "
-                    (click)="toggle(row)"
-                  >
+                    (click)="toggle(row)" [disabled]="true" title="Change status through Edit Product and independent approval"
+                   *appCan="'PRODUCT_UPDATE'">
                     <app-icon [name]="activeRow(row) ? 'close' : 'check'" />
                   </button>
                   <button
                     class="adm-btn icon danger"
                     type="button"
-                    [hidden]="!access.has('PRODUCT_DELETE')" aria-label="Delete product"
-                    (click)="remove(row)"
-                  >
+                     aria-label="Delete product"
+                    (click)="remove(row)" [disabled]="true" title="Product deletion approval is not available"
+                   *appCan="'PRODUCT_DELETE'">
                     <app-icon name="trash" />
                   </button>
                 </td>
@@ -270,9 +280,13 @@ function attrText(attr: Row) {
         </span>
       </div>
     </div>
-  </section>`,
+  </section> }`,
 })
 export class ProductsPage extends PageState {
+  embedded=input(false);
+  readonly Number=Number;
+  openProduct=output<number>();
+  private lifetime=inject(DestroyRef);
   access = inject(PermissionService);
   private api = inject(AdminApi);
   private route = inject(ActivatedRoute);
@@ -307,7 +321,7 @@ export class ProductsPage extends PageState {
   inactiveCount = computed(() => this.rows().length - this.activeCount());
   constructor() {
     super();
-    this.route.queryParamMap.subscribe((params) => {
+    this.route.queryParamMap.pipe(takeUntilDestroyed(this.lifetime)).subscribe((params) => {
       const q = params.get("q") || "";
       if (q === this.name && this.rows().length) return;
       this.name = q;
@@ -331,18 +345,13 @@ export class ProductsPage extends PageState {
     );
   }
   toggle(row: Row) {
+    if (!this.access.has("PRODUCT_UPDATE")) return;
     const active = field(row, "is_active") === false;
-    this.run(this.api.productStatus(Number(field(row, "id")), active), () => {
-      this.load();
-      this.message.set("Status updated.");
-    });
+    this.message.set("Open Edit Product and submit the status change for approval.");
   }
   remove(row: Row) {
-    if (!confirm("Delete this product?")) return;
-    this.run(this.api.deleteProduct(Number(field(row, "id"))), () => {
-      this.load();
-      this.message.set("Product deleted.");
-    });
+    if (!this.access.has("PRODUCT_DELETE")) return;
+    this.message.set("Deletion requires a registered approval operation and is currently unavailable.");
   }
   activeRow(row: Row) {
     const value = field(row, "is_active", "isActive", "status");
@@ -390,6 +399,8 @@ export class ProductsPage extends PageState {
   }
 }
 type SkuAttribute = {
+  id?:number;
+  valueIds?:(number|undefined)[];
   name: string;
   values: string[];
 };
@@ -405,11 +416,22 @@ type SkuDraft = {
   attributes: SkuAttribute[];
 };
 @Component({
-  imports: [TranslatePipe, Status, RouterLink, FormsModule, Icon, ProductImage, ProductSelect],
+  selector: "app-admin-product-form",
+  imports: [PageAccessDenied, CanAccessDirective, TranslatePipe, Status, RouterLink, FormsModule, Icon, ProductImage, ProductSelect],
   templateUrl: "./product-form.html",
   styleUrl: "./product-form.css",
 })
 export class ProductFormPage extends PageState implements OnDestroy {
+  embedded = input(false);
+  prefill = input<{name?:string;description?:string;price?:number|null;quantity?:number;warehouse?:string} | null>(null);
+  cancelled = output<void>();
+  saved = output<{id:string;status:string}>();
+  busyChanged = output<boolean>();
+  private formDestroy = inject(DestroyRef);
+  private formChange = inject(ChangeDetectorRef, {optional:true});
+  private imports = inject(AiImportsApi);
+  reviewerId:number|null=null;
+  productVersion:number|null=null;
   private api = inject(AdminApi);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -442,9 +464,50 @@ export class ProductFormPage extends PageState implements OnDestroy {
   field = field;
   constructor() {
     super();
-    this.route.paramMap.subscribe((params) => {
-      this.id = Number(params.get("id") || 0);
-      const duplicateId = Number(
+    effect(() => this.busyChanged.emit(this.busy()));
+  }
+  applyChatInput(patch:ProductInputPatch) {
+    const changed:string[]=[],issues:string[]=[];
+    if(this.busy() || !this.embedded() || this.id)return {changed,issues:['Wait until the create form is ready.']};
+    for(const key of ['name','description'] as const) if(patch[key]!==undefined){this[key]=patch[key]!;changed.push(key);}
+    if(patch.active!==undefined){this.active=patch.active;changed.push('status');}
+    if(patch.category!==undefined){
+      const matches=this.categoryOptions().filter(option=>option.label.toLowerCase()===patch.category!.toLowerCase());
+      if(matches.length===1){this.setCategory(matches[0].value);changed.push('category');}else issues.push('Choose a matching category in the form; the name was not unique or was not found.');
+    }
+    if(patch.subcategory!==undefined){
+      const matches=this.subCategoryOptions().filter(option=>option.label.toLowerCase()===patch.subcategory!.toLowerCase());
+      if(this.categoryId && matches.length===1){this.subCategoryId=matches[0].value;changed.push('sub-category');}else issues.push('Choose a category and a matching sub-category in the form.');
+    }
+    if(patch.price!==undefined || patch.quantity!==undefined || patch.warehouse!==undefined || patch.skuDescription!==undefined){
+      if(this.hasVariants || this.variants.length!==1)issues.push('This product has multiple variants. Set each SKU price, stock and warehouse in the form.');
+      else {
+        if(patch.skuDescription!==undefined){this.variants[0].description=patch.skuDescription;changed.push('SKU description');}
+        if(patch.price!==undefined){this.basePrice=patch.price;changed.push('price');}
+        if(patch.quantity!==undefined){this.baseQuantity=patch.quantity;changed.push('stock');}
+        if(patch.warehouse!==undefined){this.baseWarehouse=patch.warehouse;changed.push('warehouse');}
+        this.syncSingleVariant();
+      }
+    }
+    this.formChange?.markForCheck();
+    return {changed,issues};
+  }
+  missingChatFields() {
+    return [!this.name.trim()?'product name':'',!this.description.trim()?'description':'',!this.categoryId?'category':'',!this.subCategoryId?'sub-category':'',!this.files.length?'product image':'',this.variants.some(variant=>!variant.description.trim())?'SKU descriptions':'',this.variants.some(variant=>!Number.isFinite(variant.price)||variant.price<=0)?'SKU prices':'',!this.reviewerId?'independent reviewer':''].filter(Boolean);
+  }
+  ngOnInit() {
+    if (this.embedded()) {
+      const draft=this.prefill();
+      this.name=draft?.name || '';
+      this.description=draft?.description || '';
+      this.basePrice=draft?.price ?? 0;
+      this.baseQuantity=draft?.quantity ?? 1;
+      this.baseWarehouse=draft?.warehouse || '';
+      this.syncSingleVariant();
+    }
+    this.route.paramMap.pipe(takeUntilDestroyed(this.formDestroy)).subscribe((params) => {
+      this.id = this.embedded() ? 0 : Number(params.get("id") || 0);
+      const duplicateId = this.embedded() ? 0 : Number(
         this.route.snapshot?.queryParamMap?.get("duplicate") || 0,
       );
       this.files = [];
@@ -480,6 +543,7 @@ export class ProductFormPage extends PageState implements OnDestroy {
               ...variant,
               productSkuId: undefined,
               sku: undefined,
+              attributes:variant.attributes.map(attribute=>({...attribute,id:undefined,valueIds:undefined})),
               barcode: "",
             }));
             this.images.set([]);
@@ -495,6 +559,7 @@ export class ProductFormPage extends PageState implements OnDestroy {
     for (const url of this.previews()) URL.revokeObjectURL(url);
   }
   private applyProduct(row: Row) {
+    const version=field(row,"version");this.productVersion=typeof version==='number'?version:null;
     this.name = String(field(row, "name"));
     this.description = String(field(row, "description") || "");
     this.subCategoryId = Number(
@@ -563,6 +628,8 @@ export class ProductFormPage extends PageState implements OnDestroy {
           )
         : [""];
       return {
+        id:Number(field(attribute,"id"))||undefined,
+        valueIds:Array.isArray(values)?values.map((value:Row)=>Number(field(value,"id"))||undefined):[],
         name: String(field(attribute, "name") || ""),
         values: list.length ? list : [""],
       };
@@ -675,6 +742,7 @@ export class ProductFormPage extends PageState implements OnDestroy {
       (_, position) => position !== valueIndex,
     );
     attribute.values = next.length ? next : [""];
+    if(attribute.valueIds)attribute.valueIds=attribute.valueIds.filter((_,position)=>position!==valueIndex);
   }
   allowDrop(event: DragEvent) {
     event.preventDefault();
@@ -694,15 +762,15 @@ export class ProductFormPage extends PageState implements OnDestroy {
     if (
       images.some(
         (file) =>
-          !["image/png", "image/jpeg", "image/webp"].includes(file.type) ||
+          !["image/png", "image/jpeg"].includes(file.type) ||
           file.size > 5 * 1024 * 1024,
       )
     ) {
-      this.error.set("Choose PNG, JPG or WEBP images no larger than 5 MB.");
+      this.error.set("Choose PNG or JPG images no larger than 5 MB.");
       return;
     }
-    if (this.files.length + images.length > 6) {
-      this.error.set("Upload up to 6 product images.");
+    if (this.files.length + images.length > 4) {
+      this.error.set("Upload up to 4 product images.");
       return;
     }
     this.error.set("");
@@ -798,9 +866,9 @@ export class ProductFormPage extends PageState implements OnDestroy {
       (total, attribute) => total * attribute.values.length,
       1,
     );
-    if (count > 100) {
+    if (count > 50) {
       this.error.set(
-        "Use fewer attribute values. Generate up to 100 variants at a time.",
+        "Use fewer attribute values. Generate up to 50 variants at a time.",
       );
       return;
     }
@@ -843,6 +911,7 @@ export class ProductFormPage extends PageState implements OnDestroy {
     );
   }
   applyBulk() {
+    if(this.bulkField==='quantity'&&this.variants.some(variant=>!!variant.productSkuId)){this.error.set("Existing stock changes require an Inventory request.");return;}
     const value = Number(this.bulkValue);
     const updated = this.variants.map((variant) => {
       const original =
@@ -879,10 +948,12 @@ export class ProductFormPage extends PageState implements OnDestroy {
       .filter((item) => item !== value)
       .join(", ");
   }
-  save() {
+  save(submit=true) {
     if (this.busy()) return;
+    if(submit && (!this.reviewerId || !Number.isSafeInteger(this.reviewerId) || this.reviewerId<1)){this.error.set("Enter an independent reviewer user ID.");return;}
+    if(this.id && this.productVersion===null){this.error.set("Reload the product version before preparing an update.");return;}
     this.syncSingleVariant();
-    const problem = this.validate();
+    const problem = submit?this.validate():(!this.name.trim()||!this.subCategoryId?"Enter a name and subcategory to save a draft.":"");
     if (problem) {
       this.error.set(problem);
       return;
@@ -895,14 +966,10 @@ export class ProductFormPage extends PageState implements OnDestroy {
       sub_category_id: this.subCategoryId,
       skus,
     };
-    if (this.id) {
-      this.run(this.api.updateProduct(this.id, fields, this.files), () => {
-        void this.router.navigate(["/admin/products/view", this.id]);
-      });
-      return;
-    }
-    this.run(this.api.createProduct(fields, this.files), () => {
-      void this.router.navigateByUrl("/admin/products");
+    const staged=this.imports.stageProduct(fields,this.files,this.id||undefined,this.productVersion??undefined);
+    this.run(submit?staged.pipe(switchMap(batch=>this.imports.action(batch,'submit',{reviewerId:this.reviewerId}))):staged,batch=>{
+      if(this.embedded()) this.saved.emit({id:batch.id,status:batch.status});
+      else void this.router.navigate(['/admin/my-requests'],{queryParams:{batch:batch.id}});
     });
   }
   private validate() {
@@ -947,12 +1014,12 @@ export class ProductFormPage extends PageState implements OnDestroy {
     return this.variants.map((variant, index) => {
       const attributes = variant.useAttributes
         ? variant.attributes.map((attribute) => ({
-            id: null,
+            id: attribute.id??null,
             name: attribute.name.trim(),
             attributes: attribute.values
               .map((value) => value.trim())
               .filter(Boolean)
-              .map((value) => ({ id: null, value })),
+              .map((value,index) => ({ id: attribute.valueIds?.[index]??null, value })),
           }))
         : [];
       const row: Row = {
@@ -969,14 +1036,14 @@ export class ProductFormPage extends PageState implements OnDestroy {
           warehouse_location: variant.warehouse.trim() || undefined,
         },
       };
-      if (variant.productSkuId) row["productSkuId"] = variant.productSkuId;
+      if (variant.productSkuId) {row["productSkuId"] = variant.productSkuId;delete row["inventory"];delete row["low_stock_threshold"];}
       if (variant.barcode.trim()) row["barcode"] = variant.barcode.trim();
       return row;
     });
   }
 }
 @Component({
-  imports: [TranslatePipe, Status, RouterLink, ProductImage, Icon],
+  imports: [PageAccessDenied, CanAccessDirective, TranslatePipe, Status, RouterLink, ProductImage, Icon],
   templateUrl: "./product-detail.html",
   styleUrl: "../styles/details.css",
 })

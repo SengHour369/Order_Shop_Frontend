@@ -1,5 +1,8 @@
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { PageAccessDenied } from '../../../shared/components/page-access-denied';
+import { CanAccessDirective } from '../../../core/auth/can-access.directive';
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
-import { Component, inject, signal } from "@angular/core";
+import { Component, DestroyRef, inject, input, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, RouterLink } from "@angular/router";
 import { PageState } from "../../../shared/utils/page-state";
@@ -10,12 +13,13 @@ const successStatuses = ["COMPLETED", "SUCCESS", "PAID", "APPROVED"];
 const pendingStatuses = ["PENDING", "PROCESSING"];
 const failedStatuses = ["FAILED", "CANCELLED", "CANCELED", "REJECTED"];
 @Component({
-  imports: [TranslatePipe, Status, FormsModule, RouterLink, Icon],
-  template: `<section class="adm-stack">
+  selector: "app-admin-payments-list",
+  imports: [PageAccessDenied, CanAccessDirective, TranslatePipe, Status, FormsModule, RouterLink, Icon],
+  template: `@if (accessDenied()) { <app-page-access-denied /> } @else { <section class="adm-stack">
     <div class="adm-page-head">
       <div>
         <div class="adm-crumbs">
-          <a routerLink="/admin">{{ "Dashboard" | translate }}</a><span>›</span
+          <a routerLink="/admin" *appCanRoute="'/admin'">{{ "Dashboard" | translate }}</a><span>›</span
           ><span>{{ "Payment Details" | translate }}</span>
         </div>
         <h2>{{ "Payment Details" | translate }}</h2>
@@ -147,7 +151,7 @@ const failedStatuses = ["FAILED", "CANCELLED", "CANCELED", "REJECTED"];
                       class="adm-btn icon"
                       [routerLink]="['/admin/payments', target]"
                       aria-label="View payment"
-                      ><app-icon name="eye"
+                       *appCanRoute="['/admin/payments', target]"><app-icon name="eye"
                     /></a>
                   }
                 </td>
@@ -214,9 +218,11 @@ const failedStatuses = ["FAILED", "CANCELLED", "CANCELED", "REJECTED"];
         </span>
       </div>
     </div>
-  </section>`,
+  </section> }`,
 })
 export class PaymentsPage extends PageState {
+  queryRecords=input<Row[]|null>(null);
+  private lifetime=inject(DestroyRef);
   private api = inject(AdminApi);
   private route = inject(ActivatedRoute);
   statuses = [
@@ -246,15 +252,20 @@ export class PaymentsPage extends PageState {
   usd = usd;
   when = when;
   tone = tone;
-  constructor() {
-    super();
-    this.route.queryParamMap.subscribe((params) => {
+  ngOnInit() {
+    if(this.queryRecords()!==null){this.load();return;}
+    this.route.queryParamMap.pipe(takeUntilDestroyed(this.lifetime)).subscribe((params) => {
       this.userId = params.get("user") || "";
       this.page = 1;
       this.load();
     });
   }
   load() {
+    const records=this.queryRecords();
+    if(records!==null){
+      const filtered=records.filter(row=>!this.status||String(field(row,'status','payment_status'))===this.status);
+      this.rows.set(filtered.slice((this.page-1)*this.size,this.page*this.size));this.total.set(filtered.length);this.pages.set(Math.max(1,Math.ceil(filtered.length/this.size)));return;
+    }
     this.run(
       this.api.payments(this.page, this.status, this.userId, this.size),
       (result) => {
@@ -359,9 +370,9 @@ export class PaymentsPage extends PageState {
   }
 }
 @Component({
-  imports: [TranslatePipe, Status, RouterLink, Icon],
+  imports: [PageAccessDenied, CanAccessDirective, TranslatePipe, Status, RouterLink, Icon],
   templateUrl: "./payment-detail.html",
-  styleUrl: "../styles/details.css",
+  styleUrls: ["../styles/details.css", "../styles/detail-typography.css"],
 })
 export class PaymentDetailPage extends PageState {
   load() {

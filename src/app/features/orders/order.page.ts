@@ -2,6 +2,9 @@ import { CancelOrderDialog } from './cancellation/cancel-order-dialog';
 import { TranslatePipe } from "../../core/i18n/translate.pipe";
 import {
   Component,
+  effect,
+  ElementRef,
+  viewChild,
   inject,
   signal,
 } from "@angular/core";
@@ -17,7 +20,7 @@ import { PageState } from "../../shared/utils/page-state";
 import { Status } from "../../shared/components/status";
 @Component({
   imports: [CancelOrderDialog, TranslatePipe, PaymentQr, CurrencyPipe, DatePipe, RouterLink, Icon, OrderProgress, Status],
-  styles: [`.order-detail-actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }`],
+  styles: [`.order-detail-actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }.payment-dialog{width:min(440px,calc(100vw - 32px));max-height:90dvh;overflow:auto;box-sizing:border-box;border:1px solid #dce7f2;border-radius:18px;padding:20px;color:#101c43}.payment-dialog::backdrop{background:#101c4370}.payment-dialog header{display:flex;align-items:center;justify-content:space-between;gap:12px}.payment-dialog h2{margin:0;font-size:21px}.payment-dialog header button{background:white;color:#526187;border:1px solid #dce7f2;border-radius:8px;padding:6px 12px}.payment-dialog>p{font-size:13px;color:#64729b}`],
   template: `<div class="page-heading">
       <div>
         <h1>{{ "Order Details" | translate }}</h1>
@@ -98,13 +101,13 @@ import { Status } from "../../shared/components/status";
             <p class="small muted">Total confirmed by the shop.</p>
           </section>
           <section class="panel">
-            <h2>{{ "Payment Information" | translate }}</h2>@if(o.status === 'PENDING'){<app-payment-qr [orderId]="o.id" (verified)="load()" />}
+            <h2>{{ "Payment Information" | translate }}</h2>@if(o.status === 'PENDING' && !paymentOpen()){<app-payment-qr [orderId]="o.id" (verified)="load()" />}
             <p>Check the payment service for your confirmed payment status.</p>
             <a
               class="button outline full"
-              routerLink="/account/payments"
-              [queryParams]="{ order: o.id }"
-              ><app-icon name="card" />View Payments</a
+              [routerLink]="o.paymentMethod && o.paymentMethod !== 'CASH_ON_DELIVERY' ? ['/checkout/payment', o.id] : ['/account/payments']"
+              [queryParams]="o.paymentMethod && o.paymentMethod !== 'CASH_ON_DELIVERY' ? {} : { order: o.id }"
+              ><app-icon name="card" />{{o.paymentMethod && o.paymentMethod !== 'CASH_ON_DELIVERY' ? 'View QR Payment' : 'View Payments'}}</a
             >
           </section>
           <section class="panel">
@@ -131,6 +134,13 @@ import { Status } from "../../shared/components/status";
           }
         </aside>
       </div>
+      @if(paymentOpen()) {
+        <dialog #paymentDialog class="payment-dialog" aria-labelledby="payment-heading" (cancel)="paymentOpen.set(false)">
+          <header><h2 id="payment-heading">Complete your payment</h2><button type="button" (click)="paymentOpen.set(false)" aria-label="Close payment">Close</button></header>
+          <p>Order #{{o.order_number}} · Payment is checked automatically.</p>
+          <app-payment-qr [orderId]="o.id" (verified)="load()" />
+        </dialog>
+      }
       <app-cancel-order-dialog #cancelEditor [order]="o" (cancelled)="order.set($event)" />
     }`,
 })
@@ -138,10 +148,16 @@ export class OrderPage extends PageState {
   api = inject(OrdersApi);
   addresses = inject(AddressesApi);
   route = inject(ActivatedRoute);
+  paymentOpen = signal(this.route.snapshot.queryParamMap.get('payment') === 'qr');
+  paymentDialog = viewChild<ElementRef<HTMLDialogElement>>('paymentDialog');
   order = signal<Order | null>(null);
   address = signal<Address | null>(null);
   constructor() {
     super();
+    effect(() => {
+      const dialog = this.paymentDialog()?.nativeElement;
+      if (this.paymentOpen() && dialog && !dialog.open) dialog.showModal();
+    });
     this.load();
   }
   load() {

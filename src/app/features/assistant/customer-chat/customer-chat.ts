@@ -1,10 +1,15 @@
+import { LiveVoice } from './live-voice';
+import { VoiceCall } from './voice-call';
+import { ChatVoice } from './chat-voice';
+import { OrdersPage } from '../../orders/orders.page';
+import { AssistantResult } from '../assistant-result';
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
 import { AssistantQuota } from '../assistant-quota';
 import { RichMessage } from '../rich-message';
 import { DragLauncher } from '../floating/drag-launcher';
 import { LauncherWelcome } from '../floating/launcher-welcome';
 import { conversationId as requestId } from '../../../shared/utils/conversation-id';
-import { afterRenderEffect, Component, DestroyRef, ElementRef, effect, inject, signal, viewChild, } from "@angular/core";
+import { afterRenderEffect, Component, DestroyRef, ElementRef, effect, inject, input, signal, viewChild, } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { CurrencyPipe, DecimalPipe } from "@angular/common";
 import { Router, RouterLink } from "@angular/router";
@@ -25,11 +30,34 @@ import { ChatCheckout } from '../chat-checkout/chat-checkout';
 import { CheckoutAttempt } from '../../checkout/checkout-attempt';
 @Component({
     selector: "app-customer-chat",
-    imports: [LauncherWelcome, RichMessage, DragLauncher, TranslatePipe, FormsModule, RouterLink, CurrencyPipe, DecimalPipe, Icon, ProductImage, ChatCheckout, PaymentQr, ChatOrder],
+    providers: [ChatVoice, LiveVoice],
+    imports: [VoiceCall, OrdersPage, AssistantResult, LauncherWelcome, RichMessage, DragLauncher, TranslatePipe, FormsModule, RouterLink, CurrencyPipe, DecimalPipe, Icon, ProductImage, ChatCheckout, PaymentQr, ChatOrder],
     templateUrl: "./customer-chat.html",
     styleUrl: "./customer-chat.css",
 })
 export class CustomerChat {
+    readonly live = inject(LiveVoice);
+    startCall() {
+        this.voice.reset();
+        void this.live.start(this.conversationId, response => {
+            this.messages.update(rows => [...rows, this.present(response)]);
+            if(response.cardType==='CartCard'&&response.result.status==='SUCCESS')this.openCheckout();
+            this.saveConversation(); this.scroll();
+        }, id => {this.conversationId = id; this.saveConversation();});
+    }
+    readonly voice = inject(ChatVoice);
+    readonly voiceDraft = signal(false);
+    voiceLanguage = "en";
+    recordVoice() {
+        if(this.live.isActive()) return;
+        if(this.voice.recording()) { this.voice.finish(); return; }
+        void this.voice.start(this.voiceLanguage, text => {
+            this.prompt = (this.prompt ? this.prompt + " " : "") + text;
+            this.language = this.voiceLanguage;
+            this.voiceDraft.set(true); this.input()?.nativeElement.focus();
+        });
+    }
+    readonly pageMode = input(false);
     readonly auth = inject(AuthService);
     readonly quota=inject(AssistantQuota);
     private failedKey=requestId();
@@ -38,7 +66,7 @@ export class CustomerChat {
     private readonly cart = inject(CartApi);
     private readonly catalog = inject(CatalogApi);
     private readonly attempt = inject(CheckoutAttempt);
-    private readonly store = inject(CustomerStore);
+    readonly store = inject(CustomerStore);
     private readonly destroyRef = inject(DestroyRef);
     readonly dialog = viewChild<ElementRef<HTMLDialogElement>>("chatDialog");
     private readonly launcher = viewChild(DragLauncher);
@@ -63,40 +91,54 @@ export class CustomerChat {
     private cartRequest?: Subscription;
     private failedPrompt = "";
     private account: number | null | undefined = undefined;
+    readonly menuOpen = signal(false);
+    readonly history = signal<{id:string;title:string;time:string;messages:ChatMessage[];image?:string}[]>([]);
+    readonly startedAt = new Date().toISOString();
+    search = '';
     readonly shortcuts = [
-        {
-            label: "Find products",
-            icon: "search",
-            tone: "blue",
-            prompt: "Find wireless headphones under $50",
-        },
-        {
-            label: "Track my order",
-            icon: "box",
-            tone: "orange",
-            prompt: "What is the status of my latest order?",
-        },
-        {
-            label: "Return & refund",
-            icon: "refresh",
-            tone: "pink",
-            prompt: "Explain the return and refund policy",
-        },
-        {
-            label: "Check stock",
-            icon: "bag",
-            tone: "green",
-            prompt: "Find headphones and show available stock",
-        },
-        {
-            label: "Compare products",
-            icon: "chart",
-            tone: "blue",
-            prompt: "Help me compare headphones",
-        },
-        { label: "Order & payment", icon: "cart", tone: "purple", prompt: "How do I place an order and pay?" },
+        {label:'Find Products',icon:'search',tone:'blue',prompt:'Help me find a product'},
+        {label:'Scan Product',icon:'camera',tone:'blue',prompt:''},
+        {label:'My Orders',icon:'box',tone:'blue',prompt:'Show my orders'},
+        {label:'Make Payment',icon:'card',tone:'blue',prompt:'Show my pending order payments'},
+        {label:'Track Order',icon:'truck',tone:'green',prompt:'What is the status of my latest order?'},
+        {label:'Return Policy',icon:'help',tone:'blue',prompt:'Explain the return and refund policy'},
     ];
+    runShortcut(action:{label:string;prompt:string}) {
+        if(action.label==='Scan Product'){void this.router.navigate(['/scanner']);this.close();return;}
+        this.choose(action.prompt);
+    }
+    saveProduct(product:ChatProduct){
+        if(this.busy())return;
+        this.catalog.detail(product.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+            next:value=>{if(!value){this.cartFeedback.set('Product is unavailable.');return;}const saved=this.store.has(value.id);if(this.store.toggle(value))this.cartFeedback.set(saved?'Removed from wishlist.':'Saved to wishlist.');else this.cartFeedback.set('Could not save your wishlist.');},
+            error:()=>this.cartFeedback.set('Could not load this product. Please try again.'),
+        });
+    }
+    initials(){return (this.auth.session()?.username||'You').slice(0,2).toUpperCase();}
+    time(value?:string){return value?new Date(value).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}):'';}
+    searchProducts(){if(this.search.trim()){this.choose(this.search.trim());this.send();}}
+    private rememberChat(){
+        if(!this.conversationId||!this.messages().length)return;
+        const messages=this.messages().map(message=>({...message}));
+        const entry={id:this.conversationId,title:messages.find(m=>m.role==='user')?.text||'Shopping conversation',time:new Date().toISOString(),messages,image:messages.flatMap(m=>m.products||[])[0]?.image};
+        this.history.update(rows=>[entry,...rows.filter(row=>row.id!==entry.id)].slice(0,12));
+    }
+    openHistory(id:string){
+        if(this.busy())return;const entry=this.history().find(row=>row.id===id);if(!entry)return;
+        this.voice.reset(); this.live.close(); this.voiceDraft.set(false);
+        this.rememberChat();this.conversationId=id;this.messages.set(entry.messages.map(message=>({...message,confirmationId:undefined})));this.checkoutVisible.set(false);this.trackingOrderId.set(null);this.error.set('');this.saveConversation();this.menuOpen.set(false);this.scroll();
+    }
     constructor() {
+        this.live.events$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(event => {
+            if(event.conversationId!==this.conversationId || !('turnId' in event))return;
+            this.messages.update(rows=>{
+                const next=rows.map(row=>({...row}));
+                let turn=next.find(row=>row.voiceTurnId===event.turnId);
+                if(!turn){turn={role:event.type==='VOICE_TRANSCRIPT_UPDATED'?'user':'assistant',text:'',voiceTurnId:event.turnId};next.push(turn);}
+                turn.text+=event.text;return next;
+            });
+            this.saveConversation();this.scroll();
+        });
         let wasOpened = false;
         afterRenderEffect(() => {
             const opened = this.opened();
@@ -109,12 +151,14 @@ export class CustomerChat {
         effect(() => {
             const id = this.auth.session()?.id ?? null;
             if (id !== this.account) {
+                this.voice.reset(); this.live.close();
                 this.account = id;
                 this.request?.unsubscribe();
                 this.cartRequest?.unsubscribe();
                 this.cartBusy.set(null);
                 this.pendingCartKeys.clear();
                 this.messages.set([]);
+                this.history.set([]);
                 this.conversationId = this.restoreConversation(id);
                 this.prompt = "";
                 this.failedPrompt = "";
@@ -134,6 +178,8 @@ export class CustomerChat {
         this.scroll();
     }
     close() {
+        this.voice.reset(); this.live.close();
+        if(this.pageMode()){void this.router.navigate(['/shop']);return;}
         this.dialog()?.nativeElement.close();
         this.opened.set(false);
     }
@@ -146,6 +192,8 @@ export class CustomerChat {
     newChat() {
         if (this.busy())
             return;
+        this.voice.reset(); this.live.close(); this.voiceDraft.set(false);
+        this.rememberChat();
         this.messages.set([]);
         this.conversationId = null;
         this.saveConversation();
@@ -155,14 +203,16 @@ export class CustomerChat {
         this.needsSignIn.set(false);
         this.cartFeedback.set("");
         this.checkoutVisible.set(false);
+        this.trackingOrderId.set(null);
         this.input()?.nativeElement.focus();
     }
     send() {
         const value = this.prompt.trim();
-        if (!value || value.length > 4000 || this.busy() || this.quota.exhausted())
+        if (!value || value.length > 4000 || this.busy() || this.quota.exhausted() || this.voice.recording() || this.voice.pending())
             return;
-        this.messages.update((items) => [...items, { role: "user", text: value }]);
+        this.messages.update((items) => [...items, { role: "user", text: value, time: new Date().toISOString() }]);
         this.prompt = "";
+        this.voiceDraft.set(false);
         this.failedKey=requestId();
         this.ask(value);
     }
@@ -192,7 +242,9 @@ export class CustomerChat {
                     this.scroll();
                     return;
                 }
-                this.messages.update((items) => [...items, this.present(response)]);
+                this.messages.update((items) => [...items, {...this.present(response),time:new Date().toISOString()}]);
+                if(this.voice.autoPlay()) this.voice.play(this.present(response).text);
+                this.rememberChat();
                 if (response.cardType === "CartCard") this.openCheckout();
                 this.failedPrompt = "";
                 this.busy.set(false);
@@ -230,6 +282,14 @@ export class CustomerChat {
             role: "assistant",
             text: result.message || "No response was returned.",
             cardType: response.cardType,
+            data: !productCard && !['ConfirmationCard','KnowledgeCard'].includes(response.cardType) ? result.data : undefined,
+            intent: result.intent,
+            ordersList: response.cardType === 'OrderList' && result.status === 'SUCCESS',
+            orderId: !!this.auth.session() && response.cardType === 'OrderCard' && result.status === 'SUCCESS'
+                && typeof (payload?.['id'] ?? payload?.['orderId']) === 'number'
+                && Number.isSafeInteger(payload?.['id'] ?? payload?.['orderId'])
+                && Number(payload?.['id'] ?? payload?.['orderId']) > 0
+                ? Number(payload?.['id'] ?? payload?.['orderId']) : undefined,
             confirmationId: response.cardType === 'ConfirmationCard' && result.data && typeof result.data === 'object' && typeof (result.data as Record<string, unknown>)['confirmationId'] === 'string'
                 ? (result.data as Record<string, unknown>)['confirmationId'] as string : undefined,
             confirmationParameters: response.cardType === 'ConfirmationCard' ? this.confirmationSummary(result.data) : undefined,
@@ -282,7 +342,8 @@ export class CustomerChat {
         if (typeof preview?.['paymentMethod'] === 'string') parts.push('Payment method: ' + preview['paymentMethod']);
         return parts.join(' · ') || this.productText('Review this action before confirming.', 'សូមពិនិត្យសកម្មភាពនេះមុនបញ្ជាក់។');
     }
-    details(product: {id: number}) {
+    details(product: {id: number;skuId?:number}) {
+        if(this.live.isConnected()){void this.live.selectProduct(product.id,product.skuId);return;}
         if (this.busy()) return;
         this.busy.set(true); this.error.set('');
         const details = this.auth.session() ? this.api.tool('PRODUCT_DETAIL',{id:product.id},requestId(),this.conversationId).pipe(map(result => {
@@ -325,6 +386,7 @@ export class CustomerChat {
         this.request = this.api.confirm(message.confirmationId,this.conversationId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
             next: result => {
                 message.confirmationId = undefined;
+                this.live.refreshAfterConfirmation();
                 const intent = result.intent || '';
                 const cardType = ['PRODUCT_DETAIL','PRODUCT_VARIANTS'].includes(intent) ? 'ProductCard'
                     : intent.startsWith('CART_') || intent === 'CHECKOUT_PREVIEW' ? 'CartCard'
@@ -340,7 +402,8 @@ export class CustomerChat {
         const variant = product.variants.find(v => v.id === Number(id));
         if (!variant)
             return;
-        Object.assign(product, { skuId: variant.id, price: variant.price, originalPrice: variant.originalPrice, promotion: variant.promotion, attributes: variant.attributes, available: variant.available, quantity: 1 });
+        if(this.live.isConnected())void this.live.selectProduct(product.id,variant.id);
+        Object.assign(product, { skuId: variant.id, price: variant.price, originalPrice: variant.originalPrice, promotion: variant.promotion, discount:variant.discount,promotionStartAt:variant.promotionStartAt,promotionEndAt:variant.promotionEndAt, attributes: variant.attributes, available: variant.available, quantity: 1 });
     }
     validQuantity(product: ChatProduct) {
         return Number.isSafeInteger(product.quantity) && product.quantity > 0 && product.quantity <= Math.min(product.available ?? 0, 999);
@@ -355,6 +418,16 @@ export class CustomerChat {
                 for (const sku of p.variants)
                     labels[sku.id] = { name: p.name + (p.variants.length > 1 ? ' · ' + sku.label : ''), image: p.image };
         return labels;
+    }
+    syncProductOrder(message:ChatMessage){this.live.displayedProducts(this.displayedProducts(message).map(p=>p.id));}
+    displayedProducts(message: ChatMessage) {
+        const products = [...(message.products || [])].filter(product => !message.inStockOnly || (product.available ?? 0) > 0);
+        if (message.productSort === 'name') products.sort((a,b)=>a.name.localeCompare(b.name));
+        if (message.productSort === 'price-asc' || message.productSort === 'price-desc') {
+            const direction=message.productSort === 'price-asc' ? 1 : -1;
+            products.sort((a,b)=>a.price === undefined ? (b.price === undefined ? 0 : 1) : b.price === undefined ? -1 : direction*(a.price-b.price));
+        }
+        return products;
     }
     openCheckout() { this.checkoutVisible.set(true); this.scroll(); }
     cartLocked() { return this.cartBusy() !== null || !!this.checkout()?.loading() || !!this.checkout()?.reviewing() || !!this.checkout()?.pending(); }

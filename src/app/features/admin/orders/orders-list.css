@@ -1,0 +1,7 @@
+.adm-filter .order-guest-toggle{display:inline-flex;align-items:center;justify-content:flex-start;gap:9px;white-space:nowrap;cursor:pointer;font-size:12px;font-weight:500;line-height:1.4;margin:0;align-self:center}
+.adm-filter .order-guest-toggle input[type=checkbox]{appearance:none;-webkit-appearance:none;display:block;flex:0 0 44px;width:44px!important;min-width:44px;max-width:44px;height:24px!important;min-height:24px;box-sizing:border-box;padding:0!important;margin:0;border:0;border-radius:999px;background:#cbd5e1;cursor:pointer;position:relative;transition:background .15s}
+.adm-filter .order-guest-toggle input[type=checkbox]::before{content:'';position:absolute;width:20px;height:20px;top:2px;left:2px;border-radius:50%;background:#fff;box-shadow:0 1px 3px #0002;transition:transform .15s}
+.adm-filter .order-guest-toggle input[type=checkbox]:checked{background:#5546ed}
+.adm-filter .order-guest-toggle input[type=checkbox]:checked::before{transform:translateX(20px)}
+.adm-filter .order-guest-toggle input[type=checkbox]:focus-visible{outline:2px solid #5546ed;outline-offset:3px}
+@media(prefers-reduced-motion:reduce){.adm-filter .order-guest-toggle input[type=checkbox],.adm-filter .order-guest-toggle input[type=checkbox]::before{transition:none}}

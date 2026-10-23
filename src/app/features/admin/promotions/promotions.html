@@ -1,3 +1,6 @@
+@if (accessDenied()) {
+  <app-page-access-denied />
+} @else {
 <section class="reference-page">
   <header class="adm-page-head">
     <div>
@@ -10,28 +13,25 @@
               : "Product Promotions"
         }}
       </h2>
-      <div class="adm-crumbs">
-        <a routerLink="/admin">{{ "Dashboard" | translate }}</a><span>›</span
-        ><a routerLink="/admin/products">{{ "Products" | translate }}</a><span>›</span
-        ><a routerLink="/admin/promotions">{{ "Promotions" | translate }}</a>
+      @if(!embedded()){<div class="adm-crumbs">
+        <a routerLink="/admin" *appCanRoute="'/admin'">{{ "Dashboard" | translate }}</a><span>›</span
+        ><a routerLink="/admin/products" *appCanRoute="'/admin/products'">{{ "Products" | translate }}</a><span>›</span
+        ><a routerLink="/admin/promotions" *appCanRoute="'/admin/promotions'">{{ "Promotions" | translate }}</a>
         @if (mode !== "list") {
           <span>›</span
           >{{ mode === "create" ? "Create Promotion" : "Promotion Detail" }}
         }
-      </div>
+      </div>}
     </div>
     <div class="adm-head-actions">
       @if (mode === "list") {
-        <button class="adm-btn adm-primary" (click)="create()">
-          ＋ Create Promotion</button
-        ><a class="adm-btn" routerLink="/admin/promotions/add"
-          >Open full form</a
-        >
+        <a class="adm-btn adm-primary" routerLink="/admin/promotions/add"
+           *appCanRoute="'/admin/promotions/add'">＋ Create Promotion</a>
       } @else if (mode === "detail") {
-        <button class="adm-btn" (click)="editing.set(true)">
+        <button class="adm-btn" (click)="editing.set(true)" *appCan="'PROMOTION_MANAGE'">
           ✎ Edit Promotion</button
-        ><button class="adm-btn" (click)="duplicate()">Duplicate</button
-        ><button class="adm-btn" (click)="archive(selectedId)">{{ "Delete" | translate }}</button
+        ><button class="adm-btn" (click)="duplicate()" *appCan="'PROMOTION_MANAGE'">Duplicate</button
+        ><button class="adm-btn" (click)="archive(selectedId)" *appCan="'PROMOTION_MANAGE'">{{ "Delete" | translate }}</button
         ><a class="adm-btn adm-primary" routerLink="/shop">View on Store ↗</a>
       }
     </div>
@@ -130,7 +130,7 @@
                 <tr>
                   <td>{{ (page - 1) * 20 + i + 1 }}</td>
                   <td>
-                    <a [routerLink]="['/admin/promotions', row['id']]">{{
+                    <a [routerLink]="['/admin/promotions', row['id']]" *appCanRoute="['/admin/promotions', row['id']]">{{
                       text(row["name"])
                     }}</a
                     ><small class="muted" style="display: block">{{
@@ -174,18 +174,18 @@
                         class="adm-btn icon"
                         (click)="edit(+field(row, 'id'))"
                         aria-label="Edit promotion"
-                      >
+                       *appCan="'PROMOTION_MANAGE'">
                         ✎</button
                       ><a
                         class="adm-btn icon"
                         [routerLink]="['/admin/promotions', row['id']]"
                         aria-label="View promotion"
-                        ><app-icon name="eye" /></a
+                         *appCanRoute="['/admin/promotions', row['id']]"><app-icon name="eye" /></a
                       ><button
                         class="adm-btn icon"
                         (click)="archive(+field(row, 'id'))"
                         aria-label="Archive promotion"
-                      >
+                       *appCan="'PROMOTION_MANAGE'">
                         ×
                       </button>
                     </div>
@@ -229,7 +229,7 @@
       </section>
     }
     @if (editing()) {
-      <form class="reference-stack" (ngSubmit)="save()">
+      <form class="reference-stack" (ngSubmit)="save()" *appCan="'PROMOTION_MANAGE'">
         <h3>{{ selectedId ? "Edit Promotion" : "Create Promotion" }}</h3>
         @if (mode !== "create") {
           <nav class="reference-tabs">
@@ -590,7 +590,7 @@
                   (click)="removeSku(id)"
                   [disabled]="busy()"
                   [attr.aria-label]="'Remove SKU ' + id"
-                >
+                 *appCan="'PROMOTION_MANAGE'">
                   ×
                 </button>
               </p>
@@ -605,7 +605,7 @@
               type="button"
               (click)="assign()"
               [disabled]="busy()"
-            >
+             *appCan="'PROMOTION_MANAGE'">
               Assign SKUs
             </button>
             <div class="adm-actions">
@@ -631,10 +631,10 @@
           <button
             class="adm-btn"
             type="button"
-            (click)="editing.set(false)"
-            [routerLink]="mode === 'create' ? '/admin/promotions' : null"
+            (click)="embedded() ? cancelled.emit() : editing.set(false)"
+            [routerLink]="!embedded() && mode === 'create' ? '/admin/promotions' : null"
             [disabled]="busy()"
-          >
+           *appCanRoute="mode === 'create' ? '/admin/promotions' : null">
             {{ "Cancel" | translate }}
           </button>
           @if (mode !== "create" && step < 3) {
@@ -899,7 +899,10 @@
                             '/admin/products/view',
                             product['product_id'],
                           ]"
-                          >{{ "View Product" | translate }}</a
+                           *appCanRoute="[
+                            '/admin/products/view',
+                            product['product_id'],
+                          ]">{{ "View Product" | translate }}</a
                         >
                       </td>
                     </tr>
@@ -985,7 +988,7 @@
               class="adm-btn"
               (click)="transition('schedule')"
               [disabled]="busy()"
-            >
+             *appCan="'PROMOTION_MANAGE'">
               Schedule
             </button>
           }
@@ -998,7 +1001,7 @@
               class="adm-btn adm-primary"
               (click)="transition('activate')"
               [disabled]="busy()"
-            >
+             *appCan="'PROMOTION_MANAGE'">
               Activate
             </button>
           }
@@ -1009,7 +1012,7 @@
               class="adm-btn"
               (click)="transition('disable')"
               [disabled]="busy()"
-            >
+             *appCan="'PROMOTION_MANAGE'">
               Disable
             </button>
           }
@@ -1077,3 +1080,5 @@
     </div>
   }
 </section>
+
+}

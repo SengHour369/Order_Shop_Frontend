@@ -1,3 +1,5 @@
+import { provideHttpClient } from '@angular/common/http';
+import { ChatVoice } from '../../assistant/customer-chat/chat-voice';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { NavigationEnd, Router, provideRouter } from '@angular/router';
@@ -6,6 +8,8 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { PermissionService } from '../../../core/auth/permission.service';
 import { AdminLayout } from './admin-layout';
 describe('Edit User navigation',()=>{
+  beforeEach(()=>TestBed.configureTestingModule({providers:[provideHttpClient(),ChatVoice]}));
+
   afterEach(()=>TestBed.resetTestingModule());
   it('keeps stock navigation accessible on customer screens without bypassing permissions',()=>{
     const events=new Subject<NavigationEnd>();
@@ -82,4 +86,15 @@ describe('Edit User navigation',()=>{
       expect(layout.collapsed()).toBe(true);
     }
   });
+ it('automatically opens the requested page from a spoken command without Enter',()=>{
+  const navigate=vi.fn();TestBed.configureTestingModule({providers:[{provide:Router,useValue:{url:'/admin/products',events:new Subject<NavigationEnd>(),navigate}},{provide:AuthService,useValue:{session:()=>({role:'ADMIN'})}},{provide:PermissionService,useValue:{allowsMenu:()=>true,allows:()=>true}}]});
+  const layout=TestBed.runInInjectionContext(()=>new AdminLayout());
+  vi.spyOn(layout.searchVoice,'start').mockImplementation(async(_language,review)=>review('I want to check user orders'));
+  layout.voiceSearch();expect(layout.query).toBe('I want to check user orders');expect(navigate).toHaveBeenCalledWith(['/admin/orders']);
+ });
+ it('does not open a forbidden route or guess a route for unclear speech',()=>{
+  const navigate=vi.fn();TestBed.configureTestingModule({providers:[{provide:Router,useValue:{url:'/admin/products',events:new Subject<NavigationEnd>(),navigate}},{provide:AuthService,useValue:{session:()=>({role:'USER'})}},{provide:PermissionService,useValue:{allowsMenu:()=>true,allows:()=>false}}]});
+  const layout=TestBed.runInInjectionContext(()=>new AdminLayout());layout.followVoiceCommand('show payments');expect(navigate).not.toHaveBeenCalled();expect(layout.searchVoice.error()).toContain('permission');
+  layout.followVoiceCommand('សួស្តី');expect(navigate).not.toHaveBeenCalled();expect(layout.voiceSearchReady()).toBe(true);
+ });
 });

@@ -423,7 +423,7 @@ type SkuDraft = {
 })
 export class ProductFormPage extends PageState implements OnDestroy {
   embedded = input(false);
-  prefill = input<{name?:string;description?:string;price?:number|null;quantity?:number;warehouse?:string} | null>(null);
+  prefill = input<{name?:string;description?:string;price?:number|null;quantity?:number;warehouse?:string;skuDescription?:string;categoryName?:string} | null>(null);
   cancelled = output<void>();
   saved = output<{id:string;status:string}>();
   busyChanged = output<boolean>();
@@ -431,6 +431,8 @@ export class ProductFormPage extends PageState implements OnDestroy {
   private formChange = inject(ChangeDetectorRef, {optional:true});
   private imports = inject(AiImportsApi);
   reviewerId:number|null=null;
+  reviewerOptions=signal<{value:number;label:string}[]>([]);
+  reviewerError=signal('');
   productVersion:number|null=null;
   private api = inject(AdminApi);
   private route = inject(ActivatedRoute);
@@ -496,6 +498,10 @@ export class ProductFormPage extends PageState implements OnDestroy {
     return [!this.name.trim()?'product name':'',!this.description.trim()?'description':'',!this.categoryId?'category':'',!this.subCategoryId?'sub-category':'',!this.files.length?'product image':'',this.variants.some(variant=>!variant.description.trim())?'SKU descriptions':'',this.variants.some(variant=>!Number.isFinite(variant.price)||variant.price<=0)?'SKU prices':'',!this.reviewerId?'independent reviewer':''].filter(Boolean);
   }
   ngOnInit() {
+    this.imports.reviewerOptions().pipe(takeUntilDestroyed(this.formDestroy)).subscribe({next:result=>{
+      this.reviewerOptions.set(result.reviewers.map(user=>({value:user.id,label:user.name+(user.username?' (@'+user.username+')':'')})));
+      if(this.reviewerId===null)this.reviewerId=result.defaultReviewerId;
+    },error:()=>this.reviewerError.set('Could not load authorized reviewers. Refresh before submitting for approval.')});
     if (this.embedded()) {
       const draft=this.prefill();
       this.name=draft?.name || '';
@@ -504,6 +510,7 @@ export class ProductFormPage extends PageState implements OnDestroy {
       this.baseQuantity=draft?.quantity ?? 1;
       this.baseWarehouse=draft?.warehouse || '';
       this.syncSingleVariant();
+      if(draft?.skuDescription)this.variants[0].description=draft.skuDescription;
     }
     this.route.paramMap.pipe(takeUntilDestroyed(this.formDestroy)).subscribe((params) => {
       this.id = this.embedded() ? 0 : Number(params.get("id") || 0);
@@ -523,6 +530,8 @@ export class ProductFormPage extends PageState implements OnDestroy {
           (result) => {
             this.brands.set(result.brands);
             this.categories.set(result.categories);
+            const categoryName=this.embedded()?this.prefill()?.categoryName:undefined;
+            if(categoryName)this.applyChatInput({category:categoryName});
           },
         );
         return;

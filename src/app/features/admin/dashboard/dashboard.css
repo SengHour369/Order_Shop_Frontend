@@ -24,7 +24,7 @@
   flex-shrink: 0;
 }
 .blue {
-  color: #2563eb;
+  color: var(--admin-brand, #00834a);
   background: #eaf0ff;
 }
 .green {
@@ -132,7 +132,7 @@
   display: flex;
   justify-content: space-between;
   text-decoration: none;
-  color: #2563eb;
+  color: var(--admin-brand, #00834a);
 }
 .sales-panel .panel-footer {
   margin-top: 12px;
@@ -294,10 +294,10 @@
 }
 .dashboard-actions a span {
   margin-left: auto;
-  color: #2563eb;
+  color: var(--admin-brand, #00834a);
 }
 .dashboard-actions app-icon {
-  color: #2563eb;
+  color: var(--admin-brand, #00834a);
 }
 .dashboard-empty {
   padding: 55px 12px;

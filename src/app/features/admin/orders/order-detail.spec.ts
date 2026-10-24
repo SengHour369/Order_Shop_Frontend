@@ -59,8 +59,12 @@ describe('Order detail service composition', () => {
     const fixture = TestBed.createComponent(OrderDetailPage);
     fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;
-    expect(element.querySelectorAll('.order-overview > .admin-order-card')).toHaveLength(4);
-    expect(element.querySelectorAll('.order-content > .admin-order-card')).toHaveLength(4);
+    expect(element.querySelectorAll('.order-overview > .admin-order-card')).toHaveLength(3);
+    expect(element.querySelectorAll('.order-content > .admin-order-card')).toHaveLength(2);
+    expect(element.querySelector('.customer-card')).not.toBeNull();
+    expect(element.querySelector('.shipping-card')).not.toBeNull();
+    expect(element.querySelector('.ordered-items')).not.toBeNull();
+    expect(element.querySelector('.timeline-card')).not.toBeNull();
     expect(element.querySelector('.order-number')?.textContent).toContain('42');
     expect(element.textContent).not.toContain('Tracking No.');
     expect(element.textContent).not.toContain('Shipping Method');
@@ -79,7 +83,7 @@ describe('Order detail service composition', () => {
       fixture.detectChanges();
       const root = fixture.nativeElement as HTMLElement;
       expect(root.querySelectorAll('.order-card, .discount, .total')).toHaveLength(0);
-      expect(root.querySelectorAll('.admin-order-card')).toHaveLength(8);
+      expect(root.querySelectorAll('.admin-order-card')).toHaveLength(5);
       expect(getComputedStyle(root.querySelector('.admin-order-card')!).display).toBe('block');
       expect(root.querySelector('.admin-order-discount')).not.toBeNull();
     } finally {

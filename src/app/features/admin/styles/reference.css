@@ -1,6 +1,6 @@
 :host {
   display: block;
-  color: #0d1648;
+  color: var(--admin-ink, #0d1328);
   font-size: 13px;
 }
 .reference-filters > select {
@@ -51,9 +51,9 @@
   min-height: 34px;
 }
 .adm-primary {
-  background: #0663ff;
+  background: var(--admin-brand, #00834a);
   color: white;
-  border-color: #0663ff;
+  border-color: var(--admin-brand, #00834a);
 }
 .reference-stats {
   display: grid;
@@ -94,8 +94,8 @@
 }
 .blue,
 .processed {
-  color: #0060ff;
-  background: #eaf2ff;
+  color: var(--admin-brand, #00834a);
+  background: var(--admin-soft, #edf8f2);
 }
 .green,
 .complete {
@@ -166,7 +166,7 @@
   width: 16px;
   min-width: 16px;
   min-height: 16px;
-  accent-color: #0663ff;
+  accent-color: var(--admin-brand, #00834a);
 }
 .reference-badge {
   padding: 5px 10px;
@@ -192,8 +192,8 @@
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: #eaf2ff;
-  color: #0663ff;
+  background: var(--admin-soft, #edf8f2);
+  color: var(--admin-brand, #00834a);
 }
 .product-thumbs {
   display: flex;
@@ -226,8 +226,8 @@
   border-bottom: 3px solid transparent;
 }
 .reference-tabs button.active {
-  color: #065dff;
-  border-bottom-color: #065dff;
+  color: var(--admin-brand, #00834a);
+  border-bottom-color: var(--admin-brand, #00834a);
 }
 .reference-columns {
   display: grid;
@@ -270,7 +270,7 @@
   width: 16px;
   min-height: 16px;
   margin: 0;
-  accent-color: #0060ff;
+  accent-color: var(--admin-brand, #00834a);
 }
 .reference-grid {
   display: grid;
@@ -287,11 +287,11 @@
   border: 1px solid #e0eafa;
   background: #fff;
   border-radius: 5px;
-  color: #0d1648;
+  color: var(--admin-ink, #0d1328);
 }
 .reference-types button.active {
-  border-color: #0663ff;
-  background: #edf5ff;
+  border-color: var(--admin-brand, #00834a);
+  background: var(--admin-soft, #edf8f2);
 }
 .reference-types small {
   display: block;
@@ -314,7 +314,7 @@
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: #0663ff;
+  background: var(--admin-brand, #00834a);
   color: white;
   font-size: 17px;
 }
@@ -355,7 +355,7 @@
   border-radius: 4px;
 }
 .reference-thumbnails button.active {
-  border-color: #0663ff;
+  border-color: var(--admin-brand, #00834a);
 }
 .reference-thumbnails img {
   width: 65px;
@@ -390,7 +390,7 @@
 .reference-note {
   font-size: 12px;
   color: #647a9e;
-  background: #f6f9ff;
+  background: var(--admin-soft, #edf8f2);
   padding: 10px;
   border-radius: 5px;
 }
@@ -425,7 +425,7 @@
 }
 .reference-detail-table th {
   color: #6279a5;
-  background: #f8fbff;
+  background: var(--admin-soft, #edf8f2);
   font-weight: 400;
 }
 .reference-timeline {
@@ -444,7 +444,7 @@
   position: absolute;
   left: -26px;
   top: 3px;
-  border: 2px solid #0663ff;
+  border: 2px solid var(--admin-brand, #00834a);
   border-radius: 50%;
   background: white;
 }
@@ -520,7 +520,7 @@
 .reference-picker input[type="checkbox"] {
   width: 16px;
   min-height: 16px;
-  accent-color: #0663ff;
+  accent-color: var(--admin-brand, #00834a);
 }
 .reference-page .adm-panel > label {
   margin-top: 10px;

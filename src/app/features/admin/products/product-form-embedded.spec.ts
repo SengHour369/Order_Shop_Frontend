@@ -15,7 +15,7 @@ describe('Native product form embedded in chat',()=>{
     TestBed.configureTestingModule({providers:[provideRouter([]),
       {provide:ActivatedRoute,useValue:{paramMap:of(convertToParamMap({id:'55'})),snapshot:{queryParamMap:convertToParamMap({duplicate:'99'})}}},
       {provide:AdminApi,useValue:{product,allCategories:()=>of([{id:1,name:'Shoes'}]),allBrands:()=>of([{id:2,name:'Running',categoryId:1}])}},
-      {provide:AiImportsApi,useValue:{stageProduct:stage,action:()=>of({id:'batch-1',status:'SUBMITTED'})}},
+      {provide:AiImportsApi,useValue:{reviewerOptions:()=>of({reviewers:[],defaultReviewerId:null}),stageProduct:stage,action:()=>of({id:'batch-1',status:'SUBMITTED'})}},
       {provide:PermissionService,useValue:{has:()=>true,allows:()=>true}},
     ]});
   });
@@ -46,5 +46,11 @@ describe('Native product form embedded in chat',()=>{
   });
   it('retains the existing reviewer validation before submission',()=>{
     const f=create();f.componentInstance.save();expect(f.componentInstance.error()).toContain('independent reviewer');expect(stage).not.toHaveBeenCalled();
+  });
+  it('prefills the supplied pack SKU and resolves only existing categories after catalog loading',()=>{
+    const f=TestBed.createComponent(ProductFormPage);f.componentRef.setInput('embedded',true);
+    f.componentRef.setInput('prefill',{name:'SOVIA-F',description:'Source ingredients and cautions',skuDescription:'15 capsules',categoryName:'Shoes',quantity:0});f.detectChanges();
+    const form=f.componentInstance;expect(form.variants[0].description).toBe('15 capsules');expect(form.categoryId).toBe(1);
+    expect(form.baseQuantity).toBe(0);expect(form.basePrice).toBe(0);expect(stage).not.toHaveBeenCalled();
   });
 });

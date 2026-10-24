@@ -28,4 +28,10 @@ describe('Edit User', () => {
     const { page, api } = setup(); page.email = 'invalid'; page.save();
     expect(api.updateUserEditor).not.toHaveBeenCalled(); expect(page.error()).toContain('valid email');
   });
+  it('excludes self, displays names with usernames, and saves both assignments',()=>{
+    const {page,api}=setup();page.options.set({managers:[{id:7,name:'John',username:'john'},{id:9,name:'Jane',username:'jane'}],reviewers:[{id:10,name:'Jane',username:'approver'}]});
+    expect(page.peopleOptions('managers')).toEqual([{value:0,label:'No manager'},{value:9,label:'Jane (@jane)'}]);
+    page.managerId=9;page.approvalReviewerId=10;page.save();expect(api.updateUserEditor).toHaveBeenCalledWith(7,expect.objectContaining({managerId:9,approvalReviewerId:10}));
+  });
+ it('saves cleared direct permissions while preserving existing roles and language',()=>{const {page,api}=setup();page.permissionIds=[];page.save();expect(api.updateUserEditor).toHaveBeenCalledWith(7,expect.objectContaining({permissionIds:[],roleIds:[1],language:'en-US'}));});
 });

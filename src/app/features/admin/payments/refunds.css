@@ -4,7 +4,7 @@
 .refund-ui {
   color: #101638;
   font-size: 12px;
-  --refund-blue: #065dff;
+  --refund-blue: var(--admin-brand, #00834a);
 }
 .refund-heading {
   display: flex;
@@ -35,7 +35,7 @@
   margin-top: 8px;
 }
 .refund-ui a {
-  color: #065dff;
+  color: var(--admin-brand, #00834a);
   text-decoration: none;
 }
 .refund-crumbs a {
@@ -67,8 +67,8 @@
   cursor: not-allowed;
 }
 .refund-btn.primary {
-  background: #065dff;
-  border-color: #065dff;
+  background: var(--admin-brand, #00834a);
+  border-color: var(--admin-brand, #00834a);
   color: white;
 }
 .refund-btn.approve {
@@ -87,7 +87,7 @@
 .refund-btn.small {
   padding: 6px 11px;
   font-size: 11px;
-  color: #065dff;
+  color: var(--admin-brand, #00834a);
 }
 .refund-stats {
   display: grid;
@@ -157,8 +157,8 @@
   background: #ffedf0;
 }
 .stat-icon.blue {
-  color: #065dff;
-  background: #eaf2ff;
+  color: var(--admin-brand, #00834a);
+  background: var(--admin-soft, #edf8f2);
 }
 .refund-card {
   border: 1px solid #e6edf7;
@@ -191,7 +191,7 @@
 .refund-ui textarea {
   background: #fff;
   color: #233252;
-  border: 1px solid #dce5f2;
+  border: 1px solid var(--admin-border, #e4e9ed);
   border-radius: 5px;
   font-size: 12px;
   padding: 9px 11px;
@@ -203,7 +203,7 @@
 .search-field {
   display: flex;
   flex: 2;
-  border: 1px solid #dce5f2;
+  border: 1px solid var(--admin-border, #e4e9ed);
   border-radius: 5px;
   margin: 0;
   min-width: 260px;
@@ -224,7 +224,7 @@
   height: 16px;
 }
 .filter-btn {
-  color: #065dff;
+  color: var(--admin-brand, #00834a);
 }
 .date-filters {
   display: flex;
@@ -297,7 +297,7 @@
   color: #6c80a5;
 }
 .customer-avatar {
-  background: #edf4ff;
+  background: var(--admin-soft, #edf8f2);
   border: 1px solid #e0e8f2;
   border-radius: 6px;
   width: 36px;
@@ -384,7 +384,7 @@
   right: 0;
   top: 42px;
   z-index: 3;
-  border: 1px solid #dce5f2;
+  border: 1px solid var(--admin-border, #e4e9ed);
   background: white;
   border-radius: 6px;
   box-shadow: 0 5px 20px #10163816;
@@ -462,8 +462,8 @@
   cursor: pointer;
 }
 .refund-tabs button.active {
-  color: #065dff;
-  border-bottom-color: #065dff;
+  color: var(--admin-brand, #00834a);
+  border-bottom-color: var(--admin-brand, #00834a);
 }
 .refund-tabs app-icon {
   width: 17px;
@@ -647,7 +647,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f8fbff;
+  background: var(--admin-soft, #edf8f2);
   color: #7894bd;
 }
 .products-table th {
@@ -747,7 +747,7 @@
 }
 .text-btn {
   border: 0;
-  color: #065dff;
+  color: var(--admin-brand, #00834a);
   background: none;
   cursor: pointer;
   font-size: 11px;

@@ -41,7 +41,7 @@ main.admin-host {
   display: flex;
   flex-direction: column;
   background: #f8fafc;
-  border-right: 1px solid #e2e8f0;
+  border-right: 1px solid var(--admin-border, #e4e9ed);
   transition: width 0.25s;
 }
 .adm-side.collapsed {
@@ -60,7 +60,7 @@ main.admin-host {
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  background: #2563eb;
+  background: var(--admin-brand, #00834a);
   color: #fff;
   display: grid;
   place-items: center;
@@ -99,8 +99,8 @@ main.admin-host {
 }
 .adm-link.active,
 .adm-link:hover {
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--admin-soft, #edf8f2);
+  color: var(--admin-brand, #00834a);
 }
 .adm-side.collapsed .adm-group,
 .adm-side.collapsed .adm-link span,
@@ -149,7 +149,7 @@ main.admin-host {
   min-height: 40px;
   padding: 0 12px;
   background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--admin-border, #e4e9ed);
   border-radius: 10px;
 }
 .adm-search input {
@@ -201,7 +201,7 @@ main.admin-host {
   color: #fff;
   font-size: 12px;
   font-weight: 700;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, var(--admin-brand, #00834a), #8b5cf6);
 }
 .adm-profile small {
   display: block;
@@ -268,7 +268,7 @@ main.admin-host {
 .adm-card,
 .adm-panel {
   background: #fff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--admin-border, #e4e9ed);
   border-radius: 16px;
   padding: 16px;
 }
@@ -311,8 +311,8 @@ main.admin-host {
   height: 18px;
 }
 .adm-ico.blue {
-  background: #dbeafe;
-  color: #2563eb;
+  background: var(--admin-soft, #edf8f2);
+  color: var(--admin-brand, #00834a);
 }
 .adm-ico.green {
   background: #dcfce7;
@@ -338,7 +338,7 @@ main.admin-host {
   align-items: center;
   margin-bottom: 14px;
   background: #fff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--admin-border, #e4e9ed);
   border-radius: 16px;
   padding: 12px;
 }
@@ -379,7 +379,7 @@ main.admin-host {
   border-radius: 10px;
 }
 .adm-icons button.on {
-  border-color: #2563eb;
+  border-color: var(--admin-brand, #00834a);
   box-shadow: 0 0 0 2px #bfdbfe;
 }
 .adm-icons img {
@@ -409,7 +409,7 @@ main.admin-host {
 .adm input,
 .adm select,
 .adm textarea {
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--admin-border, #e4e9ed);
   border-radius: 8px;
   min-height: 40px;
   padding: 8px 10px;
@@ -420,7 +420,7 @@ main.admin-host {
   width: 100%;
 }
 .adm-btn {
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--admin-border, #e4e9ed);
   background: #fff;
   border-radius: 8px;
   min-height: 40px;
@@ -430,12 +430,12 @@ main.admin-host {
   background: #f8fafc;
 }
 .adm-btn.adm-primary {
-  background: #2563eb;
-  border-color: #2563eb;
+  background: var(--admin-brand, #00834a);
+  border-color: var(--admin-brand, #00834a);
   color: #fff;
 }
 .adm .adm-btn.adm-primary:hover {
-  background: #1d4ed8;
+  background: var(--admin-brand, #00834a);
   color: #fff;
 }
 .adm-btn.danger {
@@ -445,7 +445,7 @@ main.admin-host {
 .adm-table-wrap {
   overflow: auto;
   background: #fff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--admin-border, #e4e9ed);
   border-radius: 16px;
 }
 .adm table {
@@ -473,7 +473,7 @@ main.admin-host {
   padding: 2px 8px;
   font-size: 12px;
   font-weight: 700;
-  background: #e2e8f0;
+  background: var(--admin-border, #e4e9ed);
   color: #334155;
 }
 .adm-badge.on {
@@ -528,7 +528,7 @@ main.admin-host {
   display: block;
   height: 8px;
   border-radius: 99px;
-  background: #dbeafe;
+  background: var(--admin-soft, #edf8f2);
 }
 .adm-thumb {
   width: 42px;
@@ -612,13 +612,13 @@ main.admin-host {
   box-shadow: 0 8px 16px #6366f133;
 }
 .adm-ico.grad-indigo {
-  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  background: linear-gradient(135deg, var(--admin-brand, #00834a), var(--admin-brand, #00834a));
 }
 .adm-ico.grad-amber {
   background: linear-gradient(135deg, #f59e0b, #d97706);
 }
 .adm-ico.grad-blue {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  background: linear-gradient(135deg, var(--admin-brand, #00834a), var(--admin-brand, #00834a));
 }
 .adm-ico.grad-violet {
   background: linear-gradient(135deg, #8b5cf6, #7c3aed);
@@ -648,7 +648,7 @@ main.admin-host {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #e2e8f0;
+  background: var(--admin-border, #e4e9ed);
   color: #475569;
   display: grid;
   place-items: center;
@@ -671,7 +671,7 @@ main.admin-host {
   gap: 4px;
   width: fit-content;
   background: #fff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--admin-border, #e4e9ed);
   border-radius: 12px;
   padding: 4px;
   margin-bottom: 16px;
@@ -686,11 +686,11 @@ main.admin-host {
   color: #475569;
 }
 .adm-tabs button.on {
-  background: #4f46e5;
+  background: var(--admin-brand, #00834a);
   color: #fff;
 }
 .adm .adm-tabs button.on:hover {
-  background: #4338ca;
+  background: var(--admin-brand-dark, #007342);
   color: #fff;
 }
 .adm-form-grid {
@@ -714,7 +714,7 @@ main.admin-host {
 }
 .adm-table-card {
   background: #fff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--admin-border, #e4e9ed);
   border-radius: 16px;
   overflow: hidden;
 }
@@ -757,7 +757,7 @@ main.admin-host {
   width: 100%;
   max-width: 28px;
   border-radius: 8px 8px 3px 3px;
-  background: linear-gradient(180deg, #a5b4fc, #6366f1);
+  background: linear-gradient(180deg, #a5b4fc, var(--admin-brand, #00834a));
   min-height: 4px;
 }
 .adm-legend {
@@ -790,9 +790,9 @@ main.admin-host {
   font-size: 13px;
 }
 .adm-linkish {
-  color: #4f46e5;
+  color: var(--admin-brand, #00834a);
   font-weight: 700;
-  background: #eef2ff;
+  background: var(--admin-soft, #edf8f2);
   border-radius: 8px;
   padding: 8px 12px;
   text-decoration: none;
@@ -814,12 +814,12 @@ a.adm-btn.adm-primary {
   border-radius: 6px;
   display: inline-grid;
   place-items: center;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--admin-border, #e4e9ed);
   color: transparent;
 }
 .adm-tick.on {
-  background: #4f46e5;
-  border-color: #4f46e5;
+  background: var(--admin-brand, #00834a);
+  border-color: var(--admin-brand, #00834a);
   color: #fff;
 }
 .adm-tick app-icon {
@@ -886,25 +886,25 @@ a.adm-btn.adm-primary {
   display: flex;
   gap: 12px;
   align-items: flex-start;
-  border: 1px solid #dbeafe;
-  background: #eff6ff;
+  border: 1px solid var(--admin-soft, #edf8f2);
+  background: var(--admin-soft, #edf8f2);
   border-radius: 12px;
   padding: 14px;
 }
 .adm-note app-icon {
   width: 20px;
   height: 20px;
-  color: #3b82f6;
+  color: var(--admin-brand, #00834a);
   flex: none;
 }
 .adm-note strong {
   display: block;
-  color: #1e40af;
+  color: var(--admin-brand, #00834a);
   font-size: 14px;
 }
 .adm-note p {
   margin: 4px 0 0;
-  color: #1d4ed8;
+  color: var(--admin-brand, #00834a);
   font-size: 12px;
   line-height: 1.5;
 }
@@ -941,7 +941,7 @@ a.adm-btn.adm-primary {
 }
 .adm-drop:hover {
   border-color: #60a5fa;
-  background: #eff6ff;
+  background: var(--admin-soft, #edf8f2);
 }
 .adm-drop strong {
   color: #334155;
@@ -956,7 +956,7 @@ a.adm-btn.adm-primary {
   color: #94a3b8;
 }
 .adm-sku {
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--admin-border, #e4e9ed);
   background: #f8fafc;
   border-radius: 12px;
   padding: 16px;
@@ -969,7 +969,7 @@ a.adm-btn.adm-primary {
   margin: 0;
 }
 .adm-attr {
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--admin-border, #e4e9ed);
   background: #fff;
   border-radius: 10px;
   padding: 12px;
@@ -982,7 +982,7 @@ a.adm-btn.adm-primary {
   gap: 8px;
   max-height: 320px;
   overflow: auto;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--admin-border, #e4e9ed);
   border-radius: 10px;
   padding: 12px;
 }
@@ -1003,8 +1003,8 @@ a.adm-btn.adm-primary {
   color: #64748b;
 }
 .adm-icon-grid button.on {
-  border-color: #3b82f6;
-  background: #eff6ff;
+  border-color: var(--admin-brand, #00834a);
+  background: var(--admin-soft, #edf8f2);
   box-shadow: 0 0 0 2px #bfdbfe;
 }
 .adm-icon-grid img {
@@ -1020,7 +1020,7 @@ a.adm-btn.adm-primary {
   height: 18px;
   border-radius: 50%;
   background: #fff;
-  color: #2563eb;
+  color: var(--admin-brand, #00834a);
 }
 .adm-choice {
   display: flex;
@@ -1033,7 +1033,7 @@ a.adm-btn.adm-primary {
   align-items: center;
   justify-content: center;
   min-height: 40px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--admin-border, #e4e9ed);
   border-radius: 10px;
   font-size: 13px;
   font-weight: 700;
@@ -1065,7 +1065,7 @@ a.adm-btn.adm-primary {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--admin-border, #e4e9ed);
   background: #f8fafc;
   border-radius: 12px;
   padding: 16px;
@@ -1089,7 +1089,7 @@ a.adm-btn.adm-primary {
 }
 .adm-shot {
   position: relative;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--admin-border, #e4e9ed);
   border-radius: 12px;
   overflow: hidden;
   aspect-ratio: 1;
@@ -1203,8 +1203,8 @@ a.adm-btn.adm-primary {
   display: none;
 }
 .refund-layout .adm-link.active {
-  border-left: 3px solid #065dff;
-  background: #edf4ff;
+  border-left: 3px solid var(--admin-brand, #00834a);
+  background: var(--admin-soft, #edf8f2);
 }
 .refund-layout .adm-top {
   height: 66px;
@@ -1216,7 +1216,7 @@ a.adm-btn.adm-primary {
 }
 .refund-layout .adm-body {
   padding: 18px;
-  background: #f7faff;
+  background: var(--admin-soft, #edf8f2);
 }
 @media (max-width: 900px) {
   .refund-layout .adm-side:not(.collapsed) {
@@ -1237,9 +1237,9 @@ a.adm-btn.adm-primary {
   }
 }
 .refund-layout .adm-link.refund-parent {
-  border-left: 3px solid #065dff;
-  color: #065dff;
-  background: #edf4ff;
+  border-left: 3px solid var(--admin-brand, #00834a);
+  color: var(--admin-brand, #00834a);
+  background: var(--admin-soft, #edf8f2);
 }
 
 /* Shared dashboard reference theme, scoped to admin pages. */
@@ -1263,7 +1263,7 @@ a.adm-btn.adm-primary {
   border-bottom: 1px solid #f0f3f8;
 }
 .admin-refresh .adm-mark {
-  background: linear-gradient(145deg, #348aff, #1358e8);
+  background: linear-gradient(145deg, var(--admin-brand, #00834a), var(--admin-brand, #00834a));
   border-radius: 9px;
 }
 .admin-refresh .adm-nav {
@@ -1291,13 +1291,13 @@ a.adm-btn.adm-primary {
   height: 15px;
 }
 .admin-refresh .adm-link.active {
-  color: #1663da;
-  background: #eff4ff;
-  box-shadow: inset 2px 0 #2367ec;
+  color: var(--admin-brand, #00834a);
+  background: var(--admin-soft, #edf8f2);
+  box-shadow: inset 2px 0 var(--admin-brand, #00834a);
 }
 .admin-refresh .adm-link:hover {
-  background: #f3f7fd;
-  color: #1768ed;
+  background: var(--admin-soft, #edf8f2);
+  color: var(--admin-brand, #00834a);
 }
 .admin-refresh .adm-top {
   min-height: 68px;
@@ -1396,7 +1396,7 @@ a.adm-btn.adm-primary {
 .admin-refresh .grad-blue,
 .admin-refresh .grad-indigo,
 .admin-refresh .adm-ico.blue {
-  background: #edf4ff;
+  background: var(--admin-soft, #edf8f2);
   color: #3879df;
 }
 .admin-refresh .grad-green,
@@ -1579,7 +1579,7 @@ a.adm-btn.adm-primary {
 .admin-refresh a:focus-visible,
 .admin-refresh button:focus-visible,
 .admin-refresh summary:focus-visible {
-  outline: 2px solid #2563eb;
+  outline: 2px solid var(--admin-brand, #00834a);
   outline-offset: 3px;
 }
 .admin-refresh .adm-nav {
@@ -1632,3 +1632,54 @@ a.adm-btn.adm-primary {
 @media (max-width: 900px) {
   .admin-unified-layout .adm-side:not(.collapsed) { width: 240px; }
 }
+
+/* Storefront design tokens shared by every admin route and embedded editor. */
+.adm {
+  --admin-brand:#00834a;
+  --admin-brand-dark:#007342;
+  --admin-soft:#edf8f2;
+  --admin-border:#e4e9ed;
+  --admin-ink:#0d1328;
+  --admin-muted:#647087;
+  --purple:var(--admin-brand);
+  --soft:var(--admin-soft);
+  --border:var(--admin-border);
+  --muted:var(--admin-muted);
+  color:var(--admin-ink);
+  background:#fbfdfc;
+  accent-color:var(--admin-brand);
+}
+.adm.admin-refresh .adm-main,.adm.admin-refresh .adm-body{background:linear-gradient(180deg,#fff,#fbfdfc 500px,#fff)}
+.adm.admin-refresh .adm-side,.adm.admin-refresh .adm-top{border-color:var(--admin-border)}
+.adm.admin-refresh .adm-brand{color:var(--admin-ink);border-color:var(--admin-border);font-weight:700}
+.adm.admin-refresh .adm-mark{background:linear-gradient(110deg,#008e54,#007342);border-radius:9px}
+.adm.admin-refresh .adm-link{border-radius:7px;min-height:38px;font-size:13px;line-height:1.4}
+.adm.admin-refresh .adm-link.active,.adm.admin-refresh .adm-link:hover{background:var(--admin-soft);color:var(--admin-brand-dark)}
+.adm.admin-refresh .adm-link.active{box-shadow:inset 2px 0 var(--admin-brand)}
+.adm .ai-subnav a.active{background:var(--admin-soft);color:var(--admin-brand-dark)}
+.adm .adm-nav button.adm-link{background:var(--admin-soft);color:var(--admin-brand-dark)}
+.adm .adm-shop{color:var(--admin-brand-dark);border-color:var(--admin-border)}
+.adm .adm-panel,.adm .editor-card,.adm .detail-card,.adm .reference-card,.adm .adm-table-wrap{border-color:var(--admin-border);border-radius:9px;box-shadow:0 3px 14px #18312603}
+.adm .adm-btn.adm-primary,.adm a.adm-btn.adm-primary{background:linear-gradient(110deg,#008e54,#007342);border-color:var(--admin-brand);color:#fff}
+.adm .adm-btn.adm-primary:hover,.adm a.adm-btn.adm-primary:hover{background:#006b3d;border-color:#006b3d;box-shadow:0 4px 14px #00734220}
+.adm .adm-btn{border-radius:7px;min-height:38px}.adm .adm-btn.icon{min-height:34px}
+.adm .adm-top h1,.adm .adm-page-head h2,.adm .editor-card h3{color:var(--admin-ink);letter-spacing:-.4px}
+.adm .adm-page-head h2{font-size:clamp(24px,2.4vw,32px)}
+.adm .adm-body :is(input,select,textarea):focus-visible{border-color:var(--admin-brand);outline:2px solid var(--admin-brand);outline-offset:2px;box-shadow:0 0 0 3px #00834a12}
+.adm :is(button,a,[tabindex]):focus-visible{outline:2px solid var(--admin-brand);outline-offset:3px}
+.adm .adm-tabs button.on,.adm .adm-tabs a.on{color:var(--admin-brand-dark);border-color:var(--admin-brand);background:var(--admin-soft)}
+.adm .user-editor .group-chip{background:#e5f7ee;color:var(--admin-brand-dark)}
+.adm .user-editor .switch.enabled{background:var(--admin-brand)}
+.adm .user-editor .group-picker.open .group-select{border-color:var(--admin-brand);box-shadow:0 0 0 2px #00834a0b}
+.adm .user-editor .group-option input:checked,.adm .user-editor .gender-field input:checked{border-color:var(--admin-brand)}
+.adm .user-editor .group-option input:checked{background:var(--admin-brand)}
+@media(max-width:650px){.adm.admin-refresh .adm-top{padding-left:16px;padding-right:16px}.adm .adm-page-head h2{font-size:24px}}
+
+/* Pale summary tiles need dark icon strokes, overriding the original white gradient icons. */
+.admin-refresh .adm-card.stat .adm-ico.grad-indigo,.admin-refresh .adm-card.stat .adm-ico.grad-blue{color:#007342}
+.admin-refresh .adm-card.stat .adm-ico.grad-green{color:#167647}
+.admin-refresh .adm-card.stat .adm-ico.grad-amber{color:#9a6300}
+.admin-refresh .adm-card.stat .adm-ico.grad-red{color:#be2947}
+.admin-refresh .adm-card.stat .adm-ico.grad-violet{color:#733ab6}
+.adm-search{position:relative}.adm-search .search-voice{display:grid;place-items:center;flex:none;width:32px;min-width:32px;min-height:32px;height:32px;padding:5px;margin:0;border:0;border-radius:50%;background:var(--admin-soft,#edf8f2);color:var(--admin-brand,#00834a);cursor:pointer}
+.adm-search .search-voice app-icon{width:18px;height:18px;color:inherit}.adm-search .search-voice[aria-pressed=true]{background:#ffebee;color:#be2947}.adm-search .search-voice:disabled{opacity:.5;cursor:wait}.adm-search .search-voice-note{position:absolute;top:calc(100% + 6px);right:0;z-index:60;width:min(340px,85vw);padding:10px 12px;background:#fff;border:1px solid var(--admin-border,#e4e9ed);border-radius:8px;box-shadow:0 4px 14px #18312612;color:#647087;font-size:12px;line-height:1.5}.adm-search .search-voice-error{color:#be2947}

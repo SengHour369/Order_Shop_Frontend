@@ -12,7 +12,7 @@ describe("Dynamic product form", () => {
     create = vi.fn(() => of({ id: 10 }));
     TestBed.configureTestingModule({
       providers: [
-        {provide:AiImportsApi,useValue:{stageProduct:create,action:()=>of({id:"request",revision:2,status:"SUBMITTED"})}},
+        {provide:AiImportsApi,useValue:{reviewerOptions:()=>of({reviewers:[],defaultReviewerId:null}),stageProduct:create,action:()=>of({id:"request",revision:2,status:"SUBMITTED"})}},
         {
           provide: ActivatedRoute,
           useValue: { paramMap: of(convertToParamMap({})) },
@@ -160,5 +160,10 @@ describe("Dynamic product form", () => {
     page.applyBulk();
     expect(page.error()).toContain("whole stock");
     expect(page.variants[0].quantity).toBe(1);
+  });
+  it('loads the saved independent reviewer default and actual names for the selector',()=>{
+    vi.spyOn(TestBed.inject(AiImportsApi),'reviewerOptions').mockReturnValue(of({reviewers:[{id:42,name:'Jane Reviewer',username:'jane'}],defaultReviewerId:42}));
+    const form=TestBed.runInInjectionContext(()=>new ProductFormPage());form.ngOnInit();
+    expect(form.reviewerId).toBe(42);expect(form.reviewerOptions()).toEqual([{value:42,label:'Jane Reviewer (@jane)'}]);
   });
 });

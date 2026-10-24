@@ -55,4 +55,22 @@ describe('Live voice session safety',()=>{
    call.speaker.set(true);await receive({serverContent:{interrupted:true}},0);
    expect(call.speaker()).toBe(false);expect(call.status()).toBe('LISTENING');
  });
+ it('saves finalized call text in order, combines fragments, and does not save twice',async()=>{
+   const internal=call as unknown as {backend:unknown;receive:(message:unknown,generation:number)=>Promise<void>;memoryWrites:Promise<void>};
+   internal.backend={sessionId:'session',conversationId:'conversation',expiresAt:new Date(Date.now()+300000).toISOString(),maxDurationSeconds:300};
+   await internal.receive({serverContent:{inputTranscription:{text:'SOVIA-'}}},0);
+   await internal.receive({serverContent:{inputTranscription:{text:'F'},outputTranscription:{text:'Which variant?'}}},0);
+   http.expectNone('/api/ai/voice/sessions/session/transcript');
+   await internal.receive({serverContent:{turnComplete:true}},0);
+   await Promise.resolve();
+   const user=http.expectOne('/api/ai/voice/sessions/session/transcript');
+   expect(user.request.body).toEqual({turn:0,role:'user',text:'SOVIA-F'});user.flush({saved:true});
+   await vi.waitFor(()=>{
+     const assistant=http.expectOne('/api/ai/voice/sessions/session/transcript');
+     expect(assistant.request.body).toEqual({turn:0,role:'assistant',text:'Which variant?'});assistant.flush({saved:true});
+   });
+   await internal.memoryWrites;
+   internal.backend=undefined;
+   call.end();http.expectNone('/api/ai/voice/sessions/session/transcript');
+ });
 });

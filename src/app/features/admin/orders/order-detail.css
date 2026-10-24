@@ -1,7 +1,7 @@
 :host{
   display:block;
   font-size:14px;
-  color:#101c49
+  color:var(--admin-ink, #0d1328)
 }
 .order-detail{
   max-width:1600px;
@@ -16,7 +16,7 @@
   border-radius:9px 9px 0 0;
   padding:17px 0 22px;
   margin-bottom:0;
-  background:linear-gradient(#f8fbff,#fff)
+  background:linear-gradient(var(--admin-soft, #edf8f2),#fff)
 }
 .back-order{
   display:grid;
@@ -25,7 +25,7 @@
   border-radius:50%;
   width:44px;
   height:44px;
-  color:#0866ff;
+  color:var(--admin-brand, #00834a);
   flex:none;
   background:white
 }
@@ -84,7 +84,7 @@
   height:18px
 }
 .order-button:hover{
-  background:#edf4ff
+  background:var(--admin-soft, #edf8f2)
 }
 .order-button.primary{
   background:#2968ff;
@@ -117,7 +117,7 @@
   font-size:16px;
   letter-spacing:-.3px;
   margin:0 0 18px;
-  color:#101c49;
+  color:var(--admin-ink, #0d1328);
   font-weight:650
 }
 .section-icon{
@@ -133,8 +133,8 @@
   height:21px
 }
 .blue{
-  background:#e7f0ff;
-  color:#0065ff
+  background:var(--admin-soft, #edf8f2);
+  color:var(--admin-brand, #00834a)
 }
 .green{
   background:#e3f9ed;
@@ -209,7 +209,7 @@
 }
 .vip{
   background:#e8f0ff;
-  color:#0062ff;
+  color:var(--admin-brand, #00834a);
   font-size:12px;
   padding:3px 10px;
   margin-left:6px;
@@ -219,7 +219,7 @@
   display:flex;
   width:max-content;
   margin:30px auto 15px;
-  color:#0062ff;
+  color:var(--admin-brand, #00834a);
   padding:7px 28px
 }
 dl{
@@ -267,7 +267,7 @@ dd{
   padding-top:14px;
   margin-top:5px;
   font-weight:700;
-  color:#101c49;
+  color:var(--admin-ink, #0d1328);
   font-size:16px
 }
 .pricing-fields dd.admin-order-total{
@@ -293,7 +293,7 @@ dd{
   display:inline-flex;
   align-items:center;
   gap:10px;
-  color:#0062ff;
+  color:var(--admin-brand, #00834a);
   margin-top:12px;
   text-decoration:none
 }
@@ -320,7 +320,7 @@ th{
   padding:9px 12px;
   font-size:12px;
   text-align:right;
-  color:#101c49;
+  color:var(--admin-ink, #0d1328);
   font-weight:600
 }
 th:first-child{
@@ -375,7 +375,7 @@ td:first-child{
 .item-count{
   display:inline-block;
   background:#e6efff;
-  color:#0062ff;
+  color:var(--admin-brand, #00834a);
   padding:5px 13px;
   border-radius:5px;
   margin-top:8px
@@ -474,7 +474,7 @@ td:first-child{
   margin-left:auto;
   padding:6px 10px;
   font-size:13px;
-  color:#0062ff
+  color:var(--admin-brand, #00834a)
 }
 .admin-order-empty{
   color:#8291ac;
@@ -500,7 +500,7 @@ td:first-child{
   color:#405a86
 }
 button:focus-visible,a:focus-visible,select:focus-visible{
-  outline:2px solid #0866ff;
+  outline:2px solid var(--admin-brand, #00834a);
   outline-offset:3px
 }
 @media(min-width:1251px){

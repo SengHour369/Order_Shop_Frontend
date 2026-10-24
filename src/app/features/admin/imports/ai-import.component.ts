@@ -1,3 +1,4 @@
+import { ProductSelect } from '../products/product-select';
 import { conversationId as createUuid } from '../../../shared/utils/conversation-id';
 import { CanAccessDirective } from '../../../core/auth/can-access.directive';
 import {Component,DestroyRef,inject,input,signal,OnInit,OnChanges,SimpleChanges} from '@angular/core';
@@ -12,13 +13,14 @@ import {Icon} from '../../../shared/components/icon';
 import {TranslatePipe} from '../../../core/i18n/translate.pipe';
 import {ImportValuesComponent,ImportActivityComponent} from './import-readable-details';
 import {AiImportsApi,ImportBatch,ImportPreview,ImportRow,ImportSheet,ImportTool,ImportAction,ImportMode,ExecutionHistory,ImportImage,stringValues} from './ai-imports.api';
-@Component({selector:'app-ai-import',imports:[CanAccessDirective,DatePipe,KeyValuePipe,FormsModule,Icon,TranslatePipe,ImportValuesComponent,ImportActivityComponent],templateUrl:'./ai-import.html',styleUrl:'./ai-import.scss'})
+@Component({selector:'app-ai-import',imports:[ProductSelect,CanAccessDirective,DatePipe,KeyValuePipe,FormsModule,Icon,TranslatePipe,ImportValuesComponent,ImportActivityComponent],templateUrl:'./ai-import.html',styleUrl:'./ai-import.scss'})
 export class AiImportComponent implements OnInit,OnChanges{
  mode=input<ImportMode>('upload');initialBatchId=input('');
  api=inject(AiImportsApi);access=inject(PermissionService);auth=inject(AuthService);private lifetime=inject(DestroyRef);
  tools=signal<ImportTool[]>([]);batches=signal<ImportBatch[]>([]);preview=signal<ImportPreview|null>(null);
  busy=signal(false);loading=signal(false);listLoading=signal(false);error=signal('');message=signal('');fresh=signal(false);selectedId=signal('');historyLoading=signal(false);
  executionHistory=signal<ExecutionHistory|null>(null);auditHistory=signal<unknown>(null);listPage=0;listPages=0;batchCount=0;page=0;filter='';reviewerId:number|null=null;reason='';
+ reviewerOptions=signal<{value:number;label:string}[]>([]);private defaultReviewer:number|null=null;
  imageUrls=signal<Record<string,string>>({});
  activeSheet=signal('');search=signal('');showFields=signal(false);showBatches=signal(false);
  selectedRows=signal<Set<string>>(new Set());
@@ -32,6 +34,10 @@ export class AiImportComponent implements OnInit,OnChanges{
  locked(){return this.busy()||this.loading();}
  ngOnInit(){
   this.lifetime.onDestroy(()=>this.releaseImages());
+  if(this.has('IMPORT_UPLOAD'))this.api.reviewerOptions().pipe(takeUntilDestroyed(this.lifetime)).subscribe({next:result=>{
+    this.reviewerOptions.set(result.reviewers.map(user=>({value:user.id,label:user.name+(user.username?' (@'+user.username+')':'')})));this.defaultReviewer=result.defaultReviewerId;
+    if(this.reviewerId===null)this.reviewerId=this.defaultReviewer;
+  },error:()=>this.error.set('Could not load authorized reviewers. Refresh before submitting for approval.')});
   this.api.tools().pipe(takeUntilDestroyed(this.lifetime)).subscribe({next:t=>this.tools.set(t),error:()=>this.error.set('Import registry unavailable. Refresh before confirming mappings.')});
   this.refreshList();if(this.initialBatchId())this.load(this.initialBatchId());
  }
@@ -49,13 +55,14 @@ export class AiImportComponent implements OnInit,OnChanges{
  load(id:string,targetPage=0,targetFilter=''){
   if(this.busy())return;
   if(!/^[a-f0-9-]{36}$/i.test(id)){this.error.set('Invalid import identifier.');return;}
-  if(this.selectedId()!==id){if(this.hasDrafts()){this.error.set('Save or discard your corrections before opening another workbook.');return;}this.releaseImages();this.preview.set(null);this.executionHistory.set(null);this.auditHistory.set(null);this.reason='';this.reviewerId=null;this.historyTicket++;this.historyLoading.set(false);this.activeSheet.set('');this.search.set('');this.rowValues={};this.baselines={};this.knownRows={};this.draftRows.set([]);}
+  if(this.selectedId()!==id){if(this.hasDrafts()){this.error.set('Save or discard your corrections before opening another workbook.');return;}this.releaseImages();this.preview.set(null);this.executionHistory.set(null);this.auditHistory.set(null);this.reason='';this.reviewerId=this.defaultReviewer;this.historyTicket++;this.historyLoading.set(false);this.activeSheet.set('');this.search.set('');this.rowValues={};this.baselines={};this.knownRows={};this.draftRows.set([]);}
   this.selectedId.set(id);this.fresh.set(false);this.loading.set(true);this.error.set('');const ticket=++this.readTicket;this.readRequest?.unsubscribe();
   this.readRequest=this.api.preview(id,targetPage,targetFilter).pipe(takeUntilDestroyed(this.lifetime)).subscribe({next:p=>{
    if(ticket!==this.readTicket)return;
    if(!p?.summary||!p?.rows?.content||!Array.isArray(p.sheets)||!Array.isArray(p.mappings)||!Array.isArray(p.errors)){
      this.preview.set(null);this.loading.set(false);this.error.set('The running AI service uses an older import API. Deploy the verified ai-service build and reload this batch.');return;
    }
+   if(this.reviewerId===p.batch.ownerId||this.reviewerId===p.batch.lastEditorId)this.reviewerId=null;
    this.preview.set(p);this.selectedRows.set(new Set());this.page=targetPage;this.filter=targetFilter;this.sheetTools={};this.columns={};
    for(const sheet of p.sheets){this.sheetTools[sheet.id]=sheet.tool??'';const m=p.mappings.find(v=>v.sheetId===sheet.id);this.columns[sheet.id]=this.object(sheet.confirmed?m?.confirmedValues:m?.suggestions);}
    for(const row of p.rows.content){this.knownRows[row.id]=row;this.draftRows.update(drafts=>drafts.filter(draft=>draft.id!==row.id));const dirty=this.rowDirty(row.id);const sheet=p.sheets.find(sheet=>sheet.id===row.sheetId);const values=this.object(sheet?.confirmed?row.valuesJson:row.originalValues);this.baselines[row.id]={...values};if(!dirty)this.rowValues[row.id]={...values};else for(const field of ['imageIds','imageChecksums']){if(field in values)this.rowValues[row.id][field]=values[field];else delete this.rowValues[row.id][field];}}

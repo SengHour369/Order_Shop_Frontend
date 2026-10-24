@@ -1,3 +1,4 @@
+import { Icon } from '../../../shared/components/icon';
 import { Component, computed, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ApiClient } from '../../../core/api/api-client';
@@ -7,10 +8,10 @@ import { PageState } from '../../../shared/utils/page-state';
 import { Status } from '../../../shared/components/status';
 
 @Component({
-  selector: 'app-storefront-access-settings', imports: [FormsModule, Status],
+  selector: 'app-storefront-access-settings', imports: [FormsModule, Status, Icon],
   styleUrl: './storefront-access-settings.css',
   template: `<section class="access-panel" aria-labelledby="storefront-access-title">
-    <header><div><span class="eyebrow">STOREFRONT ACCESS / GUEST ACCESS</span><h3 id="storefront-access-title">Guest shopping & checkout</h3><p>Control what visitors can do before signing in. Changes apply to the storefront after saving.</p></div></header>
+    <header><span class="access-icon" aria-hidden="true"><app-icon name="bag" /></span><div><span class="eyebrow">CUSTOMER STOREFRONT</span><h3 id="storefront-access-title">Storefront Access</h3><p>Control what visitors can do before signing in. Changes apply to the storefront after saving.</p></div></header>
     <app-status [busy]="busy()" [error]="error()" [message]="message()" />
     @if (ready) {
       <form (ngSubmit)="save()"><fieldset [disabled]="busy() || !canEdit()"><legend class="sr-only">Guest access settings</legend>

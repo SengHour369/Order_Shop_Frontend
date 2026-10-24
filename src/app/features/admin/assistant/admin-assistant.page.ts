@@ -4,7 +4,7 @@ import { VoiceCall } from '../../assistant/customer-chat/voice-call';
 import { adminOrderPresentation } from '../../assistant/admin-order-presentation';
 import { ChatPresentation } from '../../assistant/chat-presentation';
 import { PromotionsPage } from '../promotions/promotions.page';
-import { parseProductInput } from '../products/product-form-assistance';
+import { parseProductInput, productNotes } from '../products/product-form-assistance';
 import { ProductFormPage } from '../products/products.page';
 import { ChatUiRenderer } from '../../assistant/chat-ui-renderer';
 import { AssistantResult } from '../../assistant/assistant-result';
@@ -29,7 +29,7 @@ import { AiImportComponent } from '../imports/ai-import.component';
 import { PermissionService } from '../../../core/auth/permission.service';
 
 interface ProductDraft {
-  name: string; description: string; category: number | null;
+  name: string; description: string; category: number | null; categoryName?:string; skuDescription?:string;
   price: number | null; quantity: number; warehouse: string; color: string; storage: string;
 }
 interface Operation { title: string; status: string; time: Date; data?: unknown; }
@@ -68,6 +68,7 @@ export class AdminAssistantPage extends AssistantPage {
 
   private launcher=inject(AssistantLauncherState);
   private assistantNavigation=inject(Router);
+  panelControlsVisible=signal(true);
   historyOpen=signal(false);
   historyWidth=signal(250);
   historyResizing=signal(false);
@@ -186,6 +187,16 @@ export class AdminAssistantPage extends AssistantPage {
     if (this.locked() || this.stockOpen() || this.promotionOpen() || this.voice.recording() || this.voice.pending()) return;
     if(/^\s*(?:please\s+)?(?:create|add)(?: a| new| a new)? (?:draft )?promotion\b/i.test(this.prompt)){const text=this.prompt;this.startPromotion(text);this.prompt='';return;}
     if(this.draft()) { this.helpProductInput(); return; }
+    const notes=productNotes(this.prompt);
+    if(notes){
+      const text=this.prompt;
+      if(/(?:create|add)[\s\S]{0,60}product|បង្កើត[\s\S]{0,60}ផលិតផល/i.test(text)){this.startProduct(text);}
+      else{
+        let current=this.current();if(!current){current={localId:conversationId(),id:null,title:notes.name||'Product information',time:new Date(),messages:[]};this.conversations.update(rows=>[current!,...rows]);}
+        current.messages.push({role:'user',text,time:new Date()},{role:'assistant',text:'ខ្ញុំបានស្គាល់ព័ត៌មានផលិតផល '+notes.name+'។ តើអ្នកចង់ប្រើព័ត៌មាននេះបង្កើតផលិតផលព្រាងឬទេ? តម្លៃ និងស្តុកដែលខ្វះត្រូវបំពេញមុនដាក់ស្នើ។',time:new Date(),productSource:text});this.current.set({...current});this.scrollChat();
+      }
+      this.prompt='';return;
+    }
     if(this.openKnownOrders())return;
     if (/^\s*(?:stock in|add stock)\b/i.test(this.prompt)) {
       this.stockQuantity = Number(this.prompt.match(/(?:stock in|add stock)\s+(\d+)/i)?.[1]) || null;
@@ -317,26 +328,27 @@ export class AdminAssistantPage extends AssistantPage {
     this.promotionOpen.set(false);
     this.stockOpen.set(false);
     this.resetProduct();
+    const parsed = productNotes(prompt) || parseProductInput(prompt).patch;
     if (prompt) {
       let conversation = this.current();
       if (!conversation) {
         conversation = { localId:conversationId(),id:null,title:prompt.slice(0,80),time:new Date(),messages:[] };
         this.conversations.update(rows => [conversation!, ...rows]);
       }
-      conversation.messages.push({ role:'user',text:prompt,time:new Date() }, {role:'assistant',text:'The Create Product form is open. Tell me what to fill, for example: name Smart Watch Pro, price $199, stock 100. You can also edit the fields yourself.',time:new Date()});
+      conversation.messages.push({ role:'user',text:prompt,time:new Date() }, {role:'assistant',text:parsed.name ? `បានបំពេញព័ត៌មាន ${parsed.name} ក្នុងផលិតផលព្រាង។ សូមពិនិត្យការពិពណ៌នា និង SKU រួចបំពេញតម្លៃ ស្តុក ប្រភេទផលិតផល និងរូបភាពដែលនៅខ្វះ។ ទំហំវេចខ្ចប់មិនមែនជាស្តុកទេ។ មិនទាន់បានដាក់ស្នើផលិតផលឡើយ។` : 'The Create Product form is open. Tell me the product details to fill. You can also edit the fields yourself.',time:new Date()});
       this.current.set({ ...conversation });
     }
-    const parsed = parseProductInput(prompt).patch;
     const name = parsed.name || prompt.match(/product\s+(?:named|called)\s+(.+?)(?:,|\s+price\b|$)/i)?.[1]?.trim() || '';
     const price = prompt.match(/(?:price\s*\$?\s*|\$)([\d,]+(?:\.\d{1,2})?)/i)?.[1];
     const quantity = prompt.match(/(?:stock|quantity)\s*(\d+)/i)?.[1];
     const warehouse = prompt.match(/\bat\s+([^,]+?)(?:\s+branch)?(?:\.|$)/i)?.[1]?.trim() || '';
-    this.draft.set({ name, price: parsed.price ?? (price ? Number(price.replace(/,/g,'')) : null), quantity: parsed.quantity ?? (quantity ? Number(quantity) : 0), warehouse: parsed.warehouse || warehouse, category: null, description: parsed.description || '', color: prompt.match(/color\s+([^,]+)/i)?.[1]?.trim() || '', storage: prompt.match(/storage\s+([^,]+)/i)?.[1]?.trim() || '' });
+    this.draft.set({ name, price: parsed.price ?? (price ? Number(price.replace(/,/g,'')) : null), quantity: parsed.quantity ?? (quantity ? Number(quantity) : 0), warehouse: parsed.warehouse || warehouse, category: null, categoryName:parsed.category, skuDescription:parsed.skuDescription, description: parsed.description || '', color: prompt.match(/color\s+([^,]+)/i)?.[1]?.trim() || '', storage: prompt.match(/storage\s+([^,]+)/i)?.[1]?.trim() || '' });
   }
   private helpProductInput() {
     const text=this.prompt.trim(),form=this.productForm();
     if(!text || !form)return;
-    const parsed=parseProductInput(text);
+    const notes=productNotes(text);
+    const parsed=notes?{patch:notes,issues:[]}:parseProductInput(text);
     const result=form.applyChatInput(parsed.patch);
     const missing=form.missingChatFields();
     const explanation=[result.changed.length ? `Updated ${result.changed.join(', ')} in the form.` : 'Tell me the fields to fill, for example: name Smart Watch Pro, price $199, stock 100, category Wearables.',...parsed.issues,...result.issues,missing.length?`Still needed: ${missing.join(', ')}.`:'Review the form before submitting.', 'No product has been submitted. Upload images and choose your reviewer in the form.'].join(' ');

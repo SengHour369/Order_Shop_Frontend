@@ -35,4 +35,8 @@ describe("Reference product category selector", () => {
     fixture.nativeElement.querySelector("input").dispatchEvent(new KeyboardEvent("keydown", {key: "Escape", bubbles:true}));
     expect(fixture.componentInstance.open()).toBe(false);
   });
+  it('searches a user name or username and selects their stable ID',()=>{
+    const f=TestBed.createComponent(ProductSelect);f.componentRef.setInput('label','reviewer name or username');f.componentRef.setInput('options',[{value:41,label:'Sok Dara (@dara)'},{value:42,label:'Sok Dara (@reviewer)'}]);f.detectChanges();const selected=vi.fn();f.componentInstance.changed.subscribe(selected);
+    f.nativeElement.querySelector('.select-trigger').click();f.detectChanges();const search=f.nativeElement.querySelector('input');search.value='@reviewer';search.dispatchEvent(new Event('input'));f.detectChanges();const rows=f.nativeElement.querySelectorAll('[role="option"]');expect(rows).toHaveLength(1);rows[0].click();expect(selected).toHaveBeenCalledWith(42);
+  });
 });

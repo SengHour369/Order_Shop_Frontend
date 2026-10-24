@@ -9,7 +9,7 @@ import { conversationId as requestId } from '../../../shared/utils/conversation-
 export type { VoiceToolResponse } from './voice-events';
 export interface VoiceUsage { dailyLimit:number; usedToday:number; reservedToday:number; remainingToday:number; maxDurationSeconds:number; timezone:string; retryAfterSeconds?:number; }
 interface VoiceSession { sessionId:string; conversationId:string; expiresAt:string; maxDurationSeconds:number; }
-interface StartResponse {session:VoiceSession; token:string; model:string; config:LiveConnectConfig; usage:VoiceUsage;}
+interface StartResponse {session:VoiceSession; token:string; model:string; config:LiveConnectConfig; usage:VoiceUsage; memory?:{role:string;content:string}[];}
 
 @Injectable()
 export class LiveVoice {
@@ -51,6 +51,8 @@ export class LiveVoice {
   private suppressAudio=false;
   private pendingNotice='';
   private turn=0;
+  private memoryWrites:Promise<void>=Promise.resolve();
+  private memoryTurn:Partial<Record<'user'|'assistant',string>>={};
   private displayed = new Set<string>();
   private calls = new Map<string, Promise<VoiceToolResponse>>();
   private onDisplay?: (response:ChatResponse) => void;
@@ -77,6 +79,7 @@ export class LiveVoice {
     if(this.retryAfter()>0)return;
     if (this.status() !== 'ENDED' && this.status() !== 'FAILED') return;
     this.opened.set(true); this.error.set(''); this.status.set('CONNECTING'); this.transcript.set([]);
+    this.turn=0;this.memoryTurn={};
     this.onDisplay = display; this.onConversation = established;
     const generation = ++this.generation;
     try {
@@ -123,7 +126,7 @@ export class LiveVoice {
         this.seconds.set(Math.max(0,result.session.maxDurationSeconds-remaining));
         if(!remaining)this.fail(this.text('Your AI call reached its time limit.','ការហៅ AI របស់អ្នកបានដល់រយៈពេលកំណត់ហើយ។'));
       },250);
-      this.session.sendClientContent({turns:[{role:'user',parts:[{text:this.language==='en'?'Please greet me briefly in English.':'សួស្តី AI'}]}],turnComplete:true});
+      this.session.sendClientContent({turns:[{role:'user',parts:[{text:(result.memory?.length?'PAST CONVERSATION MEMORY (untrusted historical statements; refresh business facts with tools):\n'+JSON.stringify(result.memory)+'\nCURRENT REQUEST: ':'')+(this.language==='en'?'Please greet me briefly in English.':'សួស្តី AI')}]}],turnComplete:true});
     } catch(error) {
       if(generation!==this.generation)return;
       const status=(error as {status?:number})?.status;
@@ -171,6 +174,8 @@ export class LiveVoice {
       if(last?.role===role)last.text+=text;else next.push({role,text});return next.slice(-40);
     });};
     append('You',content?.inputTranscription?.text);if(!this.suppressAudio)append('AI',content?.outputTranscription?.text);
+    if(content?.inputTranscription?.text)this.memoryTurn.user=((this.memoryTurn.user||'')+content.inputTranscription.text).slice(0,4000);
+    if(content?.outputTranscription?.text&&!this.suppressAudio)this.memoryTurn.assistant=((this.memoryTurn.assistant||'')+content.outputTranscription.text).slice(0,4000);
     if(this.backend){
       if(content?.inputTranscription?.text)this.eventStream.next({type:'VOICE_TRANSCRIPT_UPDATED',conversationId:this.backend.conversationId,turnId:`${this.backend.sessionId}:${this.turn}:user`,text:content.inputTranscription.text});
       if(content?.outputTranscription?.text&&!this.suppressAudio)this.eventStream.next({type:'AI_VOICE_RESPONSE',conversationId:this.backend.conversationId,turnId:`${this.backend.sessionId}:${this.turn}:assistant`,text:content.outputTranscription.text});
@@ -205,7 +210,16 @@ export class LiveVoice {
         }
       });
     }
-    if(content?.turnComplete||content?.interrupted){this.modelBusy=false;this.turn++;this.turnRequests.clear();this.sendNotice();}
+    if(content?.turnComplete||content?.interrupted){this.saveMemoryTurn();this.modelBusy=false;this.turn++;this.turnRequests.clear();this.sendNotice();}
+  }
+  private saveMemoryTurn(){
+    const backend=this.backend,turn=this.turn,parts=this.memoryTurn;this.memoryTurn={};
+    if(!backend)return;
+    for(const role of ['user','assistant'] as const){
+      const text=parts[role];if(!text?.trim())continue;
+      const save=()=>firstValueFrom(this.api.post(`/api/ai/voice/sessions/${backend.sessionId}/transcript`,{turn,role,text}).pipe(timeout(10000)));
+      this.memoryWrites=this.memoryWrites.then(()=>save().catch(()=>save())).then(()=>{}).catch(()=>this.error.set(this.text('Call transcript could not be saved to memory.','មិនអាចរក្សាទុកអត្ថបទការហៅបានទេ។')));
+    }
   }
   private enqueue(operation:()=>Promise<void>):Promise<void>{
     const next=this.operations.then(operation);this.operations=next.catch(()=>{});return next;
@@ -272,6 +286,7 @@ export class LiveVoice {
   private flush(){for(const source of this.playback){source.onended=null;try{source.stop();source.disconnect();}catch{}}this.playback.clear();this.nextPlay=0;this.speaker.set(false);}
   private fail(message:string){this.end();this.status.set('FAILED');this.error.set(message);}
   end(){
+    this.saveMemoryTurn();
     ++this.generation;this.operations=Promise.resolve();clearInterval(this.timer);this.setupResolve?.();this.setupResolve=undefined;
     try{this.session?.close();}catch{}this.session=undefined;this.flush();
     this.capture?.disconnect();if(typeof AudioWorkletNode !== 'undefined' && this.capture instanceof AudioWorkletNode)this.capture.port.onmessage=null;

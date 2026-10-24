@@ -32,3 +32,27 @@ export function parseProductInput(text:string):{patch:ProductInputPatch;issues:s
   });
   return {patch,issues};
 }
+
+/** Recognize labeled product notes, including Markdown tables, without interpreting health claims. */
+export function productNotes(text:string):ProductInputPatch|null {
+ const lines=text.split(/\r?\n/).map(line=>line.replace(/&#x20;|&nbsp;/gi,' ').replace(/^[\s#>*]+/,'').replace(/\*\*/g,'').trim()).filter(line=>line&&!/^[|\s:-]+$/.test(line));
+ const labels:Record<string,string>={'ឈ្មោះ':'name','ឈ្មោះផលិតផល':'name','ឈ្មោះផលិតផល៖':'name','name':'name','product name':'name','ម៉ាក':'brand','brand':'brand','ប្រភេទ':'category','category':'category','ចំនួន':'pack','ទំហំវេចខ្ចប់':'pack','pack size':'pack','តម្លៃ':'price','price':'price','ស្តុក':'quantity','stock':'quantity'};
+ const values:Record<string,string>={};
+ for(let i=0;i<lines.length;i++){
+  const cells=lines[i].replace(/^\||\|$/g,'').split(/\||[:៖]/).map(cell=>cell.trim()).filter(Boolean);
+  const key=labels[cells[0]?.toLowerCase()];if(!key)continue;
+  const value=cells.slice(1).join(' ').trim()||lines[i+1]?.replace(/^\||\|$/g,'').trim();
+  if(value&&!labels[value.toLowerCase()]&&!/^(?:មិន|not |unknown|មិនទាន់)/i.test(value))values[key]=value;
+ }
+ if(!values['name']||!values['brand']&&!values['category'])return null;
+ const patch:ProductInputPatch={name:values['name']};
+ if(values['category'])patch.category=values['category'];
+ // Retain the supplied details, including ingredients, cautions and uncertainty. These are
+ // source notes for review, not verified claims. Do not silently reduce them to three fields.
+ const details=lines.filter(line=>!/^\[image\]\(|^https?:\/\/|^\+\d+$|^Memorial Sloan Kettering Cancer Center$/i.test(line))
+   .map(line=>line.replace(/^\||\|$/g,'').trim()).join('\n');
+ patch.description=('Source notes — verify before publishing:\n'+details).slice(0,4000);
+ if(values['pack'])patch.skuDescription=values['pack'];
+ for(const field of ['price','quantity'] as const){const raw=values[field]?.replace(/^\$/,'').replace(/\s*USD$/i,'').trim();if(raw&&/^\d+(?:\.\d+)?$/.test(raw)&&Number(raw)>0&&(field==='price'||Number.isSafeInteger(Number(raw))))patch[field]=Number(raw);}
+ return patch;
+}

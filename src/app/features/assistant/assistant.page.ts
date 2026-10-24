@@ -21,6 +21,7 @@ import { Icon } from "../../shared/components/icon";
 export interface ChatMessage {
   requestKey?:string;
   voiceTurnId?:string;
+  productSource?:string;
   feedback?:'up'|'down';
   role: "user" | "assistant";
   text: string;

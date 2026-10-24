@@ -15,6 +15,7 @@ export function stringValues(text?:string):Record<string,string>{try{const v=JSO
 @Injectable({providedIn:'root'})
 export class AiImportsApi{
  private api=inject(ApiClient);private root='/api/ai/imports';
+ reviewerOptions(){return this.api.get<{reviewers:{id:number;name:string;username?:string}[];defaultReviewerId:number|null}>('/api/v1/user/approval-options');}
  tools(){return this.api.get<ImportTool[]>(this.root+'/tools');}
  requests(mine:boolean,page:number,filters:{search:string;status:string;source:string;entity:string}){return this.api.get<{items:ImportBatch[];total:number;totalPages:number;counts:Record<string,number>}>(this.root+'/requests',{mine:String(mine),page,...filters});}
  stageProduct(fields:{name:string;description:string;is_active:boolean;sub_category_id:number;skus:unknown[]},files:File[],id?:number,expectedVersion?:number){

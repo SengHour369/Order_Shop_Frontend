@@ -19,7 +19,7 @@ describe('Admin chatbot workflows', () => {
     ] });
     http = TestBed.inject(HttpTestingController);
   });
-  afterEach(() => {http.match("/api/ai/quota").forEach(r=>r.flush({dailyLimit:5,used:0,remaining:5,unlimited:true,resetAt:"2026-10-16T00:00:00+07:00"}));http.verify();});
+  afterEach(() => {http.match("/api/ai/quota").forEach(r=>r.flush({dailyLimit:5,used:0,remaining:5,unlimited:true,resetAt:"2026-10-16T00:00:00+07:00"}));http.match('/api/v1/user/approval-options').forEach(r=>r.flush({reviewers:[],defaultReviewerId:null}));http.verify();});
   function page() { return TestBed.createComponent(AdminAssistantPage).componentInstance; }
   it('opens the existing call overlay and exposes a voice recording button',()=>{
     const fixture=TestBed.createComponent(AdminAssistantPage);fixture.detectChanges();
@@ -38,6 +38,11 @@ describe('Admin chatbot workflows', () => {
     });
     component.view.set('control');component.startCall();
     expect(component.view()).toBe('chat');expect(component.current()?.messages.at(-1)?.result?.presentation?.blocks).toEqual([{kind:'payments.list'}]);expect(component.current()?.id).toBe('voice-chat');
+  });
+  it('offers a product draft when Khmer product information is pasted without a command',()=>{
+    const component=page();component.prompt='ឈ្មោះ៖ SOVIA-F\nម៉ាក៖ SOVINA\nប្រភេទ៖ អាហារបំប៉ន\nចំនួន៖ 15 គ្រាប់';component.send();
+    expect(component.current()?.messages.at(-1)?.productSource).toContain('SOVIA-F');expect(component.draft()).toBeNull();http.expectNone('/api/ai/admin/chat');
+    component.startProduct(component.current()!.messages.at(-1)!.productSource);expect(component.draft()?.name).toBe('SOVIA-F');expect(component.draft()?.price).toBeNull();
   });
   it('puts a Khmer voice transcript into the editable admin prompt without submitting it',()=>{
     const component=page();vi.spyOn(component.voice,'start').mockImplementation(async(_language,review)=>review('សួស្តី'));
@@ -88,6 +93,10 @@ describe('Admin chatbot workflows', () => {
     expect(f.nativeElement.querySelector('input[name="name"]').value).toBe('Smart Watch Pro');
     expect(f.nativeElement.querySelector('.sku-grid input[type="number"][step="1"]').value).toBe('100');
     expect(component.current()?.messages.at(-1)?.text).toContain('Updated');expect(component.current()?.messages.at(-1)?.text).toContain('No product has been submitted');
+    component.prompt='ឈ្មោះ៖ SOVIA-F\nម៉ាក៖ SOVINA\nប្រភេទ៖ អាហារបំប៉ន\nចំនួន៖ 15 គ្រាប់\nDong Quai Extract\nFish Collagen Peptide';component.send();f.detectChanges();await f.whenStable();f.detectChanges();
+    expect(f.nativeElement.querySelector('input[name="name"]').value).toBe('SOVIA-F');
+    expect(f.nativeElement.querySelector('textarea').value).toContain('Fish Collagen Peptide');
+    expect(f.nativeElement.querySelector('.sku-grid input[type="number"][step="1"]').value).toBe('100');
     http.expectNone('/api/ai/admin/chat');http.expectNone(r=>r.url.includes('/products/create/') || r.url.includes('/api/ai/imports'));
   });
   it('opens known promotion commands without depending on AI inference',()=>{

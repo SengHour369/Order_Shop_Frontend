@@ -1,3 +1,6 @@
+import { voiceDestination } from './voice-navigation';
+import { ChatVoice } from '../../assistant/customer-chat/chat-voice';
+import { LanguageService } from '../../../core/i18n/language.service';
 import { CanAccessDirective } from '../../../core/auth/can-access.directive';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
@@ -6,7 +9,7 @@ import { PermissionService } from "../../../core/auth/permission.service";
 import { FloatingAssistant } from '../../assistant/floating/floating-assistant';
 import { LanguageSelect } from "../../../core/i18n/language-select";
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
-import { Component, computed, inject, signal } from "@angular/core";
+import { Component, computed, effect, inject, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import {
   Router,
@@ -205,8 +208,9 @@ const groups = [
   },
 ];
 @Component({
+  providers: [ChatVoice],
   imports: [CanAccessDirective, FloatingAssistant, LanguageSelect, TranslatePipe, RouterOutlet, RouterLink, RouterLinkActive, Icon, FormsModule],
-  styles: [`.ai-subnav{display:grid;padding:0 8px 8px 38px;gap:3px}.ai-subnav a{font-size:12px;padding:8px 12px;color:#64749a;text-decoration:none;border-radius:6px}.ai-subnav a.active{color:#0866ff;background:#eaf3ff}.adm-nav button.adm-link{width:100%;border:0;background:#eff6ff;color:#0866ff;cursor:pointer;text-align:left}`],
+  styles: [`.ai-subnav{display:grid;padding:0 8px 8px 38px;gap:3px}.ai-subnav a{font-size:12px;padding:8px 12px;color:#64749a;text-decoration:none;border-radius:6px}.ai-subnav a.active{color:var(--admin-brand, #00834a);background:var(--admin-soft, #edf8f2)}.adm-nav button.adm-link{width:100%;border:0;background:var(--admin-soft, #edf8f2);color:var(--admin-brand, #00834a);cursor:pointer;text-align:left}`],
   template: `<div class="adm admin-refresh admin-unified-layout">
     @if (mobile()) {
       <button
@@ -303,6 +307,10 @@ const groups = [
                 : 'Search orders, customers, products...'
             ) | translate"
           />
+          <button type="button" class="search-voice" (click)="voiceSearch()" [disabled]="searchVoice.pending()" [attr.aria-pressed]="searchVoice.recording()" [attr.aria-label]="(searchVoice.recording() ? 'Stop voice search recording' : 'Record voice search') | translate" [title]="(searchVoice.recording() ? 'Stop recording' : 'Voice search') | translate"><app-icon [name]="searchVoice.recording() ? 'stop' : 'mic'" /></button>
+          @if(searchVoice.error()){<span class="search-voice-note search-voice-error" role="alert">{{ searchVoice.error() }}</span>}
+          @else if(searchVoice.recording() || searchVoice.pending()){<span class="search-voice-note" role="status">{{ (searchVoice.recording() ? 'Speak the page to open, then click Stop. Audio is sent for transcription.' : 'Preparing voice search…') | translate }}</span>}
+          @else if(voiceSearchReady()){<span class="search-voice-note" role="status">{{ 'I could not identify a page. Please name one, such as Orders, Customers or Products.' | translate }}<button type="button" class="search-voice" aria-label="Dismiss voice search message" (click)="voiceSearchReady.set(false)">×</button></span>}
         </form>
         }
         <div style="display:flex;align-items:center;gap:8px">
@@ -317,7 +325,7 @@ const groups = [
           }
           <span
             class="adm-hide-sm"
-            style="width:1px;height:24px;background:#e2e8f0"
+            style="width:1px;height:24px;background:var(--admin-border, #e4e9ed)"
           ></span>
           <div style="position:relative">
             <button
@@ -356,6 +364,9 @@ const groups = [
   </div>`,
 })
 export class AdminLayout {
+  readonly searchVoice=inject(ChatVoice);
+  private language=inject(LanguageService);
+  readonly voiceSearchReady=signal(false);
   auth = inject(AuthService);
   private router = inject(Router);
   access = inject(PermissionService);
@@ -382,7 +393,23 @@ export class AdminLayout {
   isRefund() {
     return this.router.url.startsWith("/admin/refunds");
   }
+  constructor(){effect(()=>{this.currentUrl();this.searchVoice.reset();this.voiceSearchReady.set(false);});}
+  voiceSearch(){
+    if(this.searchVoice.recording()){this.searchVoice.finish();return;}
+    if(this.searchVoice.pending())return;
+    this.voiceSearchReady.set(false);
+    void this.searchVoice.start(this.language.language(),text=>{this.query=text.trim();this.followVoiceCommand(this.query);});
+  }
+  followVoiceCommand(text:string){
+    const destination=voiceDestination(text);
+    if(!destination){this.voiceSearchReady.set(true);return;}
+    if(!this.access.allows(destination)){this.searchVoice.error.set('You do not have permission to open this page.');return;}
+    this.voiceSearchReady.set(false);
+    void this.router.navigate([destination]);
+  }
   search() {
+    if(this.searchVoice.recording()||this.searchVoice.pending())return;
+    this.voiceSearchReady.set(false);
     const q = this.query.trim();
     if (!q) return;
     const preferred = this.isTransactionDetail() || /^txn|^tx-/i.test(q) ? '/admin/transactions'

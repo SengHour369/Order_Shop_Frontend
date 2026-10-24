@@ -37,7 +37,7 @@ input[type="checkbox"],
 input[type="radio"] {
   width: 16px;
   height: 16px;
-  accent-color: #0663ff;
+  accent-color: var(--admin-brand, #00834a);
 }
 input:disabled,
 select:disabled,
@@ -92,7 +92,7 @@ small {
   flex-shrink: 0;
 }
 .ops-steps .current > span {
-  background: #0663ff;
+  background: var(--admin-brand, #00834a);
   color: #fff;
 }
 .ops-footer {
@@ -133,10 +133,10 @@ small {
   flex-wrap: wrap;
   gap: 16px;
   justify-content: flex-end;
-  background: #f7faff;
+  background: var(--admin-soft, #edf8f2);
 }
 .ops-total b {
-  color: #0663ff;
+  color: var(--admin-brand, #00834a);
 }
 .ops-negative {
   color: #f02445;
@@ -148,7 +148,7 @@ small {
   padding: 15px 0;
 }
 .ops-selected app-icon {
-  color: #0663ff;
+  color: var(--admin-brand, #00834a);
 }
 .ops-metrics {
   display: grid;
@@ -199,7 +199,7 @@ small {
   cursor: pointer;
 }
 .selected-row {
-  background: #f1f7ff;
+  background: var(--admin-soft, #edf8f2);
 }
 .ops-upload {
   min-height: 115px;
@@ -259,8 +259,8 @@ small {
   height: 44px;
   display: grid;
   place-items: center;
-  background: #e7f0ff;
-  color: #0663ff;
+  background: var(--admin-soft, #edf8f2);
+  color: var(--admin-brand, #00834a);
   border-radius: 50%;
   font-size: 17px;
 }

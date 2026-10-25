@@ -88,4 +88,9 @@ describe('Chat voice lifecycle', () => {
     voice.stopSpeech(); expect(voice.speaking()).toBe('');
     voice.play('សួស្តី'); expect(voice.error()).toContain('Khmer');
   });
+  it('shows an actionable provider timeout without automatically re-uploading audio',async()=>{
+    transcribe.mockReturnValue(throwError(()=>({status:504,error:{message:'Voice transcription timed out. Please try a shorter recording.'}})));
+    const review=vi.fn();await voice.start('en',review);voice.finish();
+    expect(voice.error()).toContain('shorter recording');expect(voice.pending()).toBe(false);expect(review).not.toHaveBeenCalled();expect(transcribe).toHaveBeenCalledOnce();
+  });
 });

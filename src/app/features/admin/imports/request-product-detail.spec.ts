@@ -1,0 +1,12 @@
+import {TestBed} from '@angular/core/testing';
+import {of} from 'rxjs';
+import {RequestProductDetail} from './request-product-detail';
+import {AiImportsApi} from './ai-imports.api';
+import {AdminApi} from '../api/admin.api';
+describe('Submitted product review matches Product Details',()=>{
+ beforeEach(()=>TestBed.configureTestingModule({providers:[{provide:AiImportsApi,useValue:{image:vi.fn()}},{provide:AdminApi,useValue:{brand:()=>of({name:'Submitted brand',category_name:'Catalog category'})}}]}));
+ afterEach(()=>TestBed.resetTestingModule());
+ function preview(){const f=TestBed.createComponent(RequestProductDetail);f.componentRef.setInput('batch',{id:'request',revision:3,status:'SUBMITTED',ownerId:1,assignedReviewerId:2,createdAt:'2026-10-25T04:00:00Z'});f.componentRef.setInput('rowId','row');f.componentRef.setInput('values',JSON.stringify({name:'Submitted product',description:'First line\nSecond line',isActive:'true',subCategoryId:'3',skus:JSON.stringify([{id:98765,description:'Small pack',price:0,is_default:true,inventory:{quantity:0,warehouse_location:'Main warehouse'},product_attributes:[{id:333,name:'Size',attributes:[{value:'Small'}]}]}])}));f.detectChanges();return f;}
+ it('uses product-detail panels and displays saved variants, prices, stock and attributes without IDs',()=>{const f=preview();const text=f.nativeElement.textContent;for(const label of ['Product Images','Basic Information','Product Status & Settings','Product Variants','Product Attributes','Inventory Summary','Submitted product','Small pack','$0.00','Small','Main warehouse','Submitted brand'])expect(text).toContain(label);expect(text).not.toContain('98765');expect(text).not.toContain('333');expect(f.nativeElement.querySelector('.product-overview')).toBeTruthy();expect(f.nativeElement.querySelector('.sku-table')).toBeTruthy();expect(f.nativeElement.querySelector('[routerLink]')).toBeNull();});
+ it('switches attribute and inventory tabs without changing the staged product',()=>{const f=preview();const original=f.componentInstance.row();const button=Array.from((f.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>('.product-tabs button')).find(b=>b.textContent?.trim()==='Inventory')!;button.click();f.detectChanges();expect(f.nativeElement.querySelector('.sku-table')).toBeNull();expect(f.nativeElement.textContent).toContain('Inventory Summary');expect(f.componentInstance.row()).toEqual(original);});
+});

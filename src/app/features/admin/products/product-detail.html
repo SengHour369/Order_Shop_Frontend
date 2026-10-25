@@ -1,99 +1,33 @@
-@if (accessDenied()) {
-  <app-page-access-denied />
-} @else {
-<section class="detail-page">
+@if (accessDenied()) { <app-page-access-denied /> } @else {
+<section class="detail-page product-workspace">
   <header class="detail-head">
-    <div>
-<h2>{{ "Product details" | translate }}</h2>
-<nav class="detail-crumbs" aria-label="Breadcrumb">
-<a routerLink="/admin" *appCanRoute="'/admin'">{{ "Dashboard" | translate }}</a>
-<span>›</span>
-<a routerLink="/admin/products" *appCanRoute="'/admin/products'">{{ "Products" | translate }}</a>
-<span>›</span>{{ text(row()?.['name']) }}</nav>
-</div>
-    <div class="detail-actions">
-<a class="detail-button" routerLink="/admin/products" *appCanRoute="'/admin/products'">
-<app-icon name="arrow-left" /> {{ "Back to Products" | translate }}</a>@if (row(); as product) { <a class="detail-button primary" [routerLink]="['/admin/products/edit', product['id']]" *appCanRoute="['/admin/products/edit', product['id']]">
-<app-icon name="edit" /> {{ "Edit product" | translate }}</a> }</div>
+    <div><h2>{{ 'Product Detail' | translate }}</h2><nav class="detail-crumbs" aria-label="Breadcrumb"><a routerLink="/admin/products" *appCanRoute="'/admin/products'">Products</a><span>›</span><span>Product Detail</span></nav></div>
+    <div class="detail-actions"><a class="detail-button" routerLink="/admin/products" *appCanRoute="'/admin/products'"><app-icon name="arrow-left" />Back to Products</a>@if(row(); as product){<a class="detail-button primary" [routerLink]="['/admin/products/edit', product['id']]" *appCanRoute="['/admin/products/edit', product['id']]"><app-icon name="edit" />Edit product</a>}</div>
   </header>
   <app-status [busy]="busy()" [error]="error()" [message]="message()" />
-  @if (row(); as product) {
-    <div class="detail-grid detail-product">
-      <div class="detail-stack">
-        <article class="detail-card framed">
-<h3>{{ "General Information" | translate }}</h3>
-<div class="detail-card-body">
-          <div>
-<span class="detail-label">{{ "Product Name" | translate }}</span>
-<p>{{ text(product['name']) }}</p>
-</div>
-          <div>
-<span class="detail-label">{{ "Description" | translate }}</span>
-<p>{{ product['description'] || 'No description provided.' }}</p>
-</div>
-          <div class="detail-fields">
-<div>
-<span class="detail-label">{{ "Created At" | translate }}</span>{{ when(field(product, 'created_at', 'createdAt')) }}</div>
-<div>
-<span class="detail-label">{{ "Updated At" | translate }}</span>{{ when(field(product, 'updated_at', 'updatedAt')) }}</div>
-</div>
-        </div>
-</article>
-        <article class="detail-card framed">
-<h3>{{ "Variants (SKUs)" | translate }}</h3>
-<div class="detail-card-body">
-          @for (sku of skus(product); track $index; let i = $index) {
-            <section class="detail-variant">
-              <header class="detail-variant-head">
-<strong>{{ sku['description'] || sku['sku'] || 'SKU ' + (i + 1) }}</strong>@if (field(sku, 'is_default', 'isDefault') === true) { <span class="detail-badge on dot">{{ "Default Variant" | translate }}</span> }</header>
-              <div class="detail-variant-stats">
-<div>
-<small>{{ "Price" | translate }}</small>
-<b>{{ usd(sku['price']) }}</b>
-</div>
-<div>
-<small>{{ "Inventory" | translate }}</small>
-<b>{{ text(stockOf(sku)) }}</b>
-</div>
-<div>
-<small>{{ "Warehouse" | translate }}</small>
-<b>{{ text(warehouseOf(sku)) }}</b>
-</div>
-</div>
-              @if (attrsOf(sku).length) { <div class="detail-tags">@for (attr of attrsOf(sku); track $index) { <span>
-<b>{{ text(attr['name']) }}:</b> {{ attrText(attr) }}</span> }</div> }
-            </section>
-          }
-@empty { <div class="detail-empty">No variants available.</div> }
-        </div>
-</article>
-      </div>
-      <aside class="detail-stack">
-        <article class="detail-card framed">
-<h3>{{ "Status & Organization" | translate }}</h3>
-<div class="detail-card-body">
-          <div>
-<span class="detail-label">{{ "Status" | translate }}</span>
-<span class="detail-badge dot" [class.on]="activeRow(product) === true" [class.off]="activeRow(product) === false">{{ (activeRow(product) === null ? '—' : activeRow(product) ? 'Active' : 'Inactive') | translate }}</span>
-</div>
-          <div class="detail-divided">
-<span class="detail-label">{{ "Category" | translate }}</span>{{ text(categoryOf(product)) }}</div>
-          <div class="detail-divided">
-<span class="detail-label">{{ "Sub-Category / Brand" | translate }}</span>{{ text(brandOf(product)) }}</div>
-        </div>
-</article>
-        <article class="detail-card framed">
-<h3>{{ "Product Images" | translate }}</h3>
-<div class="detail-card-body">
-<div class="detail-images">@for (url of imagesOf(product); track $index) { <a [href]="url" target="_blank" rel="noopener">
-<img appProductImage [src]="url" [alt]="text(product['name']) + ' - ' + ($index + 1)" />
-</a> }
-@empty { <p class="detail-empty">No images uploaded</p> }</div>
-</div>
-</article>
-      </aside>
+  @if(row(); as product){
+    <div class="product-overview">
+      <article class="product-panel gallery-panel"><header class="panel-title"><h3>Product Images</h3><span class="count-label">{{imagesOf(product).length}} images</span></header>
+        <div class="product-gallery">@if(imagesOf(product).length){<a class="hero-image" [href]="imagesOf(product)[selectedImage()] || imagesOf(product)[0]" target="_blank" rel="noopener"><img appProductImage [src]="imagesOf(product)[selectedImage()] || imagesOf(product)[0]" [alt]="text(product['name'])" /></a><div class="image-thumbnails">@for(url of imagesOf(product);track $index){<button type="button" [class.selected]="selectedImage()===$index" [attr.aria-label]="'View product image '+($index+1)" [attr.aria-pressed]="selectedImage()===$index" (click)="selectedImage.set($index)"><img appProductImage [src]="url" [alt]="text(product['name'])+' view '+($index+1)" /></button>}<a class="add-image" [routerLink]="['/admin/products/edit',product['id']]" *appCanRoute="['/admin/products/edit',product['id']]"><app-icon name="plus" /><span>Add Image</span></a></div>}@else{<div class="gallery-empty"><app-icon name="image" /><span>No images uploaded</span><a [routerLink]="['/admin/products/edit',product['id']]" *appCanRoute="['/admin/products/edit',product['id']]">Add product images</a></div>}</div>
+      </article>
+      <article class="product-panel information-panel"><header class="panel-title"><h3>Basic Information</h3><span class="detail-badge" [class.on]="activeRow(product)===true" [class.off]="activeRow(product)===false">{{activeRow(product)===null?'Not specified':activeRow(product)?'Active':'Inactive'}}</span></header><dl class="information-rows">
+        <div><dt>Product Name</dt><dd class="strong">{{text(product['name'])}}</dd></div><div><dt>Product Code</dt><dd>{{text(field(product,'code','product_code','productCode'))}}</dd></div><div><dt>Category</dt><dd>{{text(categoryOf(product))}}</dd></div><div><dt>Sub-Category / Brand</dt><dd>{{text(brandOf(product))}}</dd></div><div class="description-row"><dt>Description</dt><dd>{{product['description'] || 'No description provided.'}}</dd></div>
+      </dl></article>
+      <article class="product-panel settings-panel"><header class="panel-title"><h3>Product Status & Settings</h3></header><dl class="information-rows">
+        <div><dt>Status</dt><dd><span class="status-indicator" [class.enabled]="activeRow(product)===true" aria-hidden="true"></span>{{activeRow(product)===null?'Not specified':activeRow(product)?'Active':'Inactive'}}</dd></div>
+        <div><dt>Variants</dt><dd>{{skus(product).length}} SKUs</dd></div><div><dt>Created By</dt><dd>{{text(field(product,'created_by','createdBy'))}}</dd></div><div><dt>Created At</dt><dd>{{when(field(product,'created_at','createdAt'))}}</dd></div><div><dt>Updated By</dt><dd>{{text(field(product,'updated_by','updatedBy'))}}</dd></div><div><dt>Updated At</dt><dd>{{when(field(product,'updated_at','updatedAt'))}}</dd></div>
+      </dl><p class="settings-note">Product changes are submitted for review and approval.</p></article>
     </div>
+    <nav class="product-tabs" aria-label="Product sections">@for(tab of detailTabs;track tab){<button type="button" [class.active]="activeTab()===tab" [attr.aria-current]="activeTab()===tab?'page':null" (click)="activeTab.set(tab)">{{tab}}</button>}</nav>
+    @if(activeTab()==='Variants (SKUs)'){
+    <article class="product-panel variants-panel"><header class="section-heading"><div><h3>Product Variants ({{skus(product).length}} SKUs)</h3><p>Each SKU has its own price, inventory, and attribute set.</p></div><a class="detail-button primary" [routerLink]="['/admin/products/edit',product['id']]" *appCanRoute="['/admin/products/edit',product['id']]"><app-icon name="plus" />Add SKU</a></header>
+      <div class="product-table-scroll"><table class="product-table sku-table"><thead><tr><th>SKU Code</th><th>Image</th><th>Attributes</th><th>Price (USD)</th><th>Promotion Price (USD)</th><th>Inventory</th><th>Warehouse</th><th>Variant</th><th>Actions</th></tr></thead><tbody>@for(sku of skus(product);track $index){<tr><td class="sku-code">{{text(field(sku,'sku','sku_code','barcode','description','id'))}}</td><td><img class="sku-image" appProductImage [src]="skuImage(sku,product)" [alt]="text(sku['description'] || product['name'])" /></td><td><div class="attribute-chips">@for(attr of attrsOf(sku);track $index){<span>{{text(attr['name'])}}: {{attrText(attr)}}</span>}@empty{<span class="muted">—</span>}</div></td><td>{{usd(sku['price'])}}</td><td class="promotion">{{field(sku,'promotion_price','promotionPrice','sale_price')!==''?usd(field(sku,'promotion_price','promotionPrice','sale_price')):'—'}}</td><td>{{text(stockOf(sku))}}</td><td>{{text(warehouseOf(sku))}}</td><td><span class="detail-badge" [class.on]="field(sku,'is_default','isDefault')===true">{{field(sku,'is_default','isDefault')===true?'Default':'Variant'}}</span></td><td><a class="row-action" [routerLink]="['/admin/products/edit',product['id']]" aria-label="Edit SKU in product request" *appCanRoute="['/admin/products/edit',product['id']]"><app-icon name="edit" /></a></td></tr>}@empty{<tr><td colspan="9" class="table-empty">No variants available.</td></tr>}</tbody></table></div>
+    </article>}
+    @if(activeTab()==='Variants (SKUs)' || activeTab()==='Attributes' || activeTab()==='Inventory'){
+    <div class="product-lower-grid" [class.single-panel]="activeTab()!=='Variants (SKUs)'">
+      @if(activeTab()!=='Inventory'){<article class="product-panel summary-panel"><header class="section-heading"><h3>Product Attributes</h3><a class="detail-button" [routerLink]="['/admin/products/edit',product['id']]" *appCanRoute="['/admin/products/edit',product['id']]"><app-icon name="plus" />Add Attribute</a></header><div class="product-table-scroll"><table class="product-table"><thead><tr><th>Attribute Name</th><th>Values</th></tr></thead><tbody>@for(attr of attributeRows(product);track attr.name){<tr><td>{{attr.name}}</td><td><div class="attribute-chips">@for(value of attr.values;track value){<span>{{value}}</span>}</div></td></tr>}@empty{<tr><td colspan="2" class="table-empty">No attributes configured.</td></tr>}</tbody></table></div></article>}
+      @if(activeTab()!=='Attributes'){<article class="product-panel summary-panel"><header class="section-heading"><h3>Inventory Summary</h3><a class="detail-button" routerLink="/admin/inventory" *appCanRoute="'/admin/inventory'">View Inventory</a></header><div class="product-table-scroll"><table class="product-table"><thead><tr><th>Warehouse</th><th>Total Stock</th><th>Reserved</th><th>Available</th></tr></thead><tbody>@for(inventory of inventoryRows(product);track $index){<tr><td>{{text(inventory.warehouse)}}</td><td>{{text(inventory.stock)}}</td><td>{{text(inventory.reserved)}}</td><td>{{text(inventory.available)}}</td></tr>}@empty{<tr><td colspan="4" class="table-empty">No inventory records available.</td></tr>}</tbody></table></div></article>}
+    </div>}
+    @if(activeTab()==='History'){<article class="product-panel"><header class="panel-title"><h3>Product History</h3></header><dl class="information-rows"><div><dt>Created</dt><dd>{{when(field(product,'created_at','createdAt'))}}</dd></div><div><dt>Last updated</dt><dd>{{when(field(product,'updated_at','updatedAt'))}}</dd></div></dl><p class="settings-note">Review submitted changes and their approval history in My Requests.</p><a class="detail-button history-link" routerLink="/admin/my-requests" *appCanRoute="'/admin/my-requests'">View My Requests</a></article>}
   }
-</section>
-
-}
+</section>}

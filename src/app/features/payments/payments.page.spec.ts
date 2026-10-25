@@ -1,5 +1,5 @@
 import { TestBed } from "@angular/core/testing";
-import { ActivatedRoute, convertToParamMap } from "@angular/router";
+import { ActivatedRoute, convertToParamMap, provideRouter } from "@angular/router";
 import { of, throwError } from "rxjs";
 import { PaymentsPage } from "./payments.page";
 import { PaymentsApi } from "./payments.api";
@@ -12,7 +12,7 @@ describe("Order payment creation", () => {
     const byOrder = vi.fn(() => of(transactions));
     const create = vi.fn(() => of({ id: 25, order_id: 11, status: "PENDING" }));
     TestBed.configureTestingModule({
-      providers: [
+      providers: [provideRouter([]),
         {
           provide: ActivatedRoute,
           useValue: {
@@ -71,4 +71,14 @@ describe("Order payment creation", () => {
     expect(byOrder).toHaveBeenCalledTimes(2);
     expect(page.creationUncertain()).toBe(false);
   });
+  it("clears stale selected records on refresh and preserves non-success states", () => {
+    const {page}=setup();
+    const transaction={id:25,transaction_no:'TX-25',order_id:11,amount:125,currency:'USD',payment_method:'BAKONG',status:'REFUNDED'};
+    page.selectedTransaction.set(transaction);
+    expect(page.transactionTone(transaction)).toBe('');
+    expect(page.transactionTone({...transaction,status:'PENDING'})).toBe('pending');
+    expect(page.transactionTone({...transaction,status:'PAID'})).toBe('paid');
+    page.load();expect(page.selectedTransaction()).toBeNull();
+  });
+
 });

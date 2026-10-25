@@ -501,6 +501,7 @@ export class ProductFormPage extends PageState implements OnDestroy {
     this.imports.reviewerOptions().pipe(takeUntilDestroyed(this.formDestroy)).subscribe({next:result=>{
       this.reviewerOptions.set(result.reviewers.map(user=>({value:user.id,label:user.name+(user.username?' (@'+user.username+')':'')})));
       if(this.reviewerId===null)this.reviewerId=result.defaultReviewerId;
+      if(!result.defaultReviewerId)this.reviewerError.set("Set an active Reports to manager with review and approval permissions before submitting.");
     },error:()=>this.reviewerError.set('Could not load authorized reviewers. Refresh before submitting for approval.')});
     if (this.embedded()) {
       const draft=this.prefill();
@@ -1054,10 +1055,29 @@ export class ProductFormPage extends PageState implements OnDestroy {
 @Component({
   imports: [PageAccessDenied, CanAccessDirective, TranslatePipe, Status, RouterLink, ProductImage, Icon],
   templateUrl: "./product-detail.html",
-  styleUrl: "../styles/details.css",
+  styleUrls: ["../styles/details.css", "./product-detail.css"],
 })
 export class ProductDetailPage extends PageState {
   access = inject(PermissionService);
+  selectedImage = signal(0);
+  activeTab = signal('Variants (SKUs)');
+  readonly detailTabs = ['Variants (SKUs)', 'Attributes', 'Inventory', 'History'];
+  skuImage(sku: Row, product: Row) { return String(field(sku, 'image', 'image_url', 'imageUrl') || imagesOf(sku)[0] || imagesOf(product)[0] || ''); }
+  inventoryRows(product: Row) {
+    return this.skus(product).map(sku => {
+      const inventory = sku['inventory'] && typeof sku['inventory'] === 'object' ? sku['inventory'] as Row : sku;
+      return { warehouse: warehouseOf(sku), stock: field(inventory, 'stock_qty', 'stockQty', 'quantity'), reserved: field(inventory, 'reserved_qty', 'reservedQty', 'reserved'), available: field(inventory, 'available_qty', 'availableQty', 'available') };
+    });
+  }
+  attributeRows(product: Row) {
+    const attributes = new Map<string, Set<string>>();
+    for (const sku of this.skus(product)) for (const attr of attrsOf(sku)) {
+      const name = String(attr['name'] || 'Attribute');
+      if (!attributes.has(name)) attributes.set(name, new Set());
+      for (const value of attrText(attr).split(',').map(value => value.trim()).filter(Boolean)) attributes.get(name)!.add(value);
+    }
+    return [...attributes].map(([name, values]) => ({ name, values: [...values] }));
+  }
   stockOf(sku: Row) { return stock({ skus: [sku] }); }
   private api = inject(AdminApi);
   private route = inject(ActivatedRoute);
@@ -1082,6 +1102,7 @@ export class ProductDetailPage extends PageState {
     super();
     this.route.paramMap.subscribe((params) => {
       this.row.set(null);
+      this.selectedImage.set(0);
       this.run(
         this.api.product(Number(params.get("id"))).pipe(
           switchMap((row) => {

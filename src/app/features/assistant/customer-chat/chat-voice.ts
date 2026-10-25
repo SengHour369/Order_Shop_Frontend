@@ -53,7 +53,7 @@ export class ChatVoice {
         const blob = new Blob(chunks, {type});
         if (!blob.size) { this.error.set('No audio recorded. Please try again.'); return; }
         this.pending.set(true);
-        this.request = this.api.transcribe(blob, language === 'km' ? 'km' : 'en').pipe(timeout(45000)).subscribe({
+        this.request = this.api.transcribe(blob, language === 'km' ? 'km' : 'en').pipe(timeout(50000)).subscribe({
           next: result => {
             this.pending.set(false);
             if (generation !== this.generation) return;
@@ -66,6 +66,7 @@ export class ChatVoice {
             const message = typeof error?.error?.message === 'string' ? error.error.message.slice(0, 300) : '';
             this.error.set(status === 401 || status === 403 ? 'Please sign in to use voice transcription.'
               : status === 429 ? 'Free transcription quota or rate limit reached. Please wait before trying again.'
+              : status === 504 ? message || 'Voice transcription timed out. Please try a shorter recording.'
               : status === 503 ? message || 'Voice transcription is unavailable. Please type your message.'
               : status === 422 ? 'No clear speech detected. Please try recording again.'
               : 'Could not transcribe your recording. Please try again or type your message.');

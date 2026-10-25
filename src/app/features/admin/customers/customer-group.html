@@ -8,7 +8,7 @@
     @if (error() && !busy() && !group()) {<button class="group-button" type="button" (click)="load()">Reload group</button>}
     @if (detail && group()) {
       <article class="group-card group-banner"><span class="group-avatar"><app-icon [name]="icon()" /></span><div class="banner-content"><h2>{{ name }}<span class="group-badge" [class.active]="active">{{ active ? 'Active' : 'Inactive' }}</span></h2><p>{{ description || 'No description provided.' }}</p><div class="banner-metadata"><div><span>Group Code</span><b class="type-badge">{{ code }}</b></div><div><span>Group Type</span><strong><app-icon [name]="icon()" />{{ type }}</strong></div><div><span>Created At</span><strong><app-icon name="calendar" />{{ when(field(group() || {}, 'created_at')) }}</strong></div><div><span>Created By</span><strong>{{ text(field(group() || {}, 'created_by', 'createdBy')) }}</strong></div></div></div></article>
-      <div class="group-stats">@for (stat of stats(); track stat.label) {<article class="group-card stat-card"><span [class]="'stat-icon ' + stat.color"><app-icon [name]="stat.icon" /></span><div><span>{{ stat.label }}</span><strong>{{ stat.value }}</strong><small>Group analytics unavailable</small></div></article>}</div>
+      <div class="group-stats">@for (stat of stats(); track stat.label) {<article class="group-card stat-card"><span [class]="'stat-icon ' + stat.color"><app-icon [name]="stat.icon" /></span><div><span>{{ stat.label }}</span><strong>{{ stat.value }}</strong></div></article>}</div>
     }
     <div class="group-columns" [class.viewing]="detail">
       <div class="group-column">

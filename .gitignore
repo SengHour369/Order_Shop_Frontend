@@ -19,3 +19,7 @@
 reports/
 frontend-dist.tar.gz
 .npm-cache/
+
+# Application reports are source code, not generated test reports.
+!src/app/features/admin/reports/
+!src/app/features/admin/reports/**

@@ -617,3 +617,33 @@ button:disabled {
 .product-collection{border:1px solid #e0e9fa;border-radius:9px;background:white;padding:10px;margin-top:10px;min-width:0}.collection-heading{display:flex;align-items:center;flex-wrap:wrap;gap:9px;color:#14265b}.collection-icon{display:grid;place-items:center;width:30px;height:30px;border-radius:6px;background:#06f;color:white}.collection-icon app-icon{width:22px;height:22px}.collection-heading h3{font-size:13px;margin:0}.collection-heading small{font-size:10px;color:#7584a7}.collection-heading .stock-filter{display:flex;align-items:center;gap:4px;margin-left:auto;font-size:10px}.collection-heading select{font:inherit;font-size:10px;border:1px solid #dce7fa;border-radius:5px;background:#fff;color:#20376e;padding:6px;max-width:150px}.collection-heading>a{font-size:10px;color:#06f;text-decoration:none}.collection-empty{font-size:11px;color:#7584a7}.product-collection .chat-products{margin-top:9px}.product-collection .chat-product{border-radius:5px;padding:7px;gap:4px}.product-collection .chat-product>button.chat-detail{background:#f7f8fb;border-radius:4px}.product-collection .chat-product>button.chat-detail img{height:100px}.product-collection .chat-price b{font-size:13px;color:#162358}.product-collection .chat-add{background:#fff;color:#06f;border:1px solid #cbdfff;border-radius:4px;padding:6px;min-height:0}.product-collection .chat-product .chat-detail:not(:first-child){color:#06f}.product-collection .chat-product small{color:#008b57}@media(max-width:650px){.product-collection .chat-products{margin-left:0}.collection-heading .stock-filter{margin-left:0}.collection-heading select{margin-left:auto}.collection-heading>a{display:none}}
 
 .voice-options,.voice-status,.voice-playback{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;font-size:.8rem;padding:.35rem .75rem}.voice-options label{display:flex;align-items:center;gap:.3rem}.voice-options select,.voice-playback button,.voice-status button{font:inherit;border:1px solid #cbd5e1;border-radius:.5rem;background:transparent;color:inherit;padding:.3rem .5rem}.voice-playback app-icon{width:1rem;height:1rem;display:inline-flex}.voice-wave{display:flex;align-items:center;gap:3px;height:30px}.voice-wave i{width:4px;min-height:2px;background:currentColor;border-radius:3px;transition:height 80ms linear}.voice-error{color:#b91c1c;font-size:.85rem;padding:.4rem .75rem}.voice-mic[aria-pressed="true"]{color:#b91c1c}.voice-options{justify-content:space-between}@media(max-width:480px){.voice-options{font-size:.75rem;gap:.3rem}}
+
+/* Keep iOS from zooming the chat when a form field receives focus. */
+@media (max-width: 650px) {
+  .ai-chat input,
+  .ai-chat select,
+  .ai-chat textarea,
+  .chat-composer textarea {
+    font-size: 16px;
+  }
+}
+
+/* Customer shopping assistant uses the storefront bag identity. */
+.ai-launcher {
+  background:#f0f6ff;border-color:#dbe8f8;
+  box-shadow:0 5px 22px #0066ff24;
+}
+.ai-launcher:hover {background:#e5efff}
+.ai-launcher:focus-visible {outline-color:#0066ff}
+.bot-avatar,
+.ai-launcher .bot-avatar {background:#f0f6ff}
+.customer-ai-icon {display:block;width:100%;height:100%;object-fit:contain;pointer-events:none}
+.ai-launcher .customer-ai-icon {width:100%;height:100%}
+
+.chat-composer textarea:focus,
+.chat-composer textarea:focus-visible {
+  outline:none;
+  outline-offset:0;
+  border-color:#c8d3e2;
+  box-shadow:none;
+}

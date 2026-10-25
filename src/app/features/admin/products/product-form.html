@@ -15,7 +15,7 @@
       </div>
     </header>
     <app-status [busy]="busy()" [error]="error()" [message]="message()" />
-    <article class="editor-card" style="padding:16px;margin-bottom:16px"><p>Live products remain unchanged until an independent reviewer approves and executes this request.</p><label class="editor-field" id="product-reviewer-label">Assigned reviewer<app-product-select controlId="product-reviewer" labelId="product-reviewer-label" label="reviewer name or username" placeholder="Select a reviewer" [options]="reviewerOptions()" [value]="reviewerId || 0" (changed)="reviewerId=$event" [disabled]="busy()" /></label>@if(reviewerError()){<p role="alert">{{ reviewerError() }}</p>}@if(id){<p>Existing stock is managed through Inventory requests. Product approval does not overwrite reserved or available stock.</p>}</article>
+    <article class="editor-card" style="padding:16px;margin-bottom:16px"><p>Live products remain unchanged until an independent reviewer approves and executes this request.</p><label class="editor-field" id="product-reviewer-label">Reports to manager<app-product-select controlId="product-reviewer" labelId="product-reviewer-label" label="reviewer name or username" placeholder="Set an authorized Reports to manager" [options]="reviewerOptions()" [value]="reviewerId || 0" (changed)="reviewerId=$event" [disabled]="true" /></label>@if(reviewerError()){<p role="alert">{{ reviewerError() }}</p>}@if(id){<p>Existing stock is managed through Inventory requests. Product approval does not overwrite reserved or available stock.</p>}</article>
     <div class="editor-columns">
       <div class="editor-stack">
         <article class="editor-card">

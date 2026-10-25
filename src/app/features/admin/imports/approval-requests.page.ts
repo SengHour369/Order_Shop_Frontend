@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, ViewChild, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -7,11 +7,14 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AiImportsApi, ImportBatch, ImportPreview, ImportRow, ImportAction } from './ai-imports.api';
 import { PermissionService } from '../../../core/auth/permission.service';
 import { AuthService } from '../../../core/auth/auth.service';
-import { ImportValuesComponent, ImportActivityComponent, importLabel } from './import-readable-details';
+import { ImportValuesComponent, ImportActivityComponent, importLabel, isImportIdentifier } from './import-readable-details';
+import { RequestProductDetail } from './request-product-detail';
 import { approvalChanges } from './approval-diff';
-@Component({imports:[DatePipe,FormsModule,RouterLink,ImportValuesComponent,ImportActivityComponent],templateUrl:'./approval-requests.html',styleUrl:'./approval-requests.css'})
+@Component({imports:[DatePipe,FormsModule,RouterLink,ImportValuesComponent,ImportActivityComponent,RequestProductDetail],templateUrl:'./approval-requests.html',styleUrl:'./approval-requests.css'})
 export class ApprovalRequestsPage {
  private api=inject(AiImportsApi);private route=inject(ActivatedRoute);private auth=inject(AuthService);access=inject(PermissionService);private lifetime=inject(DestroyRef);
+ @ViewChild('decisionDialog') decisionDialog?:ElementRef<HTMLDialogElement>;
+ readonly pendingBulk=signal<'approve'|'reject'|'request-changes'|null>(null);readonly decisionTarget=signal<ImportBatch|null>(null);readonly decisionError=signal('');
  mine=this.route.snapshot.data['mine']===true;readonly busy=signal(false);readonly error=signal('');readonly message=signal('');readonly rows=signal<ImportBatch[]>([]);readonly counts=signal<Record<string,number>>({});readonly detail=signal<ImportPreview|null>(null);readonly history=signal<unknown>(null);readonly selected=signal<Set<string>>(new Set());
  page=0;pages=0;total=0;search='';status=this.mine?'':'SUBMITTED';source='';entity='';tab='Details';reason='';reviewerId:number|null=null;fieldSearch='';rowPage=0;rowFilter='';
  readonly tabs=['Details','Changes','Validation','Attachments','History'];readonly statuses=['','SUBMITTED','CHANGES_REQUESTED','APPROVED','REJECTED','COMPLETED','DRAFT','VALIDATED','INVALID','PROCESSING','PARTIAL_SUCCESS','FAILED'];readonly sources=['EXCEL_IMPORT','MANUAL_CREATE','MANUAL_UPDATE','AI_ASSISTANT'];readonly entities=['PRODUCT','PRODUCT_SKU','CATEGORY','BRANCH','INVENTORY','PROMOTION'];label=importLabel;
@@ -21,20 +24,26 @@ export class ApprovalRequestsPage {
  load(){return this.run(()=>this.readList());}
  filter(){this.page=0;void this.load();}
  pick(status:string){this.status=status;this.filter();}
- private async readDetail(id:string){const preview=await firstValueFrom(this.api.preview(id,this.rowPage,this.rowFilter));this.detail.set(preview);this.reviewerId=preview.batch.assignedReviewerId;this.history.set(await firstValueFrom(this.api.history(id)));}
+ private async readDetail(id:string){const preview=await firstValueFrom(this.api.preview(id,this.rowPage,this.rowFilter));this.detail.set(preview);this.reviewerId=preview.batch.assignedReviewerId;if(this.mine&&["DRAFT","CHANGES_REQUESTED"].includes(preview.batch.status)){this.reviewerId=(await firstValueFrom(this.api.reviewerOptions())).defaultReviewerId;}this.history.set(await firstValueFrom(this.api.history(id)));}
  open(id:string){this.rowPage=0;this.rowFilter='';this.tab='Details';this.reason='';return this.run(()=>this.readDetail(id));}
  close(){this.detail.set(null);this.history.set(null);void this.load();}
  reload(){const detail=this.detail();return detail?this.run(()=>this.readDetail(detail.batch.id)):this.load();}
+ isProductRow(row:ImportRow){return this.detail()?.sheets.find(sheet=>sheet.id===row.sheetId)?.tool?.startsWith('PRODUCT_BULK_')??false;}
+ rowLabel(id:string){const row=this.detail()?.rows.content.find(row=>row.id===id);return row?'Row '+row.rowNumber:'Related row';}
  authUserId(){return this.auth.session()?.id;}
  canEdit(batch:ImportBatch){const user=this.auth.session()?.id;return batch.ownerId===user?this.access.has('IMPORT_UPLOAD')&&!['SUBMITTED','APPROVED','PROCESSING','COMPLETED','PARTIAL_SUCCESS','FAILED','REJECTED'].includes(batch.status):this.access.has('IMPORT_REVIEW')&&batch.assignedReviewerId===user&&!['PROCESSING','COMPLETED','PARTIAL_SUCCESS','FAILED','REJECTED'].includes(batch.status);}
  canReview(batch:ImportBatch){const user=this.auth.session()?.id;return batch.status==='SUBMITTED'&&batch.assignedReviewerId===user&&batch.ownerId!==user&&batch.lastEditorId!==user&&this.access.has('IMPORT_REVIEW');}
  canApprove(batch:ImportBatch){return this.canReview(batch)&&this.access.has('IMPORT_APPROVE')&&this.access.has('IMPORT_EXECUTE');}
  canExecute(batch:ImportBatch){return ['APPROVED','PROCESSING','PARTIAL_SUCCESS','FAILED'].includes(batch.status)&&batch.reviewerId===this.auth.session()?.id&&['IMPORT_APPROVE','IMPORT_EXECUTE','IMPORT_REVIEW'].every(p=>this.access.has(p));}
- changes(row:ImportRow){const sheet=this.detail()?.sheets.find(sheet=>sheet.id===row.sheetId);const query=this.fieldSearch.toLowerCase();return approvalChanges(row.currentValues,row.valuesJson,!!sheet?.tool?.endsWith('_CREATE')).filter(change=>!query||change.field.toLowerCase().includes(query));}
+ changes(row:ImportRow){const sheet=this.detail()?.sheets.find(sheet=>sheet.id===row.sheetId);const query=this.fieldSearch.toLowerCase();return approvalChanges(row.currentValues,row.valuesJson,!!sheet?.tool?.endsWith('_CREATE')).filter(change=>!change.field.split(/[.\[\]]/).some(isImportIdentifier)&&(!query||change.field.toLowerCase().includes(query)));}
  toggle(batch:ImportBatch){this.selected.update(ids=>{const next=new Set(ids);if(next.has(batch.id))next.delete(batch.id);else next.add(batch.id);return next;});}
  async decide(action:ImportAction,batch=this.detail()?.batch){if(!batch)return;if(['approve','reject','request-changes'].includes(action)&&(!this.canReview(batch)||!this.reason.trim())){this.error.set('Enter a review reason before deciding.');return;}if(action==='approve'&&!this.canApprove(batch)||action==='execute'&&!this.canExecute(batch))return;
-  return this.run(async()=>{let result=await firstValueFrom(this.api.action(batch,action,action==='submit'?{reviewerId:this.reviewerId}:['approve','reject','request-changes'].includes(action)?{reason:this.reason.trim()}:{}));if(action==='approve'&&result.status==='APPROVED')result=await firstValueFrom(this.api.action(result,'execute'));await this.readDetail(result.id);this.message.set('Server status: '+this.label(result.status)+'.');});
+  return this.run(async()=>{let result=await firstValueFrom(this.api.action(batch,action,action==='submit'?{reviewerId:this.reviewerId}:['approve','reject','request-changes'].includes(action)?{reason:this.reason.trim()}:{}));if(action==='approve'&&result.status==='APPROVED')result=await firstValueFrom(this.api.action(result,'execute'));await this.readDetail(result.id);if(result.status==='INVALID'){this.tab='Validation';this.message.set('');const issues=this.detail()?.errors??[];this.error.set('Validation failed. The request was not submitted or approved. '+(issues.length?issues.map(issue=>issue.message).slice(0,3).join(' · '):'Review the validation results and correct the proposed data.'));return;}this.message.set('Server status: '+this.label(result.status)+'.');});
  }
+ requestDecision(action:'approve'|'reject'|'request-changes'){const batch=this.detail()?.batch;if(!batch||this.busy()||!this.canReview(batch)||action==='approve'&&!this.canApprove(batch))return;this.decisionTarget.set(batch);this.reason='';this.decisionError.set('');this.pendingBulk.set(action);this.decisionDialog?.nativeElement.showModal();}
+ requestBulk(action:'approve'|'reject'){const targets=this.rows().filter(row=>this.selected().has(row.id));if(this.busy()||!targets.length)return;if(targets.some(row=>action==='approve'?!this.canApprove(row):!this.canReview(row))){this.error.set('Every selected request must be assigned to you and permit this action.');return;}this.decisionTarget.set(null);this.reason='';this.decisionError.set('');this.pendingBulk.set(action);this.decisionDialog?.nativeElement.showModal();}
+ cancelBulk(event?:Event){if(this.busy()){event?.preventDefault();return;}this.pendingBulk.set(null);this.decisionTarget.set(null);this.reason='';this.decisionError.set('');this.decisionDialog?.nativeElement.close();}
+ async confirmBulk(){const action=this.pendingBulk();if(!action||this.busy())return;if(!this.reason.trim()){this.decisionError.set('A decision reason is required.');return;}this.decisionError.set('');const target=this.decisionTarget();if(target)await this.decide(action,target);else if(action!=='request-changes')await this.bulk(action);if(this.error()){this.decisionError.set(this.error());return;}this.cancelBulk();}
  bulk(action:'approve'|'reject'){const targets=this.rows().filter(row=>this.selected().has(row.id));if(!targets.length||!this.reason.trim()){this.error.set('Select requests and enter a decision reason.');return;}if(targets.some(row=>action==='approve'?!this.canApprove(row):!this.canReview(row))){this.error.set('Every selected request must be assigned to you and permit this action.');return;}
   return this.run(async()=>{let done=0;try{for(const batch of targets){let result=await firstValueFrom(this.api.action(batch,action,{reason:this.reason.trim()}));if(action==='approve'&&result.status==='APPROVED')result=await firstValueFrom(this.api.action(result,'execute'));done++;if(action==='approve'&&!['COMPLETED','PROCESSING'].includes(result.status))throw new Error('Execution requires review');}}finally{await this.readList();this.message.set(`${done} decision responses received. Review each request's actual execution status.`);}});
  }

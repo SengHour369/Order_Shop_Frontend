@@ -54,6 +54,8 @@ export interface Product {
   skus: Sku[];
 }
 export interface CartItem {
+  product_name?: string;
+  image_url?: string;
   id: number;
   product_sku_id: number;
   quantity: number;

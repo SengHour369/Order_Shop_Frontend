@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { ApiClient } from '../../core/api/api-client';
-interface PaymentQrData {orderId:number;amount:number;currency:string;status:string;expiresAt:string;provider:string;paymentVerified?:boolean;transactionReference?:string;verifiedAt?:string;paidAmount?:number;orderStatus?:string;}
+interface PaymentQrData {bakongAppAvailable?:boolean;orderId:number;amount:number;currency:string;status:string;expiresAt:string;provider:string;paymentVerified?:boolean;transactionReference?:string;verifiedAt?:string;paidAmount?:number;orderStatus?:string;}
 @Component({selector:'app-payment-qr',imports:[TranslatePipe, CurrencyPipe,DatePipe,RouterLink],template:`
   <section aria-label="KHQR payment" class="qr-payment" [class.payment-workspace]="chatLayout()" [class.chat-receipt]="compactReceipt() && data()?.status === 'SUCCESS'">
     <div class="payment-steps" aria-label="Payment progress"><div class="done"><b>✓</b><small>Checkout</small></div><div [class.active]="data()?.status==='PENDING' && !expired(data()!) && !failed()" [class.done]="data()?.status==='SUCCESS'" [class.failed]="failed()"><b>{{failed()?'×':data()?.status==='SUCCESS'?'✓':'▣'}}</b><small>Payment</small></div><div [class.done]="data()?.status==='SUCCESS' && orderConfirmed()"><b>{{data()?.status==='SUCCESS' && orderConfirmed()?'✓':'⚑'}}</b><small>Confirm</small></div></div>
@@ -39,6 +39,21 @@ interface PaymentQrData {orderId:number;amount:number;currency:string;status:str
         }
       }
     }@else if(!unavailable()){<h3>Complete Your Payment</h3><p>Preparing your secure payment code…</p>}
+    @if(data()?.status==='PENDING' && !expired(data()!) && !failed() && data()?.orderStatus==='PENDING') {
+      <div class="bakong-app-actions">
+        @if(data()?.bakongAppAvailable !== true){
+          <p role="status">Bakong app payment is not enabled for this store. Scan the KHQR using another device or your banking app.</p>
+        } @else if(appLink()) {
+          <a class="payment-primary" [href]="appLink()" rel="noopener" (click)="appOpened.set(true)">Open Bakong App</a>
+        } @else {
+          <button type="button" class="payment-primary" [disabled]="appBusy()" (click)="prepareBakong()">{{appBusy()?'Preparing Bakong…':'Pay with Bakong App'}}</button>
+        }
+        @if(appLink()){<p>Review and authorize payment inside Bakong. If the app does not open, scan the QR using another device or your banking app.</p>}
+        @if(appLink() && !automaticReturn()){<p>After authorizing payment in Bakong, switch back to this E-Shop tab. We will check the payment with your bank.</p>}
+        @if(appOpened()){<p role="status">Returned from Bakong? Payment is still pending until the bank verifies it.</p><button type="button" class="payment-outline" [disabled]="busy()" (click)="refresh(true)">Verify payment</button>}
+        @if(appError() && data()?.bakongAppAvailable === true){<p role="status">{{appError()}}</p>}
+      </div>
+    }
     @if(checkoutFlow() && data()?.status==='PENDING' && !expired(data()!) && !failed()){<button class="payment-outline red-text" [disabled]="actionBusy()||busy()" (click)="cancelPayment.emit()">{{actionBusy()?'Returning to checkout…':'Cancel Payment'}}</button><p class="payment-exit-note">This closes the QR screen. Your existing order stays pending while bank verification continues; you can resume it from checkout.</p>}
     @if(error()){<p role="alert">{{error()}}</p>}
     @if((!chatLayout() || !data() || data()?.status==='REVIEW_REQUIRED') && !unavailable() && (!checkoutFlow() || !data()) && data()?.status!=='SUCCESS' && !failed()){<button class="payment-outline" [disabled]="busy()" (click)="refresh(false)">{{busy()?'Checking…':data()?'Refresh payment':'Retry payment QR'}}</button>}
@@ -46,6 +61,20 @@ interface PaymentQrData {orderId:number;amount:number;currency:string;status:str
   </section>`,styleUrl:'./payment-qr.scss'})
 
 export class PaymentQr {
+  automaticReturn=signal(true);appLink=signal('');appBusy=signal(false);appError=signal('');appOpened=signal(false);
+  async prepareBakong(){
+    const p=this.data();if(this.appBusy()||!p||p.bakongAppAvailable!==true||p.status!=='PENDING'||this.expired(p)||p.orderStatus!=='PENDING')return;
+    const version=this.version;this.appBusy.set(true);this.appError.set('');
+    try{
+      const result=await firstValueFrom(this.api.post<{deepLink:string;paymentId:number;orderId:number;automaticReturn?:boolean}>(`/api/v1/payments/orders/${this.orderId()}/bakong-app`));
+      if(version!==this.version)return;
+      const link=new URL(result.deepLink);
+      const current=this.data();
+      if(link.protocol!=='https:'||link.username||link.password||result.orderId!==this.orderId()||!current||current.status!=='PENDING'||this.expired(current))throw new Error('Invalid payment link');
+      this.appLink.set(link.href);this.automaticReturn.set(result.automaticReturn!==false);
+    }catch{if(version===this.version)this.appError.set('Bakong app link is unavailable. Use the existing KHQR instead. No payment has been confirmed.');}
+    finally{if(version===this.version)this.appBusy.set(false);}
+  }
   chatLayout=input(false);
   compactReceipt=input(false);
   verified=output<number>();
@@ -53,7 +82,11 @@ export class PaymentQr {
   orderId=input.required<number>(); private api=inject(ApiClient); private destroy=inject(DestroyRef);
   unavailable=signal(false); data=signal<PaymentQrData|null>(null); image=signal(''); busy=signal(false);error=signal(''); private version=0;private inFlightVersion=-1;private readyDeadline=0;
   private readonly clock=signal(Date.now());
-  constructor(){const timer=setInterval(()=>this.clock.set(Date.now()),1000);const poll=setInterval(()=>{const p=this.data();if(!p&&!this.busy()&&Date.now()<this.readyDeadline){void this.refresh(false);return;}if(p?.status==='PENDING'&&!this.busy())void this.refresh(true);else if(p?.status==='SUCCESS'&&this.checkoutFlow()&&!this.orderConfirmed()&&!this.busy())void this.refresh(false);},5000);effect(()=>{const id=this.orderId();untracked(()=>{this.version++;this.readyDeadline=Date.now()+120000;this.unavailable.set(false);this.data.set(null);this.clearImage();void this.refresh(false,id);});});this.destroy.onDestroy(()=>{clearInterval(timer);clearInterval(poll);this.version++;this.clearImage();});}
+  constructor(){
+    const resume=()=>{if(document.visibilityState==='visible'&&this.data()?.status==='PENDING')void this.refresh(true);};
+    document.addEventListener('visibilitychange',resume);
+    this.destroy.onDestroy(()=>document.removeEventListener('visibilitychange',resume));
+    const timer=setInterval(()=>this.clock.set(Date.now()),1000);const poll=setInterval(()=>{const p=this.data();if(!p&&!this.busy()&&Date.now()<this.readyDeadline){void this.refresh(false);return;}if(p?.status==='PENDING'&&!this.busy())void this.refresh(true);else if(p?.status==='SUCCESS'&&this.checkoutFlow()&&!this.orderConfirmed()&&!this.busy())void this.refresh(false);},5000);effect(()=>{const id=this.orderId();untracked(()=>{this.version++;this.appLink.set('');this.appError.set('');this.appBusy.set(false);this.appOpened.set(false);this.readyDeadline=Date.now()+120000;this.unavailable.set(false);this.data.set(null);this.clearImage();void this.refresh(false,id);});});this.destroy.onDestroy(()=>{clearInterval(timer);clearInterval(poll);this.version++;this.clearImage();});}
   failed(){const p=this.data();return !!p && (['FAILED','EXPIRED','CANCELLED'].includes(p.status));}
   orderConfirmed(){return ['PROCESSING','SHIPPED','DELIVERED'].includes(this.data()?.orderStatus??'');}
   remaining(p:PaymentQrData){const seconds=Math.max(0,Math.ceil((Date.parse(p.expiresAt)-this.clock())/1000));return `${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`;}
@@ -66,7 +99,7 @@ export class PaymentQr {
       let p=await firstValueFrom(verify?this.api.post<PaymentQrData>(path+'/verify'):this.api.get<PaymentQrData>(path+'/qr'));
       if(p.status==='SUCCESS'&&(p.paymentVerified!==true||['CANCELLED','FAILED'].includes(p.orderStatus??'')))p={...p,status:'REVIEW_REQUIRED'};
       if(version!==this.version)return;const previous=this.data();this.data.set(p);
-      if(p.status!=='PENDING'||this.expired(p))this.clearImage();
+      if(p.status!=='PENDING'||this.expired(p)){this.clearImage();this.appLink.set('');}
       if(p.status==='SUCCESS'&&(!this.checkoutFlow()||this.orderConfirmed())&&(previous?.status!=='SUCCESS'||this.checkoutFlow()&&!['PROCESSING','SHIPPED','DELIVERED'].includes(previous?.orderStatus??'')))this.verified.emit(id);
       if(p.status==='PENDING'&&!this.expired(p)&&(!this.image()||previous?.expiresAt!==p.expiresAt)){
         this.clearImage();

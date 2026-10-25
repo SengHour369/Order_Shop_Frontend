@@ -107,4 +107,35 @@ describe('Provider-verified QR payment',()=>{
     await Promise.resolve();f.detectChanges();expect(f.componentInstance.data()?.status).toBe('REVIEW_REQUIRED');expect(verified).not.toHaveBeenCalled();expect(f.nativeElement.textContent).toContain('Do not pay again');f.destroy();
   });
 
+  it('prepares an app link only after an explicit action and leaves payment pending',async()=>{
+    const f=create();
+    http.expectOne('/api/v1/payments/orders/12/qr').flush({status:'REVIEW_REQUIRED'});await Promise.resolve();
+    f.componentInstance.data.set({orderId:12,status:'PENDING',orderStatus:'PENDING',bakongAppAvailable:true,amount:10,currency:'USD',provider:'BAKONG',expiresAt:new Date(Date.now()+60000).toISOString()});
+    f.detectChanges();http.expectNone('/api/v1/payments/orders/12/bakong-app');
+    const preparation=f.componentInstance.prepareBakong();
+    const request=http.expectOne('/api/v1/payments/orders/12/bakong-app');expect(request.request.method).toBe('POST');
+    request.flush({orderId:12,paymentId:5,deepLink:'https://approved.example/payment',automaticReturn:false});await preparation;f.detectChanges();
+    expect(f.nativeElement.querySelector('.bakong-app-actions a').textContent).toContain('Open Bakong App');
+    expect(f.nativeElement.textContent).toContain('switch back to this E-Shop tab');
+    expect(f.componentInstance.data()?.status).toBe('PENDING');http.expectNone('/api/v1/payments/orders/12/verify');f.destroy();
+  });
+  it('keeps the QR fallback when app-link preparation fails',async()=>{
+    const f=create();http.expectOne('/api/v1/payments/orders/12/qr').flush({status:'REVIEW_REQUIRED'});await Promise.resolve();
+    f.componentInstance.data.set({orderId:12,status:'PENDING',orderStatus:'PENDING',bakongAppAvailable:true,amount:10,currency:'USD',provider:'BAKONG',expiresAt:new Date(Date.now()+60000).toISOString()});
+    const preparation=f.componentInstance.prepareBakong();http.expectOne('/api/v1/payments/orders/12/bakong-app').flush({}, {status:503,statusText:'Unavailable'});await preparation;
+    expect(f.componentInstance.appError()).toContain('Use the existing KHQR');expect(f.componentInstance.appLink()).toBe('');expect(f.componentInstance.data()?.status).toBe('PENDING');f.destroy();
+  });
+  it('never prepares an app link for expired payment',async()=>{
+    const f=create();http.expectOne('/api/v1/payments/orders/12/qr').flush({orderId:12,status:'PENDING',orderStatus:'PENDING',amount:10,currency:'USD',provider:'BAKONG',expiresAt:'2020-01-01T00:00:00Z'});await Promise.resolve();
+    await f.componentInstance.prepareBakong();http.expectNone('/api/v1/payments/orders/12/bakong-app');expect(f.componentInstance.appLink()).toBe('');f.destroy();
+  });
+
+  it('does not offer or call app handoff when the server reports it unconfigured',async()=>{
+    const f=create();http.expectOne('/api/v1/payments/orders/12/qr').flush({status:'REVIEW_REQUIRED'});await Promise.resolve();
+    f.componentInstance.data.set({orderId:12,status:'PENDING',orderStatus:'PENDING',amount:10,currency:'USD',provider:'BAKONG',expiresAt:new Date(Date.now()+60000).toISOString(),bakongAppAvailable:false});
+    f.detectChanges();expect(f.nativeElement.querySelector('.bakong-app-actions button')).toBeNull();
+    expect(f.nativeElement.querySelector('.bakong-app-actions').textContent).toContain('not enabled');
+    await f.componentInstance.prepareBakong();http.expectNone('/api/v1/payments/orders/12/bakong-app');f.destroy();
+  });
+
 });

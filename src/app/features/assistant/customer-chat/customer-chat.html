@@ -11,7 +11,7 @@
   [attr.aria-expanded]="opened()"
   aria-controls="customer-ai-chat"
 >
-  <span class="bot-avatar" aria-hidden="true"><app-icon name="robot" /></span>
+  <span class="bot-avatar" aria-hidden="true"><img class="customer-ai-icon" src="/images/customer-ai-bag.png" alt="" /></span>
 </button>
 <app-launcher-welcome [position]="launcher.position()" [dismissed]="opened() || pageMode()" />
 <dialog
@@ -26,7 +26,7 @@
 >
   <div class="chat-shopbar"><a routerLink="/" (click)="close()" class="chat-brand"><app-icon name="bag" />E-Shop</a><div class="chat-search"><app-icon name="search"/><input aria-label="Search products in assistant" placeholder="Search products, brands, categories…" [(ngModel)]="search" (keydown.enter)="searchProducts()"/><button type="button" (click)="searchProducts()" aria-label="Search products"><app-icon name="search"/></button></div><a routerLink="/cart" (click)="close()" aria-label="Shopping cart" class="chat-cart"><app-icon name="cart"/>@if(store.cartCount()){<span>{{store.cartCount()}}</span>}</a><span class="customer-avatar">{{initials()}}</span><strong class="chat-account">{{auth.session()?.username||'Guest'}}</strong></div>
   <header class="chat-header">
-    <span class="bot-avatar"><app-icon name="robot" /></span>
+    <span class="bot-avatar"><img class="customer-ai-icon" src="/images/customer-ai-bag.png" alt="" /></span>
     <div>
       <h2 id="ai-chat-title">E-Shop AI Assistant</h2>
       <p class="assistant-status"><span></span>Ready to help</p><p class="assistant-description">I can help you find products, place orders, make payments, track orders and more.</p>
@@ -69,7 +69,7 @@
     [attr.aria-busy]="busy()"
   >
     <article class="chat-message assistant">
-      <span class="bot-avatar small"><app-icon name="robot" /></span>
+      <span class="bot-avatar small"><img class="customer-ai-icon" src="/images/customer-ai-bag.png" alt="" /></span>
       <div class="message-bubble">
         Hi! I’m your E-Shop AI Assistant.<br/>Is there anything I can do to help you?
       </div>
@@ -90,7 +90,7 @@
     @for (message of messages(); track $index) {
       <article [class]="'chat-message ' + message.role">
         @if (message.role === "assistant") {
-          <span class="bot-avatar small"><app-icon name="robot" /></span>
+          <span class="bot-avatar small"><img class="customer-ai-icon" src="/images/customer-ai-bag.png" alt="" /></span>
         }
         <div class="message-content">
           <div class="message-bubble">@if(message.role === 'assistant'){<app-rich-message [text]="message.text"/>}@else{ {{message.text}} }</div>@if(message.role === 'assistant' && message.text){<div class="voice-playback"><button type="button" (click)="voice.play(message.text)" [disabled]="live.isActive() || voice.recording() || voice.pending()" aria-label="Play assistant response"><app-icon name="speaker"/> Play</button>@if(voice.speaking() === message.text){<button type="button" (click)="voice.togglePause()">{{voice.paused() ? 'Resume' : 'Pause'}}</button><button type="button" (click)="voice.stopSpeech()">Stop</button>}</div>}<time class="message-time">{{time(message.time)}}</time>
@@ -217,13 +217,9 @@
     @if (cartFeedback()) {
       <p class="chat-feedback" role="status">{{ cartFeedback() }}</p>
     }
-    @if (checkoutVisible()) { <app-chat-checkout [language]="language" [labels]="cartLabels()" (navigate)="close()" /> }
+    @if (checkoutVisible()) { <app-chat-checkout [preferredMethod]="checkoutPaymentMethod()" [language]="language" [labels]="cartLabels()" (navigate)="close()" /> }
   </div>
   <div class="composer-shortcuts">@for(action of shortcuts;track action.label){<button type="button" (click)="runShortcut(action)" [disabled]="busy()"><app-icon [name]="action.icon"/>{{action.label}}</button>}</div>
-  <div class="voice-options"><small>Audio is sent to Google for transcription. Avoid private or banking details; review the draft before Send.</small>
-    <label>Voice language <select [(ngModel)]="voiceLanguage" [disabled]="live.isActive() || voice.recording() || voice.pending()"><option value="en">English</option><option value="km">ខ្មែរ</option></select></label>
-    <label><input type="checkbox" [ngModel]="voice.autoPlay()" (ngModelChange)="voice.autoPlay.set($event); !$event && voice.stopSpeech()"/> Read new replies aloud</label>
-  </div>
   @if(voice.recording()){<div class="voice-status" role="status"><span>Listening · {{voice.seconds()}} / 60s</span><span class="voice-wave" aria-hidden="true">@for(level of voice.levels(); track $index){<i [style.height.px]="level"></i>}</span><button type="button" (click)="voice.reset()">Discard</button></div>}
   @if(voice.pending()){<p class="voice-status" role="status">Preparing voice transcript… <button type="button" (click)="voice.reset()">Cancel</button></p>}
   @if(voice.error()){<p class="voice-error" role="alert">{{voice.error()}}</p>}

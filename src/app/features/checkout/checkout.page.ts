@@ -4,7 +4,7 @@ import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { CurrencyPipe } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { Router, RouterLink } from "@angular/router";
-import { forkJoin, of, catchError, map } from "rxjs";
+import { forkJoin, of, catchError, map, tap } from "rxjs";
 import { PaymentsApi } from "../payments/payments.api";
 import { CatalogApi } from "../catalog/catalog.api";
 import { Icon } from "../../shared/components/icon";
@@ -135,6 +135,21 @@ export class CheckoutPage extends PageState {
     if (!this.canSubmit()) return;
     const activeOrder=this.activeOrderId();
     if(activeOrder){void this.router.navigate(['/checkout/payment',activeOrder]);return;}
+    if(this.locked()){this.placeCheckout();return;}
+    const reviewed=this.cart();
+    this.run(this.cartApi.current(), current=>{
+      this.cart.set(current);
+      if(!reviewed || this.cartSignature(reviewed)!==this.cartSignature(current)){
+        this.message.set("Your cart has been updated. Review the items and total below, then confirm checkout again.");
+        return;
+      }
+      this.placeCheckout();
+    });
+  }
+  private cartSignature(cart:Cart){
+    return JSON.stringify([Number(cart.total_price),cart.items.map(item=>[item.product_sku_id,item.quantity]).sort((a,b)=>a[0]-b[0])]);
+  }
+  private placeCheckout(){
     const body = this.attempt.begin(
       this.auth.userId(),
       this.addressId,
@@ -144,7 +159,15 @@ export class CheckoutPage extends PageState {
     );
     this.review.save(this.addressId,this.method);
     this.locked.set(true);
-    this.run(this.orders.checkout(body), (o) => {
+    this.run(this.orders.checkout(body).pipe(tap({error: (error) => {
+      // This validation runs before order creation. Unknown responses must retain
+      // the original key so retrying cannot create a duplicate order.
+      if (error.status === 400 && error.error?.message === "Cart changed. Review again before confirming.") {
+        this.attempt.clear(this.auth.userId());
+        this.locked.set(false);
+        this.needsRefresh.set(true);
+      }
+    }})), (o) => {
       if (o.status === "CHECKOUT_PENDING") {
         this.message.set(
           "Stock confirmation is still pending. Retry this checkout shortly.",

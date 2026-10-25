@@ -1,58 +1,12 @@
-<section class="welcome-hero reference-welcome">
-  <div class="welcome-copy">
-    <a class="welcome-logo brand" routerLink="/"
-      ><span class="brand-bag"><app-icon name="check" /></span
-      ><span>E-Shop</span></a
-    >
-    <span class="eyebrow">{{ "WELCOME TO E-SHOP" | translate }}</span>
-    <h1>{{ "Shop Smarter" | translate }}<br /><span>{{ "Live Better" | translate }}</span></h1>
-    <p>
-      {{ "Discover products for every part of your life. Find your favorites and make everyday shopping easier." | translate }}
-    </p>
-  </div>
-  <img
-    class="welcome-art"
-    src="/images/eshop-welcome-photo.png"
-    fetchpriority="high"
-    width="1254"
-    height="1254"
-    alt="Shopping cart with parcels, ivory headphones, a smartphone and a green and white sneaker"
-  />
-  <div class="hero-actions">
-    <a
-      class="button primary"
-      [routerLink]="auth.session() ? '/account' : '/auth'"
-      >{{ "Get Started" | translate }} <app-icon name="arrow" /></a
-    ><a class="button outline" routerLink="/shop">{{ "Shop Now" | translate }}</a>
-  </div>
-  <div class="customer-perks">
-    <a [routerLink]="auth.session() ? '/account/orders' : '/guest/orders'"
-      ><app-icon name="truck" /><span
-        ><strong>{{ "Delivery Updates" | translate }}</strong><small>{{ "Follow your order" | translate }}</small></span
-      ></a
-    >
-    <a routerLink="/account/payments"
-      ><app-icon name="shield" /><span
-        ><strong>{{ "Payment Options" | translate }}</strong><small>{{ "ABA, Bakong & more" | translate }}</small></span
-      ></a
-    >
-    <a routerLink="/account/support"
-      ><app-icon name="box" /><span
-        ><strong>{{ "Order Support" | translate }}</strong
-        ><small>{{ "Help with your purchase" | translate }}</small></span
-      ></a
-    >
-    <a routerLink="/assistant"
-      ><app-icon name="headphones" /><span
-        ><strong>{{ "Shopping Assistant" | translate }}</strong
-        ><small>{{ "Find your next favorite" | translate }}</small></span
-      ></a
-    >
-  </div>
+<section class="welcome-reference-banner" aria-label="Welcome to E-Shop">
+  <a routerLink="/shop" aria-label="Shop now">
+    <img src="/images/eshop-banner-reference.png" width="1280" height="545"
+      fetchpriority="high" alt="Shop Smarter, Live Better. Discover products for every part of your life. Find your favorites and make everyday shopping easier. Shop Now." />
+  </a>
 </section>
 <nav class="category-tiles welcome-categories" aria-label="Shop by category">
   @for (c of categories.slice(0, 8); track c.name; let i = $index) {
-    <a routerLink="/shop" [queryParams]="{ category: c.name }"
+    <a routerLink="/shop" [queryParams]="{ category: c.name }" [attr.aria-label]="c.name | translate"
       ><span
         class="category-photo"
         aria-hidden="true"

@@ -3,7 +3,7 @@ import { Component, inject, signal } from "@angular/core";
 import { CurrencyPipe } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { forkJoin } from "rxjs";
-import { ActivatedRoute } from "@angular/router";
+import { ActivatedRoute, RouterLink } from "@angular/router";
 import { PaymentsApi } from "./payments.api";
 import { Order, Transaction } from "../../core/api/models";
 import { OrdersApi } from "../orders/orders.api";
@@ -13,7 +13,8 @@ import { SignInCard } from "../../shared/components/sign-in-card";
 import { PageState } from "../../shared/utils/page-state";
 import { Status } from "../../shared/components/status";
 @Component({
-  imports: [TranslatePipe, CurrencyPipe, FormsModule, Icon, SignInCard, Status],
+  imports: [TranslatePipe, CurrencyPipe, FormsModule, Icon, SignInCard, Status, RouterLink],
+  styleUrl: "./customer-transactions.scss",
   template: `<div class="page-heading">
       <div>
         <h1>Payment Methods</h1>
@@ -75,6 +76,22 @@ import { Status } from "../../shared/components/status";
         }
       </section>
     }
+    @if(auth.session()) {
+    <section class="customer-transactions">
+      <header class="transactions-heading"><div><p class="section-eyebrow">YOUR PAYMENTS</p><h2>Transaction History</h2><p>Review the payment records linked to your orders.</p></div><button type="button" class="history-refresh" (click)="load()" [disabled]="busy()"><app-icon name="refresh" />Refresh</button></header>
+      <div class="history-scroll"><table class="customer-history"><thead><tr><th>Transaction</th><th>Order</th><th>Method</th><th>Amount</th><th>Status</th><th></th></tr></thead><tbody>
+      @for(transaction of transactions();track transaction.id){<tr [class.selected]="selectedTransaction()?.id===transaction.id"><td><strong>{{transaction.transaction_no || '#'+transaction.id}}</strong></td><td>#{{transaction.order_id}}</td><td>{{transaction.payment_method || '—'}}</td><td>{{transaction.amount | currency:transaction.currency}}</td><td><span class="transaction-status" [class.paid]="transactionTone(transaction)==='paid'" [class.failed]="transactionTone(transaction)==='failed'" [class.pending]="transactionTone(transaction)==='pending'">{{transaction.status}}</span></td><td><button type="button" class="view-transaction" (click)="selectedTransaction.set(transaction)" [attr.aria-label]="'View transaction '+(transaction.transaction_no || transaction.id)">View Details <span aria-hidden="true">↗</span></button></td></tr>}
+      @empty{<tr><td colspan="6" class="history-empty"><app-icon name="wallet" /><strong>No transactions yet</strong><p>Your payment records will appear here after you pay for an order.</p></td></tr>}
+      </tbody></table></div>
+    </section>
+    @if(selectedTransaction();as transaction){
+      <section class="customer-transaction-detail" aria-labelledby="transaction-heading">
+        <header class="transactions-heading"><div><p class="section-eyebrow">PAYMENT RECORD</p><h2 id="transaction-heading">Transaction Details</h2><p>{{transaction.transaction_no || 'Transaction #'+transaction.id}}</p></div><button type="button" class="history-refresh" (click)="selectedTransaction.set(null)" aria-label="Close transaction details"><app-icon name="x" />Close</button></header>
+        <div class="customer-payment-banner" [class.paid]="transactionTone(transaction)==='paid'" [class.failed]="transactionTone(transaction)==='failed'"><span class="payment-state-icon"><app-icon [name]="transactionTone(transaction)==='paid'?'check':transactionTone(transaction)==='failed'?'x':'clock'" /></span><div><h3>{{transactionTone(transaction)==='paid'?'Payment completed':transactionTone(transaction)==='pending'?'Payment pending':transactionTone(transaction)==='failed'?'Payment unsuccessful':transaction.status}}</h3><p>{{transactionTone(transaction)==='paid'?'Your payment has been recorded as successful.':transactionTone(transaction)==='pending'?'Your payment is awaiting confirmation.':'Status reported by the payment service.'}}</p></div><strong>{{transaction.amount | currency:transaction.currency}}</strong></div>
+        <div class="customer-detail-grid"><article><h3><app-icon name="wallet" />Payment Information</h3><dl><div><dt>Transaction ID</dt><dd>{{transaction.id}}</dd></div><div><dt>Reference</dt><dd>{{transaction.transaction_no || '—'}}</dd></div><div><dt>Amount</dt><dd>{{transaction.amount | currency:transaction.currency}}</dd></div><div><dt>Currency</dt><dd>{{transaction.currency}}</dd></div><div><dt>Payment Method</dt><dd>{{transaction.payment_method || '—'}}</dd></div><div><dt>Status</dt><dd><span class="transaction-status" [class.paid]="transactionTone(transaction)==='paid'" [class.failed]="transactionTone(transaction)==='failed'">{{transaction.status}}</span></dd></div></dl></article><article><h3><app-icon name="shopping-bag" />Your Order</h3><dl><div><dt>Order ID</dt><dd>#{{transaction.order_id}}</dd></div></dl><p class="customer-order-note">View your order for purchased items, delivery information, and the latest order status.</p><a class="transaction-order-link" [routerLink]="['/orders',transaction.order_id]">View Order <span aria-hidden="true">↗</span></a><p class="privacy-note"><app-icon name="shield" />Only your payment records are shown here.</p></article></div>
+      </section>
+    }
+    }
     <div class="payment-grid">
       <section>
         <div class="section-heading">
@@ -107,75 +124,21 @@ import { Status } from "../../shared/components/status";
       <section class="panel">
         <div class="section-title">
           <span class="icon-circle"><app-icon name="card" /></span>
-          <div>
-            <h2>{{ "Payment Information" | translate }}</h2>
-            <p>Know what happens next.</p>
-          </div>
+          <div><h2>{{ "Payment Information" | translate }}</h2><p>Know what happens next.</p></div>
         </div>
         <div class="payment-tabs">
-          <span class="tab active"><app-icon name="wallet" /> E-Wallet</span
-          ><span class="tab"><app-icon name="bank" /> Bank Payment</span>
+          <span class="tab active"><app-icon name="wallet" /> E-Wallet</span>
+          <span class="tab"><app-icon name="bank" /> Bank Payment</span>
         </div>
         <div class="unavailable-box">
           <span class="icon-circle"><app-icon name="lock" /></span>
           <h3>Pay from your order</h3>
-          <p>
-            When the shop enables KHQR, open your order details or chat checkout to scan its order-specific QR. A new
-            payment is confirmed only after verification with Bakong.
-          </p>
+          <p>When the shop enables KHQR, open your order details or chat checkout to scan its order-specific QR. A new payment is confirmed only after verification with Bakong.</p>
         </div>
-        <p class="availability-note">
-          <app-icon name="shield" /> An order is marked paid only after
-          confirmation from the payment service.
-        </p>
+        <p class="availability-note"><app-icon name="shield" /> An order is marked paid only after confirmation from the payment service.</p>
       </section>
     </div>
-    <div class="section-heading">
-      <h2>{{ "Payment History" | translate }}</h2>
-      <button
-        class="outline small"
-        [disabled]="!auth.session() || busy()"
-        (click)="load()"
-      >
-        <app-icon name="refresh" />{{ "Refresh" | translate }}
-      </button>
-    </div>
-    <div class="panel table-scroll">
-      <table>
-        <thead>
-          <tr>
-            <th>Transaction</th>
-            <th>{{ "Order" | translate }}</th>
-            <th>Method</th>
-            <th>{{ "Amount" | translate }}</th>
-            <th>{{ "Status" | translate }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (t of transactions(); track t.id) {
-            <tr>
-              <td>{{ t.transaction_no }}</td>
-              <td>#{{ t.order_id }}</td>
-              <td>{{ t.payment_method }}</td>
-              <td>{{ t.amount | currency: t.currency }}</td>
-              <td>
-                <span class="badge">{{ t.status }}</span>
-              </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="5" class="empty-cell">
-                {{
-                  auth.session()
-                    ? "No payment records to display."
-                    : "Sign in to view your payment history."
-                }}
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>`,
+`,
 })
 export class PaymentsPage extends PageState {
   api = inject(PaymentsApi);
@@ -183,6 +146,19 @@ export class PaymentsPage extends PageState {
   auth = inject(AuthService);
   route = inject(ActivatedRoute);
   transactions = signal<Transaction[]>([]);
+  selectedTransaction = signal<Transaction | null>(null);
+  transactionTone(transaction: Transaction) {
+    const status = String(transaction.status).toUpperCase();
+    if (['SUCCESS','COMPLETED','PAID','APPROVED'].includes(status)) return 'paid';
+    if (['PENDING','PROCESSING'].includes(status)) return 'pending';
+    if (['FAILED','CANCELLED','CANCELED','REJECTED','EXPIRED'].includes(status)) return 'failed';
+    return '';
+  }
+  private updateTransactions(rows: Transaction[]) {
+    this.transactions.set(rows);
+    const selected = this.selectedTransaction();
+    if (selected) this.selectedTransaction.set(rows.find(row => row.id === selected.id) || null);
+  }
   order = signal<Order | null>(null);
   creationUncertain = signal(false);
   paymentMethod = "BAKONG";
@@ -221,12 +197,12 @@ export class PaymentsPage extends PageState {
         }),
         (result) => {
           this.order.set(result.order);
-          this.transactions.set(result.transactions);
+          this.updateTransactions(result.transactions);
           this.creationUncertain.set(false);
         },
       );
     } else {
-      this.run(this.api.list(), (t) => this.transactions.set(t));
+      this.run(this.api.list(), (t) => this.updateTransactions(t));
     }
   }
   canCreatePayment() {

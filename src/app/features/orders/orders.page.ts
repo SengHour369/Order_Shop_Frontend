@@ -1,6 +1,8 @@
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { CatalogApi } from "../catalog/catalog.api";
 import { ChatOrder } from '../assistant/chat-order';
 import { TranslatePipe } from "../../core/i18n/translate.pipe";
-import { Component, inject, input, signal } from "@angular/core";
+import { Component, DestroyRef, inject, input, signal } from "@angular/core";
 import { CurrencyPipe, DatePipe } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { RouterLink } from "@angular/router";
@@ -82,11 +84,11 @@ import { Status } from "../../shared/components/status";
           <button
             class="customer-order-choice"
             [class.selected]="selectedOrder().id === o.id"
-            (click)="selectedId.set(o.id)"
+            [routerLink]="['/account/orders',o.id]"
           >
             <span class="order-choice-icon"><app-icon name="box" /></span
             ><span class="grow"
-              ><strong>{{ o.order_number }}</strong
+              ><strong>{{ productTitle(o) }}</strong
               ><small
                 >{{ o.order_date | date: "mediumDate" }} ·
                 {{ o.items?.length || 0 }} items</small
@@ -180,6 +182,14 @@ import { Status } from "../../shared/components/status";
     } }`,
 })
 export class OrdersPage extends PageState {
+  private catalog=inject(CatalogApi);
+  private destroy=inject(DestroyRef);
+  private requested=new Set<number>();
+  productNames=signal<Record<number,string>>({});
+  productTitle(order:Order){
+    const names=[...new Set((order.items||[]).map(item=>this.productNames()[item.product_sku_id]).filter(Boolean))];
+    return names.length ? names.join(', ') : 'Ordered products';
+  }
   embedded = input(false);
   language = input("en");
   date = "";
@@ -218,13 +228,21 @@ export class OrdersPage extends PageState {
     if (!this.auth.session()) return;
     this.run(this.api.history(this.page, this.status), (r) => {
       this.orders.set(r.content);
+      for(const id of new Set(r.content.flatMap(order=>(order.items||[]).map(item=>item.product_sku_id)))){
+        if(this.requested.has(id))continue;
+        this.requested.add(id);
+        this.catalog.forSku(id).pipe(takeUntilDestroyed(this.destroy)).subscribe({
+          next:product=>this.productNames.update(names=>({...names,[id]:product.name})),
+          error:()=>this.requested.delete(id)
+        });
+      }
       this.pages = r.totalPages;
     });
   }
   filtered() {
     const q = this.search.toLowerCase();
     return this.orders().filter((o) =>
-      ((o.order_number || "").toLowerCase().includes(q) || (o.status || "").toLowerCase().includes(q))
+      ((o.order_number || "").toLowerCase().includes(q) || this.productTitle(o).toLowerCase().includes(q) || (o.status || "").toLowerCase().includes(q))
       && (!this.date || o.order_date?.slice(0,10) === this.date),
     );
   }

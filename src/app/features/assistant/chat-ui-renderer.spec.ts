@@ -1,3 +1,4 @@
+import { LanguageService } from '../../core/i18n/language.service';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
@@ -16,6 +17,7 @@ describe('Chat UI whitelist and native orders', () => {
       {provide:AdminApi,useValue:{products:()=>of({items:[{id:2,name:'Real astronaut',skus:[],is_active:true}],total:1,pages:1}),payments:()=>of({items:[{id:8,order_number:'ORD-8',status:'PENDING',amount:25,payment_method:'KHQR'}],total:1,pages:1}),orders,searchInventory:inventory,inventorySummary:()=>of({total_products:21,total_stock:100,low_stock:3,out_of_stock:1}),ordersSummary:()=>of({totalOrders:21}),order:()=>of({id:7,order_number:'ORD-7',status:'PENDING',total_amount:25}),orderItems:()=>of([]),paymentByOrder:()=>of(null)}},
       {provide:PermissionService,useValue:{has:()=>true,allows:()=>true}},
     ]});
+    TestBed.inject(LanguageService).setLanguage('en');
   });
   it('renders the existing table, filters, paging and embedded View without JSON', async () => {
     const fixture=TestBed.createComponent(ChatUiRenderer);

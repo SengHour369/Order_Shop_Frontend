@@ -26,6 +26,7 @@ const session = {
 describe("Integration regressions", () => {
   let http: HttpTestingController;
   let auth: AuthService;
+
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
@@ -37,12 +38,13 @@ describe("Integration regressions", () => {
     auth = TestBed.inject(AuthService);
     auth.accept(session);
   });
+
   afterEach(() => http.verify());
 
   it("resolves a category name to its ID before filtering products", () => {
     TestBed.inject(CatalogApi).category("Home & Living", 2).subscribe();
     const lookup = http.expectOne(
-      "/api/v1/categories/name/?name=Home%20%26%20Living",
+        "/api/v1/categories/name/?name=Home%20%26%20Living",
     );
     expect(lookup.request.method).toBe("POST");
     lookup.flush({ code: "200", data: { id: 14 } });
@@ -60,48 +62,48 @@ describe("Integration regressions", () => {
   it("preserves promotion totals when adapting Spring pagination", () => {
     let total = 0;
     TestBed.inject(CatalogApi)
-      .promotionPage(8, 2)
-      .subscribe((page) => (total = page.total_items));
+        .promotionPage(8, 2)
+        .subscribe((page) => (total = page.total_items));
     http
-      .expectOne("/api/v1/promotions/8/products?page=2&size=12")
-      .flush({
-        code: "200",
-        data: { content: [], totalElements: 33, totalPages: 3 },
-      });
+        .expectOne("/api/v1/promotions/8/products?page=2&size=12")
+        .flush({
+          code: "200",
+          data: { content: [], totalElements: 33, totalPages: 3 },
+        });
     expect(total).toBe(33);
   });
 
   it("does not treat an HTTP 200 business error as success", () => {
     let error = "";
     TestBed.inject(ApiClient)
-      .data("/api/v1/test")
-      .subscribe({ error: (value) => (error = value.message) });
+        .data("/api/v1/test")
+        .subscribe({ error: (value) => (error = value.message) });
     http
-      .expectOne("/api/v1/test")
-      .flush({
-        success: false,
-        status: 409,
-        message: "Stock changed",
-        data: null,
-      });
+        .expectOne("/api/v1/test")
+        .flush({
+          success: false,
+          status: 409,
+          message: "Stock changed",
+          data: null,
+        });
     expect(error).toBe("Stock changed");
   });
 
   it("does not copy a password returned by the legacy profile response", () => {
     let profile: unknown;
     TestBed.inject(ProfileApi)
-      .get()
-      .subscribe((value) => (profile = value));
+        .get()
+        .subscribe((value) => (profile = value));
     http
-      .expectOne("/api/v1/user/id/user?id=7")
-      .flush({
-        code: "200",
-        data: {
-          id: 7,
-          fullName: "Test Shopper",
-          password: "must-not-propagate",
-        },
-      });
+        .expectOne("/api/v1/user/id/user?id=7")
+        .flush({
+          code: "200",
+          data: {
+            id: 7,
+            fullName: "Test Shopper",
+            password: "must-not-propagate",
+          },
+        });
     expect(profile).not.toHaveProperty("password");
     expect(profile).toHaveProperty("fullName", "Test Shopper");
   });
@@ -125,8 +127,8 @@ describe("Integration regressions", () => {
       is_default: false,
     };
     TestBed.inject(AddressesApi)
-      .update(2, body)
-      .subscribe({ error: (value) => (error = value.message) });
+        .update(2, body)
+        .subscribe({ error: (value) => (error = value.message) });
     const request = http.expectOne("/api/v1/addresses/2/user/7");
     expect(request.request.method).toBe("PUT");
     expect(request.request.body).toEqual(body);
@@ -136,14 +138,14 @@ describe("Integration regressions", () => {
 
   it("uses the signed-in customer identity for return requests", () => {
     TestBed.inject(AfterSalesApi)
-      .requestReturn({
-        order_id: 11,
-        product_id: 42,
-        return_type: "REFUND",
-        reason: "Damaged item",
-        amount: 10,
-      })
-      .subscribe();
+        .requestReturn({
+          order_id: 11,
+          product_id: 42,
+          return_type: "REFUND",
+          reason: "Damaged item",
+          amount: 10,
+        })
+        .subscribe();
     const request = http.expectOne("/api/v1/returns/user");
     expect(request.request.body.customer_id).toBe(7);
     expect(request.request.body.return_type).toBe("REFUND");
@@ -152,22 +154,22 @@ describe("Integration regressions", () => {
 
   it("keeps the account signed in after a forbidden request", () => {
     TestBed.inject(CatalogApi)
-      .list()
-      .subscribe({ error: () => {} });
+        .list()
+        .subscribe({ error: () => {} });
     http
-      .expectOne("/api/v1/products/get/all")
-      .flush({}, { status: 403, statusText: "Forbidden" });
+        .expectOne("/api/v1/products/get/all")
+        .flush({}, { status: 403, statusText: "Forbidden" });
     expect(auth.session()?.id).toBe(7);
     http.expectNone("/api/v1/public/refresh");
   });
 
   it("does not restore a session after logout during token refresh", () => {
     TestBed.inject(CatalogApi)
-      .list()
-      .subscribe({ error: () => {} });
+        .list()
+        .subscribe({ error: () => {} });
     http
-      .expectOne("/api/v1/products/get/all")
-      .flush({}, { status: 401, statusText: "Unauthorized" });
+        .expectOne("/api/v1/products/get/all")
+        .flush({}, { status: 401, statusText: "Unauthorized" });
     const refresh = http.expectOne("/api/v1/public/refresh");
     auth.clear();
     refresh.flush({ ...session, access_token: "late-token" });
@@ -177,11 +179,11 @@ describe("Integration regressions", () => {
 
   it("preserves a new login when an old refresh request fails", () => {
     TestBed.inject(CatalogApi)
-      .list()
-      .subscribe({ error: () => {} });
+        .list()
+        .subscribe({ error: () => {} });
     http
-      .expectOne("/api/v1/products/get/all")
-      .flush({}, { status: 401, statusText: "Unauthorized" });
+        .expectOne("/api/v1/products/get/all")
+        .flush({}, { status: 401, statusText: "Unauthorized" });
     const refresh = http.expectOne("/api/v1/public/refresh");
     auth.accept({
       ...session,

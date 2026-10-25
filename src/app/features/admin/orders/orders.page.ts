@@ -80,7 +80,7 @@ function csvCell(value: unknown) {
     <app-status [busy]="busy()" [error]="error()" />
     @if(queryRecords() !== null){<p class="query-notice" role="status">Server-filtered order results{{queryDate() ? ' for ' + queryDate() : ''}}. Up to 20 records returned; filters and pages apply to these results.</p>}
     <div class="adm-table-card">
-      <form class="adm-filter" (ngSubmit)="$event.preventDefault()">
+      <form class="adm-filter" (ngSubmit)="applyFilters()">
         <input
           name="search"
           [(ngModel)]="search"
@@ -97,7 +97,7 @@ function csvCell(value: unknown) {
           }
         </select>
         <label class="order-guest-toggle"><input type="checkbox" role="switch" name="guestsOnly" [(ngModel)]="guestsOnly" (ngModelChange)="page=1; load()" /><span>Guest orders only</span></label>
-        <select name="payment" [(ngModel)]="paymentMethod">
+        <select name="payment" [(ngModel)]="paymentMethod" (ngModelChange)="applyFilters()">
           <option value="all">All Payment Methods</option>
           <optgroup label="KHQR network">
             <option value="BAKONG">Bakong</option>
@@ -113,10 +113,12 @@ function csvCell(value: unknown) {
           name="date"
           type="date"
           [(ngModel)]="date"
+          (ngModelChange)="applyFilters()"
           [attr.aria-label]='"Order date" | translate'
         />
+        <button class="adm-btn" type="submit" [disabled]="busy()">Search</button>
         @if (filtersOn()) {
-          <button class="adm-btn" type="button" (click)="clearFilters()">
+          <button class="adm-btn" type="button" (click)="clearFilters()" [disabled]="busy()">
             Clear
           </button>
         }
@@ -300,14 +302,21 @@ export class OrdersPage extends PageState {
       error: () => this.error.set("No order matched that number."),
     });
   }
+  private readonly filteredSource = signal<Row[]|null>(null);
+  applyFilters(){this.page=1;this.load();}
   load() {
     const records=this.queryRecords();
     if(records !== null){
-      const matching=records.filter(row=>!this.status || String(field(row,'status'))===this.status);
+      const matching=this.filterRows(records).filter(row=>!this.status || String(field(row,'status'))===this.status);
       this.rows.set(matching.slice((this.page-1)*this.size,this.page*this.size));
       this.total.set(matching.length);this.pages.set(Math.max(1,Math.ceil(matching.length/this.size)));
       return;
     }
+    if(this.search.trim()||this.paymentMethod!=='all'||this.date){
+      this.run(forkJoin({list:this.api.allOrders(this.status,this.guestsOnly),summary:this.api.ordersSummary()}),result=>{this.filteredSource.set(result.list);const matching=this.filterRows(result.list);this.total.set(matching.length);this.pages.set(Math.max(1,Math.ceil(matching.length/this.size)));this.summary.set(result.summary);});
+      return;
+    }
+    this.filteredSource.set(null);
     this.run(
       forkJoin({
         list: this.api.orders(this.page, this.status, this.size, this.guestsOnly),
@@ -361,20 +370,24 @@ export class OrdersPage extends PageState {
     );
   }
   clearFilters() {
-    const reload = !!this.status || this.guestsOnly;
     this.guestsOnly = false;
     this.search = "";
     this.paymentMethod = "all";
     this.date = "";
     this.status = "";
     this.page = 1;
-    if (reload) this.load();
+    this.load();
   }
   visible() {
+    const source=this.filteredSource();
+    const matching=this.filterRows(source??this.rows());
+    return source===null?matching:matching.slice((this.page-1)*this.size,this.page*this.size);
+  }
+  private filterRows(rows:Row[]) {
     const q = this.search.trim().toLowerCase();
     const method = this.paymentMethod;
     const day = this.date;
-    return this.rows().filter((row) => {
+    return rows.filter((row) => {
       if (q) {
         const number = String(
           field(row, "order_number", "orderNumber"),
@@ -634,11 +647,13 @@ export class OrderDetailPage extends PageState {
         switchMap(result => {
           const customerId = Number(field(result.order, 'customer_id', 'customerId'));
           const addressId = Number(field(result.order, 'shipping_address_id', 'shippingAddressId'));
+          const paymentKnown = 'payment_id' in result.order || 'paymentId' in result.order;
+          const hasPayment = !paymentKnown || Number(field(result.order,'payment_id','paymentId')) > 0;
           const optional = (source: ReturnType<AdminApi['customer']>, label: string) => source.pipe(catchError(() => { failures.push(label); return of(null); }));
           return forkJoin({
             customer: customerId ? optional(this.api.customer(customerId), 'customer') : of(null),
             address: addressId ? optional(this.api.address(addressId), 'shipping address') : of(null),
-            payment: optional(this.api.paymentByOrder(id), 'payment'),
+            payment: hasPayment ? optional(this.api.paymentByOrder(id), 'payment') : of(null),
           }).pipe(map(details => ({ ...result, details })));
         })
       ),

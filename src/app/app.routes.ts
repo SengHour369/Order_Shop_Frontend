@@ -509,14 +509,14 @@ export const routes: Routes = [
         title: "Sales Report · ShopAdmin",
         data: { report: "sales" },
         loadComponent: () =>
-          import("./features/admin/reports/reports.page").then((m) => m.ReportsPage),
+          import("./features/admin/reports/sales-report.page").then((m) => m.SalesReportPage),
       },
       {
         path: "payment-report",
         title: "Payment Report · ShopAdmin",
         data: { report: "payment" },
         loadComponent: () =>
-          import("./features/admin/reports/reports.page").then((m) => m.ReportsPage),
+          import("./features/admin/reports/payment-report.page").then((m) => m.PaymentReportPage),
       },
       {
         path: "tax-report",

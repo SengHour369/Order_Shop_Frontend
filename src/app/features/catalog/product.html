@@ -47,7 +47,7 @@
       }
       <div class="detail-variants" aria-label="Product options">
         @for (sku of p.skus; track sku.id) {
-          <button type="button" [class.selected]="skuId() === sku.id" [attr.aria-pressed]="skuId() === sku.id" (click)="choose(sku)">
+          <button type="button" [class.selected]="skuId() === sku.id" [attr.aria-pressed]="skuId() === sku.id" [attr.aria-label]="optionLabel(sku)" (click)="choose(sku)">
             @if (sku.image_url || p.main_image[0]; as image) { <img appProductImage [src]="image" alt="" /> }
             <span>{{ optionLabel(sku) }}</span>
           </button>

@@ -1,39 +1,149 @@
-<div class="page-heading"><div><h1>{{ 'Account Settings' | translate }}</h1><p>{{ 'Manage your profile information, preferences, and account settings.' | translate }}</p></div></div>
-<app-status [busy]="busy()" [error]="error()" [message]="message()" />
-@if (!auth.session()) { <app-sign-in-card action="view your profile and account preferences" path="/account/settings" /> }
-@else {
-@if(!profile()&&!busy()){<button type="button" (click)="load()">{{ 'Retry' | translate }}</button>}
-<div class="profile-layout">
-  <nav class="profile-sections" aria-label="Account settings sections">
-    <button type="button" [class.selected]="section==='profile'" (click)="section='profile'"><app-icon name="user"/><span><strong>{{ 'Profile Information' | translate }}</strong><small>{{ 'Update your personal information' | translate }}</small></span></button>
-    <a routerLink="/account/security"><app-icon name="shield"/><span><strong>{{ 'Password & Security' | translate }}</strong><small>{{ 'Manage password and security' | translate }}</small></span></a>
-    <button type="button" [class.selected]="section==='preferences'" (click)="section='preferences'"><app-icon name="settings"/><span><strong>{{ 'Preferences' | translate }}</strong><small>{{ 'Language, currency, notifications' | translate }}</small></span></button>
-    <button type="button" [class.selected]="section==='connected'" (click)="section='connected'"><app-icon name="lock"/><span><strong>{{ 'Connected Accounts' | translate }}</strong><small>{{ 'Manage linked accounts' | translate }}</small></span></button>
-    <button type="button" class="delete-section" [class.selected]="section==='delete'" (click)="section='delete'"><app-icon name="trash"/><span><strong>{{ 'Delete Account' | translate }}</strong><small>{{ 'Permanently delete your account' | translate }}</small></span></button>
-  </nav>
-  @if(section==='profile') {
-  <form class="profile-card" #form="ngForm" (ngSubmit)="form.valid && save()">
-    <header><app-icon name="user"/><h2>{{ 'Profile Information' | translate }}</h2><button class="primary desktop-save" [disabled]="!profile()||busy()||!dirty()||form.invalid">{{ 'Save Changes' | translate }}</button></header>
-    <div class="profile-body">
-      <p class="photo-title">{{ 'Profile Photo' | translate }}</p>
-      <div class="profile-portrait"><span class="portrait">{{ (profile()?.fullName || profile()?.username || 'U').charAt(0).toUpperCase() }}<span class="portrait-camera"><app-icon name="camera"/></span></span><div><p>{{ 'Upload a new photo' | translate }}</p><small>JPG, PNG (Max 5MB)</small><div class="photo-actions"><button type="button" disabled>{{ 'Change Photo' | translate }}</button><button type="button" class="remove" disabled>{{ 'Remove' | translate }}</button></div></div></div>
-      <small class="feature-note">{{ 'Photo storage is not available yet.' | translate }}</small>
-      <fieldset [disabled]="!profile()||busy()">
-      <label>{{ 'Full Name' | translate }} <em>*</em><input name="fullName" [(ngModel)]="fullName" required maxlength="150" autocomplete="name"/></label>
-      <label>{{ 'Email Address' | translate }} <em>*</em><input [value]="profile()?.email || ''" disabled type="email" autocomplete="email"/></label>
-      <label>{{ 'Phone Number' | translate }} <em>*</em><input name="phone" [(ngModel)]="phone" required pattern="\+?[0-9 ()-]{7,25}" maxlength="25" type="tel" autocomplete="tel" placeholder="+855 12 345 678"/></label>
-      <label>{{ 'Date of Birth' | translate }}<input name="birthdate" [(ngModel)]="birthdate" type="date" [max]="today" autocomplete="bday"/></label>
-      <div class="unsupported-fields"><p>{{ 'Gender' | translate }}</p><div class="gender-options">@for(gender of ['Male','Female','Other'];track gender){<label><input type="radio" disabled name="gender"/>{{ gender | translate }}</label>}</div><label>{{ 'Nationality' | translate }}<select disabled><option>{{ 'Not available' | translate }}</option></select></label><small class="feature-note">{{ 'Gender and nationality are not stored by this service yet.' | translate }}</small></div>
-      </fieldset>
-      <label>{{ 'Address (Primary)' | translate }}</label><a class="primary-address" routerLink="/account/addresses"><span>@if(address();as a){ {{ a.address_line1 }}<br/>{{ a.commune }} {{ a.district }} {{ a.city }} {{ a.zip_code }}<br/>{{ a.country }} }@else{ {{ (addressError() ? 'Could not load your address.' : 'No default address saved.') | translate }} }</span><span class="address-edit"><app-icon name="edit"/>{{ 'Edit Address' | translate }}</span></a>
+<div class="page-heading">
+    <div>
+        <h1>{{ 'Account Settings' | translate }}</h1>
+        <p>{{ 'Manage your profile information, preferences, and account settings.' | translate }}</p>
     </div>
-    <footer class="mobile-save"><button class="primary" [disabled]="!profile()||busy()||!dirty()||form.invalid">{{ 'Save Changes' | translate }}</button></footer>
-  </form>
-  } @else {
-    <section class="profile-card"><header><h2>{{ (section==='preferences'?'Preferences':section==='connected'?'Connected Accounts':'Delete Account') | translate }}</h2></header><div class="profile-body">
-      @if(section==='preferences'){<label>{{ 'Language' | translate }}<app-language-select/></label><label>{{ 'Currency' | translate }}<input value="USD ($)" disabled/></label><a class="button outline" routerLink="/account/notification-settings">{{ 'Notification Settings' | translate }}</a>}
-      @else{<p>{{ (section==='connected'?'Manage sign-in providers through your identity provider.':'Account deletion is not available in self-service. Contact support for assistance.') | translate }}</p><a routerLink="/account/support" class="button outline">{{ 'Help & Support' | translate }}</a>}
-    </div></section>
-  }
 </div>
+
+<app-status [busy]="busy()" [error]="error()" [message]="message()" />
+
+@if (!auth.session()) {
+    <app-sign-in-card action="view your profile and account preferences" path="/account/settings" />
+} @else {
+    @if (!profile() && !busy()) {
+        <button type="button" (click)="load()">{{ 'Retry' | translate }}</button>
+    }
+
+    <div class="profile-layout">
+        <nav class="profile-sections" aria-label="Account settings sections">
+            <button type="button" [class.selected]="section==='profile'" (click)="section='profile'">
+                <app-icon name="user" />
+                <span>
+          <strong>{{ 'Profile Information' | translate }}</strong>
+          <small>{{ 'Update your personal information' | translate }}</small>
+        </span>
+            </button>
+            <a routerLink="/account/security">
+                <app-icon name="shield" />
+                <span>
+          <strong>{{ 'Password & Security' | translate }}</strong>
+          <small>{{ 'Manage password and security' | translate }}</small>
+        </span>
+            </a>
+            <button type="button" [class.selected]="section==='preferences'" (click)="section='preferences'">
+                <app-icon name="settings" />
+                <span>
+          <strong>{{ 'Preferences' | translate }}</strong>
+          <small>{{ 'Language, currency, notifications' | translate }}</small>
+        </span>
+            </button>
+            <button type="button" [class.selected]="section==='connected'" (click)="section='connected'">
+                <app-icon name="lock" />
+                <span>
+          <strong>{{ 'Connected Accounts' | translate }}</strong>
+          <small>{{ 'Manage linked accounts' | translate }}</small>
+        </span>
+            </button>
+            <button type="button" class="delete-section" [class.selected]="section==='delete'" (click)="section='delete'">
+                <app-icon name="trash" />
+                <span>
+          <strong>{{ 'Delete Account' | translate }}</strong>
+          <small>{{ 'Permanently delete your account' | translate }}</small>
+        </span>
+            </button>
+        </nav>
+
+        @if (section==='profile') {
+            <form class="profile-card" #form="ngForm" (ngSubmit)="form.valid && save()">
+                <header>
+                    <app-icon name="user" />
+                    <h2>{{ 'Profile Information' | translate }}</h2>
+                    <button class="primary desktop-save" [disabled]="!profile()||busy()||!dirty()||form.invalid">{{ 'Save Changes' | translate }}</button>
+                </header>
+                <div class="profile-body">
+                    <p class="photo-title">{{ 'Profile Photo' | translate }}</p>
+                    <div class="profile-portrait">
+            <span class="portrait">
+              {{ (profile()?.fullName || profile()?.username || 'U').charAt(0).toUpperCase() }}
+                <span class="portrait-camera"><app-icon name="camera" /></span>
+            </span>
+                        <div>
+                            <p>{{ 'Upload a new photo' | translate }}</p>
+                            <small>JPG, PNG (Max 5MB)</small>
+                            <div class="photo-actions">
+                                <button type="button" disabled>{{ 'Change Photo' | translate }}</button>
+                                <button type="button" class="remove" disabled>{{ 'Remove' | translate }}</button>
+                            </div>
+                        </div>
+                    </div>
+                    <small class="feature-note">{{ 'Photo storage is not available yet.' | translate }}</small>
+                    <fieldset [disabled]="!profile()||busy()">
+                        <label>
+                            {{ 'Full Name' | translate }} <em>*</em>
+                            <input name="fullName" [(ngModel)]="fullName" required maxlength="150" autocomplete="name" />
+                        </label>
+                        <label>
+                            {{ 'Email Address' | translate }} <em>*</em>
+                            <input [value]="profile()?.email || ''" disabled type="email" autocomplete="email" />
+                        </label>
+                        <label>
+                            {{ 'Phone Number' | translate }} <em>*</em>
+                            <input name="phone" [(ngModel)]="phone" required pattern="\+?[0-9 ()-]{7,25}" maxlength="25" type="tel" autocomplete="tel" placeholder="+855 12 345 678" />
+                        </label>
+                        <label>
+                            {{ 'Date of Birth' | translate }}
+                            <input name="birthdate" [(ngModel)]="birthdate" type="date" [max]="today" autocomplete="bday" />
+                        </label>
+                        <div class="unsupported-fields">
+                            <p>{{ 'Gender' | translate }}</p>
+                            <div class="gender-options">
+                                @for (gender of ['Male','Female','Other']; track gender) {
+                                    <label><input type="radio" disabled name="gender" />{{ gender | translate }}</label>
+                                }
+                            </div>
+                            <label>
+                                {{ 'Nationality' | translate }}
+                                <select disabled>
+                                    <option>{{ 'Not available' | translate }}</option>
+                                </select>
+                            </label>
+                            <small class="feature-note">{{ 'Gender and nationality are not stored by this service yet.' | translate }}</small>
+                        </div>
+                    </fieldset>
+                    <label>{{ 'Address (Primary)' | translate }}</label>
+                    <a class="primary-address" routerLink="/account/addresses">
+            <span>
+              @if (address(); as a) {
+                  {{ a.address_line1 }}<br />
+                  {{ a.commune }} {{ a.district }} {{ a.city }} {{ a.zip_code }}<br />
+                  {{ a.country }}
+              } @else {
+                  {{ (addressError() ? 'Could not load your address.' : 'No default address saved.') | translate }}
+              }
+            </span>
+                        <span class="address-edit"><app-icon name="edit" />{{ 'Edit Address' | translate }}</span>
+                    </a>
+                </div>
+                <footer class="mobile-save">
+                    <button class="primary" [disabled]="!profile()||busy()||!dirty()||form.invalid">{{ 'Save Changes' | translate }}</button>
+                </footer>
+            </form>
+        } @else {
+            <section class="profile-card">
+                <header>
+                    <h2>{{ (section==='preferences'?'Preferences':section==='connected'?'Connected Accounts':'Delete Account') | translate }}</h2>
+                </header>
+                <div class="profile-body">
+                    @if (section==='preferences') {
+                        <label>{{ 'Language' | translate }}<app-language-select /></label>
+                        <label>{{ 'Currency' | translate }}<input value="USD ($)" disabled /></label>
+                        <a class="button outline" routerLink="/account/notification-settings">{{ 'Notification Settings' | translate }}</a>
+                    } @else {
+                        <p>{{ (section==='connected'?'Manage sign-in providers through your identity provider.':'Account deletion is not available in self-service. Contact support for assistance.') | translate }}</p>
+                        <a routerLink="/account/support" class="button outline">{{ 'Help & Support' | translate }}</a>
+                    }
+                </div>
+            </section>
+        }
+    </div>
 }

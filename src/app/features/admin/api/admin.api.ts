@@ -260,6 +260,9 @@ export class AdminApi {
       ),
     );
   }
+  allOrders(status = "", guestsOnly = false) {
+    return this.all<Row>(page => this.orders(page, status, 100, guestsOnly));
+  }
   customerOrders(userId: number, page = 1, size = 10) {
     return this.page<Row>(this.api.post('/api/v1/orders/get/all', this.query(page, size, 1, String(userId))));
   }

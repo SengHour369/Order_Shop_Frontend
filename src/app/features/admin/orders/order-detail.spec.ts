@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
-import { AdminApi } from '../api/admin.api';
+import { AdminApi, Row } from '../api/admin.api';
 import { OrderDetailPage } from './orders.page';
 
 describe('Order detail service composition', () => {
   function create(paymentFails = false) {
     const api = {
-      order: vi.fn(() => of({ id: 42, customer_id: 7, shipping_address_id: 9, status: 'PENDING' })),
+      order: vi.fn(() => of<Row>({ id: 42, customer_id: 7, shipping_address_id: 9, status: 'PENDING' })),
       orderItems: vi.fn(() => of([{ id: 2, quantity: 1 }])),
       customer: vi.fn(() => of({ id: 7, fullName: 'Test Customer', email: 'test@example.test' })),
       address: vi.fn(() => of({ id: 9, address_line1: 'Street 1', city: 'Phnom Penh', country: 'Cambodia' })),
@@ -109,4 +109,6 @@ describe('Order detail service composition', () => {
     expect(page.mapUrl({})).toBe('');
     expect(page.mapUrl(page.order()!)).toContain('Street%201');
   });
+  it('does not request a nonexistent payment when the order explicitly has no payment',()=>{const {page,api}=create();api.paymentByOrder.mockClear();api.order.mockReturnValue(of<Row>({id:42,customer_id:7,shipping_address_id:9,status:'PENDING',payment_id:null}));page.load(42);expect(api.paymentByOrder).not.toHaveBeenCalled();expect(page.order()?.['payment']).toBeUndefined();expect(page.message()).toBe('');});
+
 });

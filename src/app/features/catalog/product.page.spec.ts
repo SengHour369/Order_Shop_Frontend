@@ -34,8 +34,8 @@ describe('Customer product details', () => {
     const page = fixture.componentInstance;
     expect(fixture.nativeElement.textContent).toContain('True Black');
     expect(page.discount()).toBe(28);
-    expect(page.images()).toEqual(['/black.png', '/white.png']);
-    page.moveImage(-1); expect(page.currentImage()).toBe('/white.png');
+    expect(page.images()).toEqual(['/black.png']);
+    page.moveImage(-1); expect(page.currentImage()).toBe('/black.png');
     page.choose(product.skus[1]); expect(page.skuId()).toBe(11); expect(page.currentImage()).toBe('/white.png');
   });
   it('blocks invalid quantities and unavailable variants before contacting the cart API', () => {
@@ -114,4 +114,17 @@ describe('Customer product details', () => {
     expect(fixture.nativeElement.querySelector('.specifications-empty')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('.specification-table')).toBeNull();
   });
+  it('deduplicates selected SKU attributes and replaces them when selecting another SKU',()=>{
+    const page=TestBed.createComponent(ProductPage).componentInstance;
+    const duplicate={id:2,name:'Color',attributes:[{id:2,value:'True Black'}]};
+    page.product.set({...product,skus:[{...product.skus[0],attributes:[...product.skus[0].attributes!,duplicate]},
+      {...product.skus[1],attributes:[{id:3,name:'Color',attributes:[{id:3,value:'White'}]}]}]});
+    expect(page.highlights()).toEqual([{name:'Color',value:'True Black'}]);
+    expect(page.specifications().filter(row=>row.name==='Color')).toHaveLength(1);
+    page.choose(page.product()!.skus[1]);
+    expect(page.highlights()).toEqual([{name:'Color',value:'White'}]);
+    expect(page.specifications().find(row=>row.name==='SKU')?.values).toEqual(['HEAD-WHT']);
+    expect(page.images()).toEqual(['/white.png']);
+  });
+
 });

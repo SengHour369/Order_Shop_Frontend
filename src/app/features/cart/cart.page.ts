@@ -1,7 +1,11 @@
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { CatalogApi } from "../catalog/catalog.api";
+import { Icon } from '../../shared/components/icon';
+import { ProductImage } from '../../shared/components/product-image';
 import { AuthService } from "../../core/auth/auth.service";
 import { StorefrontAccessService } from "../../core/storefront/storefront-access.service";
 import { TranslatePipe } from "../../core/i18n/translate.pipe";
-import { Component, inject, signal } from "@angular/core";
+import { Component, DestroyRef, inject, signal } from "@angular/core";
 import { CurrencyPipe } from "@angular/common";
 import { RouterLink } from "@angular/router";
 import { CartApi } from "./cart.api";
@@ -10,7 +14,7 @@ import { CustomerStore } from "../../core/stores/customer.store";
 import { PageState } from "../../shared/utils/page-state";
 import { Status } from "../../shared/components/status";
 @Component({
-  imports: [TranslatePipe, CurrencyPipe, RouterLink, Status],
+  imports: [Icon, ProductImage, TranslatePipe, CurrencyPipe, RouterLink, Status],
   template: `<div class="breadcrumbs">
       <a routerLink="/">{{ "Home" | translate }}</a><span>›</span><span>{{ "Cart" | translate }}</span>
     </div>
@@ -22,8 +26,10 @@ import { Status } from "../../shared/components/status";
         <div class="panel">
           @for (item of c.items; track item.id) {
             <div class="line-item">
-              <div>
-                <h3>Product SKU #{{ item.product_sku_id }}</h3>
+              <a class="cart-item-picture" [routerLink]="productDetails()[item.product_sku_id] ? ['/shop',productDetails()[item.product_sku_id].id] : null" [attr.aria-label]="'View ' + productName(item)">@if(productImage(item)){<img appProductImage [src]="productImage(item)" alt="" loading="lazy" />}@else{<app-icon name="bag" />}</a>
+              <div class="cart-item-details">
+                <h3>@if(productDetails()[item.product_sku_id]; as product){<a [routerLink]="['/shop',product.id]">{{productName(item)}}</a>}@else{ {{productName(item)}} }</h3>
+                @if(productDetails()[item.product_sku_id]?.variant){<small class="cart-variant">{{productDetails()[item.product_sku_id].variant}}</small>}
                 <span class="muted">{{
                   item.total_price | currency: "USD"
                 }}</span>
@@ -72,7 +78,7 @@ import { Status } from "../../shared/components/status";
               >Continue to checkout →</a>
             } @else {<p>Guest checkout is currently unavailable.</p><a class="button primary full" routerLink="/auth" [queryParams]="{returnUrl:'/checkout'}">Sign in to checkout</a>}
             <button
-              class="button outline"
+              class="button outline cart-clear"
               [disabled]="busy()"
               (click)="clear()"
             >
@@ -85,6 +91,12 @@ import { Status } from "../../shared/components/status";
     }`,
 })
 export class CartPage extends PageState {
+  private catalog = inject(CatalogApi);
+  private destroy = inject(DestroyRef);
+  private requested = new Set<number>();
+  productDetails = signal<Record<number,{id:number;name:string;image:string;variant:string}>>({});
+  productName(item:CartItem){return this.productDetails()[item.product_sku_id]?.name || item.product_name || ('Product SKU #'+item.product_sku_id);}
+  productImage(item:CartItem){return this.productDetails()[item.product_sku_id]?.image || item.image_url || '';}
   api = inject(CartApi);
   auth = inject(AuthService);
   access = inject(StorefrontAccessService);
@@ -96,6 +108,17 @@ export class CartPage extends PageState {
   }
   show(c: Cart) {
     this.cart.set(c);
+    for(const id of new Set(c.items.map(item=>item.product_sku_id))){
+      if(this.requested.has(id))continue;
+      this.requested.add(id);
+      this.catalog.forSku(id).pipe(takeUntilDestroyed(this.destroy)).subscribe({
+        next:product=>{
+          const sku=product.skus.find(s=>s.id===id);
+          this.productDetails.update(details=>({...details,[id]:{id:product.id,name:product.name,image:sku?.image_url||product.main_image?.[0]||'',variant:sku?.description||sku?.sku||''}}));
+        },
+        error:()=>{this.requested.delete(id);}
+      });
+    }
     this.store.cartCount.set(c.total_items);
   }
   update(i: CartItem, delta: number) {

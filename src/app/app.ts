@@ -15,6 +15,7 @@ import { CustomerChat } from "./features/assistant/customer-chat/customer-chat";
 @Component({
   selector: "app-root",
   host: {
+    "[class.customer-inputs]": "!isAdmin()",
     "[class.customer-experience]": "!isAdmin() && !isAssistant()",
     "[class.customer-welcome-page]": "router.url.split('?')[0] === '/'",
     "[class.customer-auth-page]": "router.url.split('?')[0] === '/auth'",
@@ -34,9 +35,9 @@ import { CustomerChat } from "./features/assistant/customer-chat/customer-chat";
     @if (!isAdmin() && !isAssistant()) {
       <header class="shop-header">
         <div class="header-top">
+          <a class="mobile-menu-link" routerLink="/categories" aria-label="Browse categories"><app-icon name="menu" /></a>
           <a routerLink="/" class="brand"
-            ><span class="brand-bag"><app-icon name="check" /></span
-            ><span>E-Shop<small>{{ "Shop Smarter. Live Better." | translate }}</small></span></a
+            ><span class="brand-original"><img src="/images/eshop-logo.png" alt="E-Shop" width="1280" height="427" /></span></a
           >
           @if (["/", "/auth"].includes(router.url.split("?")[0])) {
             <nav class="welcome-navigation" aria-label="Welcome navigation">
@@ -149,8 +150,7 @@ import { CustomerChat } from "./features/assistant/customer-chat/customer-chat";
     @if (!isAdmin() && !isAssistant()) {
       <footer class="site-footer">
         <a class="brand" routerLink="/"
-          ><span class="brand-bag"><app-icon name="check" /></span
-          ><span>E-Shop<small>{{ "Shop Smarter. Live Better." | translate }}</small></span></a
+          ><span class="brand-original"><img src="/images/eshop-logo.png" alt="E-Shop" width="1280" height="427" /></span></a
         >
         <p>{{ "Everything you love. All in one place." | translate }}</p>
         <a routerLink="/account/support">{{ "Help & Support" | translate }}</a
@@ -170,8 +170,9 @@ import { CustomerChat } from "./features/assistant/customer-chat/customer-chat";
           ariaCurrentWhenActive="page"
           ><app-icon name="grid" /><span>{{ "Categories" | translate }}</span></a
         >
+        <a class="mobile-wishlist-link" routerLink="/account/wishlist" routerLinkActive="active" ariaCurrentWhenActive="page"><app-icon name="heart" /><span>{{ "Wishlist" | translate }}</span></a>
         <a class="mobile-scan" routerLink="/scanner" routerLinkActive="active" ariaCurrentWhenActive="page" [attr.aria-label]='"Scan a product" | translate'><span><app-icon name="camera" /></span><small>{{ "Scan" | translate }}</small></a>
-        <a
+        <a class="mobile-cart-link"
           routerLink="/cart"
           routerLinkActive="active"
           ariaCurrentWhenActive="page"

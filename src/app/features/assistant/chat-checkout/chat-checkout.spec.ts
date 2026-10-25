@@ -66,7 +66,8 @@ describe('Checkout inside customer chat', () => {
         request.flush({ data: { id: 30, order_number: 'ORD-30', status: 'PENDING', total_amount: 39 } });
         fixture.detectChanges();
         expect(fixture.nativeElement.textContent).toContain('ORD-30');
-        expect(TestBed.inject(CheckoutAttempt).read(7)).toBeNull();
+        expect(TestBed.inject(CheckoutAttempt).orderId(7)).toBe(30);
+        expect(TestBed.inject(CheckoutAttempt).read(7)?.payment_method).toBe('ABA');
         http.expectNone(r => r.url.includes('/payment-transactions'));
     });
     it('preserves the checkout key after uncertain failure and retries the same order', () => {
@@ -136,4 +137,12 @@ describe('Checkout inside customer chat', () => {
         expect(fixture.nativeElement.textContent).toContain('Sign in');
         http.expectNone(r => r.url.includes('/api/v1/'));
     });
+    it('preselects requested Bakong with the saved address but never submits automatically',()=>{
+        const fixture=create();fixture.componentRef.setInput('preferredMethod','BAKONG');fixture.detectChanges();
+        const component=fixture.componentInstance;expect(component.method).toBe('BAKONG');expect(component.addressId).toBe(5);
+        http.expectNone(checkoutUrl);
+        component.method='CASH_ON_DELIVERY';review(component);fixture.detectChanges();component.edit();fixture.detectChanges();
+        expect(component.method).toBe('CASH_ON_DELIVERY');http.expectNone(checkoutUrl);
+    });
+
 });

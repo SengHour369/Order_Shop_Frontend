@@ -27,6 +27,7 @@ describe("Admin API contracts", () => {
     second.flush({ code: '200', data: { payload: [{ id: 2 }], total_items: 2, total_pages: 2, current_page: 2 } });
     expect(records).toEqual([{ id: 1 }, { id: 2 }]);
   });
+  it('reads all order pages before applying combined admin filters',()=>{let result:Row[]=[];api.allOrders('PENDING',true).subscribe(rows=>result=rows);const first=http.expectOne('/api/v1/orders/get/all');expect(first.request.body).toEqual({page:1,size:100,criteria_type:5,criteria_value:'GUEST:PENDING'});first.flush({code:'200',data:{payload:[{id:1}],total_items:2,total_pages:2,current_page:1}});const second=http.expectOne('/api/v1/orders/get/all');expect(second.request.body.page).toBe(2);second.flush({code:'200',data:{payload:[{id:2}],total_items:2,total_pages:2,current_page:2}});expect(result).toEqual([{id:1},{id:2}]);});
   it('filters customer order history on the server with explicit pagination', () => {
     api.customerOrders(7, 2, 10).subscribe();
     const request = http.expectOne('/api/v1/orders/get/all');

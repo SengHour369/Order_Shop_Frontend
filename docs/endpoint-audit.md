@@ -5,6 +5,9 @@ Generated from current Spring controller annotations and Angular HTTP call sites
 | Method | Route | Static status | Angular source |
 | --- | --- | --- | --- |
 | GET | `/api/v1/admin/monitor` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
+| GET | `/api/v1/admin/live-tests/runs` | Adapter present; live verification required | [live-tests.page.ts](../src/app/features/admin/live-tests/live-tests.page.ts) |
+| GET | `/api/v1/admin/live-tests/runs/{id}` | Adapter present; live verification required | [live-tests.page.ts](../src/app/features/admin/live-tests/live-tests.page.ts) |
+| POST | `/api/v1/admin/live-tests/runs` | Adapter present; live verification required | [live-tests.page.ts](../src/app/features/admin/live-tests/live-tests.page.ts) |
 | GET | `/api/v1/admin/session` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | GET | `/api/v1/admin/settings` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | PUT | `/api/v1/admin/settings` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
@@ -24,7 +27,8 @@ Generated from current Spring controller annotations and Angular HTTP call sites
 | GET | `/api/ai/executions/{id}` | Adapter present; live verification required | [assistant.api.ts](../src/app/features/assistant/assistant.api.ts) |
 | GET | `/api/ai/imports/tools` | Review required |  |
 | GET | `/api/ai/imports` | Review required |  |
-| POST | `/api/ai/imports/upload` | Review required |  |
+| GET | `/api/ai/imports/requests` | Review required |  |
+| POST | `/api/ai/imports/manual-product` | Review required |  |
 | POST | `/api/ai/imports/{id}/rows/{rowId}/images` | Review required |  |
 | POST | `/api/ai/imports/{id}/rows/{rowId}/images/{imageId}/detach` | Review required |  |
 | GET | `/api/ai/imports/{id}/images/{imageId}` | Review required |  |
@@ -45,8 +49,40 @@ Generated from current Spring controller annotations and Angular HTTP call sites
 | GET | `/api/ai/imports/{id}/original` | Review required |  |
 | GET | `/api/ai/imports/{id}/report` | Review required |  |
 | POST | `/api/ai/knowledge` | Review required |  |
+| GET | `/api/ai/admin/memory` | Review required |  |
+| GET | `/api/ai/admin/memory/{id}` | Review required |  |
+| DELETE | `/api/ai/admin/memory/{id}` | Review required |  |
 | POST | `/api/ai/feedback` | Adapter present; live verification required | [assistant.api.ts](../src/app/features/assistant/assistant.api.ts) |
 | GET | `/api/ai/quota` | Adapter present; live verification required | [assistant-quota.ts](../src/app/features/assistant/assistant-quota.ts) |
+| POST | `/api/ai/voice/transcriptions` | Adapter present; live verification required | [assistant.api.ts](../src/app/features/assistant/assistant.api.ts) |
+| GET | `/api/ai/voice/config` | Adapter present; live verification required | [live-voice.ts](../src/app/features/assistant/customer-chat/live-voice.ts) |
+| GET | `/api/ai/voice/usage` | Adapter present; live verification required | [live-voice.ts](../src/app/features/assistant/customer-chat/live-voice.ts) |
+| POST | `/api/ai/voice/sessions` | Adapter present; live verification required | [live-voice.ts](../src/app/features/assistant/customer-chat/live-voice.ts) |
+| POST | `/api/ai/voice/sessions/{id}/transcript` | Adapter present; live verification required | [live-voice.ts](../src/app/features/assistant/customer-chat/live-voice.ts) |
+| GET | `/api/ai/voice/sessions/{id}` | Review required |  |
+| POST | `/api/ai/voice/sessions/{id}/connected` | Adapter present; live verification required | [live-voice.ts](../src/app/features/assistant/customer-chat/live-voice.ts) |
+| POST | `/api/ai/voice/sessions/{id}/end` | Adapter present; live verification required | [live-voice.ts](../src/app/features/assistant/customer-chat/live-voice.ts) |
+| POST | `/api/ai/voice/sessions/{id}/tools` | Adapter present; live verification required | [live-voice.ts](../src/app/features/assistant/customer-chat/live-voice.ts) |
+| POST | `/api/ai/voice/sessions/{id}/displayed-products` | Adapter present; live verification required | [live-voice.ts](../src/app/features/assistant/customer-chat/live-voice.ts) |
+| POST | `/api/ai/voice/sessions/{id}/selection` | Adapter present; live verification required | [live-voice.ts](../src/app/features/assistant/customer-chat/live-voice.ts) |
+| GET | `/api/ai/admin/workflows/templates` | Review required |  |
+| POST | `/api/ai/admin/workflows/propose` | Review required |  |
+| GET | `/api/ai/admin/workflows` | Review required |  |
+| GET | `/api/ai/admin/workflows/catalog` | Review required |  |
+| GET | `/api/ai/admin/workflows/{id}` | Review required |  |
+| POST | `/api/ai/admin/workflows` | Review required |  |
+| PUT | `/api/ai/admin/workflows/{id}` | Review required |  |
+| POST | `/api/ai/admin/workflows/validate` | Review required |  |
+| POST | `/api/ai/admin/workflows/{id}/publish` | Review required |  |
+| GET | `/api/ai/admin/workflows/{id}/versions` | Review required |  |
+| POST | `/api/ai/admin/workflows/versions/{id}/execute` | Review required |  |
+| GET | `/api/ai/admin/workflows/summary` | Review required |  |
+| GET | `/api/ai/admin/workflows/executions` | Review required |  |
+| GET | `/api/ai/admin/workflows/executions/{id}/logs` | Review required |  |
+| GET | `/api/ai/admin/workflows/executions/{id}` | Review required |  |
+| POST | `/api/ai/admin/workflows/executions/{id}/cancel` | Review required |  |
+| POST | `/api/ai/admin/workflows/executions/{id}/rerun` | Review required |  |
+| POST | `/api/ai/admin/workflows/executions/{id}/reconcile` | Review required |  |
 | GET | `/api/v1/gateway/routes` | Excluded: gateway infrastructure |  |
 | POST | `/api/v1/gateway/routes` | Excluded: gateway infrastructure |  |
 | PUT | `/api/v1/gateway/routes/{id}` | Excluded: gateway infrastructure |  |
@@ -103,6 +139,7 @@ Generated from current Spring controller annotations and Angular HTTP call sites
 | POST | `/api/v1/public/session/second-factor` | Excluded: alternative cookie-session protocol; app uses bearer tokens | [auth.service.ts](../src/app/core/auth/auth.service.ts) |
 | POST | `/api/v1/public/session/refresh` | Excluded: alternative cookie-session protocol; app uses bearer tokens | [auth.service.ts](../src/app/core/auth/auth.service.ts) |
 | POST | `/api/v1/public/session/logout` | Excluded: alternative cookie-session protocol; app uses bearer tokens |  |
+| GET | `/api/v1/user/approval-options` | Adapter present; live verification required | [ai-imports.api.ts](../src/app/features/admin/imports/ai-imports.api.ts) |
 | POST | `/api/v1/user/create` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | POST | `/api/v1/user/id` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | POST | `/api/v1/user/id/image` | Adapter present; live verification required | [profile.api.ts](../src/app/features/account/profile.api.ts) |
@@ -213,6 +250,7 @@ Generated from current Spring controller annotations and Angular HTTP call sites
 | POST | `/api/v1/admin/promotions/{id}/disable` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | GET | `/api/v1/promotions/active` | Adapter present; live verification required | [catalog.api.ts](../src/app/features/catalog/catalog.api.ts) |
 | GET | `/api/v1/promotions/{id}/products` | Adapter present; live verification required | [catalog.api.ts](../src/app/features/catalog/catalog.api.ts) |
+| POST | `/api/v1/products/reports/sku-categories` | Review required |  |
 | GET | `/api/v1/storefront/categories` | Review required |  |
 | GET | `/api/v1/storefront/categories/name` | Review required |  |
 | GET | `/api/v1/storefront/categories/{id}` | Review required |  |
@@ -295,6 +333,7 @@ Generated from current Spring controller annotations and Angular HTTP call sites
 | POST | `/api/v1/returns/{returnId}/receive` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | POST | `/api/v1/returns/{returnId}/inspect/start` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | POST | `/api/v1/returns/{returnId}/inspect/complete` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
+| GET | `/api/v1/orders/reports/sales-details` | Adapter present; live verification required | [sales-report.page.ts](../src/app/features/admin/reports/sales-report.page.ts) |
 | GET | `/api/v1/guest/cart` | Review required |  |
 | POST | `/api/v1/guest/cart/items` | Review required |  |
 | PATCH | `/api/v1/guest/cart/items/{id}` | Review required |  |
@@ -314,11 +353,13 @@ Generated from current Spring controller annotations and Angular HTTP call sites
 | POST | `/api/v1/guest/reviews` | Review required |  |
 | POST | `/api/v1/guest/session` | Adapter present; live verification required | [guest.api.ts](../src/app/core/storefront/guest.api.ts) |
 | DELETE | `/api/v1/guest/session` | Review required |  |
+| POST | `/api/v1/payments/orders/{id}/bakong-app` | Adapter present; live verification required | [payment-qr.ts](../src/app/features/payments/payment-qr.ts) |
 | GET | `/api/v1/payments/orders/{id}/qr/image` | Review required |  |
 | GET | `/api/v1/payments/orders/{id}/qr` | Review required |  |
-| POST | `/api/v1/payments/orders/{id}/verify` | Review required |  |
+| POST | `/api/v1/payments/orders/{id}/verify` | Adapter present; live verification required | [checkout-payment.page.ts](../src/app/features/payments/checkout-payment.page.ts) |
 | GET | `/internal/commerce/guest-orders/{id}/qr/image` | Excluded: service-to-service API |  |
 | GET | `/internal/commerce/guest-orders/{id}/qr` | Excluded: service-to-service API |  |
+| GET | `/internal/commerce/payments` | Excluded: service-to-service API |  |
 | GET | `/internal/commerce/payments/{id}` | Excluded: service-to-service API |  |
 | POST | `/api/v1/bakong/get-qr-image` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts), [payments.api.ts](../src/app/features/payments/payments.api.ts) |
 | POST | `/api/v1/bakong/check-transaction` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts), [payments.api.ts](../src/app/features/payments/payments.api.ts) |
@@ -331,7 +372,8 @@ Generated from current Spring controller annotations and Angular HTTP call sites
 | POST | `/api/v1/payments/order` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | POST | `/api/v1/payments/transaction` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | POST | `/api/v1/payments/user/history` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts), [payments.api.ts](../src/app/features/payments/payments.api.ts) |
-| GET | `/api/v1/payments/methods` | Adapter present; live verification required | [payments.api.ts](../src/app/features/payments/payments.api.ts) |
+| GET | `/api/v1/payments/methods` | Adapter present; live verification required | [payment-qr.ts](../src/app/features/payments/payment-qr.ts), [payments.api.ts](../src/app/features/payments/payments.api.ts) |
+| GET | `/api/v1/payments/reports/breakdown` | Adapter present; live verification required | [payment-report.page.ts](../src/app/features/admin/reports/payment-report.page.ts) |
 | GET | `/api/v1/payments/reports/monthly` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | POST | `/api/v1/payment-transactions/get/all` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |
 | GET | `/api/v1/payment-transactions/{id}` | Adapter present; live verification required | [admin.api.ts](../src/app/features/admin/api/admin.api.ts) |

@@ -393,13 +393,13 @@ import {
                     <tr>
                       <td>
                         {{
-                          text(field(item, "movement_type", "type", "reason"))
+                          text(field(item, "movement_type", "movementType", "type", "reason"))
                         }}
                       </td>
                       <td>
                         {{
                           text(
-                            field(item, "quantity", "change_qty", "stock_qty")
+                            field(item, "quantity_change", "quantityChange", "quantity", "change_qty", "stock_qty")
                           )
                         }}
                       </td>

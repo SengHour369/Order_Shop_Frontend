@@ -13,6 +13,7 @@ import { AddressesApi } from "../../features/addresses/addresses.api";
 import { NotificationsApi } from "../../features/notifications/notifications.api";
 import { PaymentsApi } from "../../features/payments/payments.api";
 import { ProfileApi } from "../../features/account/profile.api";
+
 const session = {
   id: 7,
   access_token: "access",
@@ -21,9 +22,11 @@ const session = {
   email: "shopper@example.test",
   role: "USER",
 };
+
 describe("Backend contracts", () => {
   let http: HttpTestingController;
   let auth: AuthService;
+
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
@@ -34,7 +37,9 @@ describe("Backend contracts", () => {
     http = TestBed.inject(HttpTestingController);
     auth = TestBed.inject(AuthService);
   });
+
   afterEach(() => http.verify());
+
   it("preserves the login DTO field casing", () => {
     auth.login("shopper", "password").subscribe();
     const request = http.expectOne("/api/v1/public/session/login");
@@ -46,6 +51,7 @@ describe("Backend contracts", () => {
     request.flush(session);
     expect(auth.userId()).toBe(7);
   });
+
   it("adds a SKU with a server-owned price and authenticated user", () => {
     auth.accept(session);
     TestBed.inject(CartApi).add(42, 2).subscribe();
@@ -54,6 +60,7 @@ describe("Backend contracts", () => {
     expect(request.request.headers.get("Authorization")).toBe("Bearer access");
     request.flush({ code: "200", data: { items: [] } });
   });
+
   it("uses one-based catalog pagination and search criteria", () => {
     auth.accept(session);
     TestBed.inject(CatalogApi).list(2, "tea").subscribe();
@@ -67,17 +74,19 @@ describe("Backend contracts", () => {
     });
     request.flush({ code: "200", data: { payload: [] } });
   });
+
   it("unwraps each address envelope", () => {
     auth.accept(session);
     let ids: number[] = [];
     TestBed.inject(AddressesApi)
-      .list()
-      .subscribe((rows) => (ids = rows.map((r) => r.id)));
+        .list()
+        .subscribe((rows) => (ids = rows.map((r) => r.id)));
     http
-      .expectOne("/api/v1/addresses/user/7")
-      .flush([{ code: "200", data: { id: 9 } }]);
+        .expectOne("/api/v1/addresses/user/7")
+        .flush([{ code: "200", data: { id: 9 } }]);
     expect(ids).toEqual([9]);
   });
+
   it("sends checkout identity without client totals or stock", () => {
     auth.accept(session);
     const body = {
@@ -91,6 +100,7 @@ describe("Backend contracts", () => {
     expect(request.request.body).toEqual(body);
     request.flush({ code: "200", data: { id: 1, status: "CHECKOUT_PENDING" } });
   });
+
   it("shares refresh between concurrent expired requests", () => {
     auth.accept(session);
     const catalog = TestBed.inject(CatalogApi);
@@ -109,6 +119,7 @@ describe("Backend contracts", () => {
       r.flush({ code: "200", data: { payload: [] } });
     }
   });
+
   it("authorizes logout because the gateway protects it", () => {
     auth.accept(session);
     auth.logout().subscribe();
@@ -116,24 +127,26 @@ describe("Backend contracts", () => {
     expect(r.request.headers.get("Authorization")).toBe("Bearer access");
     r.flush({});
   });
+
   it("keeps the renewed session when a retried business request fails", () => {
     auth.accept(session);
     let failed = false;
     TestBed.inject(CatalogApi)
-      .list()
-      .subscribe({ error: () => (failed = true) });
+        .list()
+        .subscribe({ error: () => (failed = true) });
     http
-      .expectOne("/api/v1/products/get/all")
-      .flush({}, { status: 401, statusText: "Unauthorized" });
+        .expectOne("/api/v1/products/get/all")
+        .flush({}, { status: 401, statusText: "Unauthorized" });
     http
-      .expectOne("/api/v1/public/refresh")
-      .flush({ ...session, access_token: "renewed" });
+        .expectOne("/api/v1/public/refresh")
+        .flush({ ...session, access_token: "renewed" });
     http
-      .expectOne("/api/v1/products/get/all")
-      .flush({}, { status: 500, statusText: "Server error" });
+        .expectOne("/api/v1/products/get/all")
+        .flush({}, { status: 500, statusText: "Server error" });
     expect(failed).toBe(true);
     expect(auth.session()?.access_token).toBe("renewed");
   });
+
   it("does not send credentials to external URLs", () => {
     auth.accept(session);
     TestBed.inject(HttpClient).get("https://example.test/image").subscribe();
@@ -141,6 +154,7 @@ describe("Backend contracts", () => {
     expect(r.request.headers.has("Authorization")).toBe(false);
     r.flush({});
   });
+
   it("calls the remaining shop routes", () => {
     auth.accept(session);
     const cart = TestBed.inject(CartApi);
@@ -167,23 +181,23 @@ describe("Backend contracts", () => {
     payments.statusHistory(6).subscribe();
     auth.checkUser("shopper@example.test").subscribe();
     auth
-      .registerAccount({
-        username: "ada",
-        password: "secret",
-        email: "ada@example.test",
-        phone: "1",
-        full_name: "Ada",
-      })
-      .subscribe();
+        .registerAccount({
+          username: "ada",
+          password: "secret",
+          email: "ada@example.test",
+          phone: "1",
+          full_name: "Ada",
+        })
+        .subscribe();
     const flush = (url: string) =>
-      http
-        .expectOne(url)
-        .flush({ code: "200", data: { content: [], items: [] } });
+        http
+            .expectOne(url)
+            .flush({ code: "200", data: { content: [], items: [] } });
     flush("/api/v1/cart/user/id?userId=7");
     flush("/api/v1/cart/user/userId/clear?userId=7");
     http
-      .expectOne("/api/v1/addresses/user/7/paged?page=1&size=5&sort=id,desc")
-      .flush({ content: [], number: 1, totalPages: 0, totalElements: 0 });
+        .expectOne("/api/v1/addresses/user/7/paged?page=1&size=5&sort=id,desc")
+        .flush({ content: [], number: 1, totalPages: 0, totalElements: 0 });
     flush("/api/notifications/4");
     flush("/api/v1/promotions/active?page=1&size=20");
     flush("/api/v1/promotions/3/products?page=1&size=20");
@@ -195,7 +209,7 @@ describe("Backend contracts", () => {
     flush("/api/v1/payments/user/id?userId=7");
     flush("/api/v1/payments/user/detail?userId=7&paymentId=9");
     flush(
-      "/api/v1/payments/user/history?userId=7&page=0&size=10&sort=paymentDate,desc&status=SUCCESS",
+        "/api/v1/payments/user/history?userId=7&page=0&size=10&sort=paymentDate,desc&status=SUCCESS",
     );
     flush("/api/v1/payment-transactions/no/TX-1");
     flush("/api/v1/payment-transactions/6/status-history");
@@ -211,4 +225,5 @@ describe("Backend contracts", () => {
     register.flush({ code: "200", data: {} });
   });
 });
+
 import { HttpClient } from "@angular/common/http";

@@ -1,118 +1,25 @@
-@if (accessDenied()) {
-  <app-page-access-denied />
-} @else {
-<section class="detail-page detail-payment">
-  <header class="detail-head">
-<div>
-<h2>{{ "Payment Details" | translate }}</h2>
-<nav class="detail-crumbs" aria-label="Breadcrumb">
-<a routerLink="/admin" *appCanRoute="'/admin'">{{ "Dashboard" | translate }}</a>
-<span>›</span>
-<a routerLink="/admin/payments" *appCanRoute="'/admin/payments'">{{ "Payments" | translate }}</a>
-<span>›</span>{{ row() ? text(field(row()!, 'code', 'id')) : id }}</nav>
-</div>
-<a class="detail-button" routerLink="/admin/payments" *appCanRoute="'/admin/payments'">
-<app-icon name="arrow-left" /> Back to Payments</a>
-</header>
-  <app-status [busy]="busy()" [error]="error()" />
-  @if (row(); as current) {
-    @if (field(current, "customerType", "customer_type") === "GUEST") {<p class="detail-badge">Guest order payment · No registered customer account</p>}
-    <div class="detail-grid">
-<div class="detail-stack">
-      <article class="detail-card">
-<div class="detail-row">
-<span>{{ text(field(current, 'code', 'id')) }}</span>
-<span class="detail-badge dot" [class.on]="paymentTone(current) === 'on'" [class.off]="paymentTone(current) === 'off'" [class.wait]="paymentTone(current) === 'wait'">{{ text(current['status']) }}</span>
-</div>
-<div class="detail-amount">{{ amount(current) }} <small>{{ text(current['currency']) }}</small>
-</div>
-<p class="detail-muted">{{ paymentTone(current) === 'on' ? 'Payment Service records this payment as successful.' : paymentTone(current) === 'off' ? 'This payment did not complete successfully.' : paymentTone(current) === 'wait' ? 'Awaiting payment confirmation.' : 'Current status reported by Payment Service.' }}</p>
-<span class="detail-badge">{{ text(field(current, 'payment_method', 'method')) }}</span>
+@if(accessDenied()){<app-page-access-denied />}@else{
+<section class="detail-page payment-workspace">
+<header class="detail-head"><div><h2>{{'Payment Details' | translate}}</h2><nav class="detail-crumbs" aria-label="Breadcrumb"><a routerLink="/admin" *appCanRoute="'/admin'">Dashboard</a><span>›</span><a routerLink="/admin/payments" *appCanRoute="'/admin/payments'">Payments</a><span>›</span><span>Payment Details</span></nav></div><div class="payment-head-actions"><a class="detail-button" routerLink="/admin/payments" *appCanRoute="'/admin/payments'"><app-icon name="arrow-left" />Back to Payments</a><div class="actions-menu"><button class="detail-button" type="button" [attr.aria-expanded]="actionsOpen()" (click)="actionsOpen.set(!actionsOpen())">Actions <span aria-hidden="true">⌄</span></button>@if(actionsOpen()){<div class="actions-dropdown"><button type="button" (click)="load();actionsOpen.set(false)" [disabled]="busy()"><app-icon name="refresh" />Refresh status</button><a [routerLink]="['/admin/payments/bakong-callback',id]" *appCanRoute="['/admin/payments/bakong-callback',id]"><app-icon name="shield" />Review callback</a></div>}</div></div></header>
+<app-status [busy]="busy()" [error]="error()" [message]="message()" />
+@if(row();as current){
+<article class="payment-banner" [class.success]="paymentTone(current)==='on'" [class.failed]="paymentTone(current)==='off'" [class.pending]="paymentTone(current)==='wait'">
+ <div class="banner-heading"><span class="banner-icon"><app-icon [name]="paymentTone(current)==='on'?'check':paymentTone(current)==='off'?'x':'clock'" /></span><div><h3>{{paymentTone(current)==='on'?'Payment Completed':paymentTone(current)==='off'?'Payment Unsuccessful':paymentTone(current)==='wait'?'Payment Pending':'Payment '+text(current['status'])}}</h3><p>{{paymentTone(current)==='on'?'Payment Service records this payment as successful.':paymentTone(current)==='wait'?'Awaiting payment confirmation.':paymentTone(current)==='off'?'This payment did not complete successfully.':'Current status reported by Payment Service.'}}</p></div></div>
+ <dl class="banner-facts"><div><dt>Payment ID</dt><dd>{{text(current['id'])}}</dd></div><div><dt>Order Number</dt><dd><a [routerLink]="['/admin/orders',field(current,'order_id','orderId') || id]" *appCanRoute="['/admin/orders',field(current,'order_id','orderId') || id]">{{text(field(current,'order_number','orderNumber') || field(order() || {},'order_number','orderNumber','code'))}} ↗</a></dd></div><div><dt>Amount</dt><dd class="payment-amount">{{amount(current)}} {{text(current['currency'])}}</dd></div><div><dt>Method</dt><dd><span class="method-badge">{{text(field(current,'payment_method','method'))}}</span></dd></div><div><dt>Payment Date</dt><dd>{{when(field(current,'payment_date','paymentDate','datetime'))}}</dd></div></dl>
 </article>
-      <article class="detail-card">
-<h3>{{ "Transaction Info" | translate }}</h3>
-<div class="detail-rows">
-<div class="detail-row">
-<span>{{ "Payment ID" | translate }}</span>
-<b class="detail-mono">{{ text(current['id']) }}</b>
+@if(field(current,'customerType','customer_type')==='GUEST'){<p class="guest-note">Guest order payment · No registered customer account</p>}
+<div class="payment-information-grid">
+ <article class="payment-card"><header><span class="card-icon"><app-icon name="wallet" /></span><h3>Payment Information</h3></header><dl class="payment-fields">
+ <div><dt>Payment ID</dt><dd>{{text(current['id'])}}</dd></div><div><dt>Transaction ID</dt><dd class="reference-value"><span>{{text(field(current,'transaction_id','transactionId','transaction_hash'))}}</span>@if(field(current,'transaction_id','transactionId','transaction_hash')!==''){<button class="copy-button" type="button" aria-label="Copy transaction ID" (click)="copyValue(field(current,'transaction_id','transactionId','transaction_hash'))"><app-icon name="copy" /></button>}</dd></div><div><dt>Payment Date</dt><dd>{{when(field(current,'payment_date','paymentDate','datetime'))}}</dd></div><div><dt>Amount</dt><dd class="payment-amount" [class.success-text]="paymentTone(current)==='on'">{{amount(current)}} {{text(current['currency'])}}</dd></div><div><dt>Status</dt><dd><span class="detail-badge dot" [class.on]="paymentTone(current)==='on'" [class.off]="paymentTone(current)==='off'" [class.wait]="paymentTone(current)==='wait'">{{text(current['status'])}}</span></dd></div><div><dt>Method</dt><dd><span class="method-badge">{{text(field(current,'payment_method','method'))}}</span></dd></div><div><dt>Provider</dt><dd>{{text(field(current,'payment_provider','provider'))}}</dd></div><div><dt>Currency</dt><dd>{{text(current['currency'])}}</dd></div><div><dt>Verified By</dt><dd>{{text(field(current,'verified_by','verifiedBy'))}}</dd></div><div><dt>Verified At</dt><dd>{{when(field(current,'verified_at','verifiedAt'))}}</dd></div><div><dt>Reference No.</dt><dd class="reference-value"><span>{{text(field(current,'reference_no','referenceNo','code'))}}</span>@if(field(current,'reference_no','referenceNo','code')!==''){<button class="copy-button" type="button" aria-label="Copy reference number" (click)="copyValue(field(current,'reference_no','referenceNo','code'))"><app-icon name="copy" /></button>}</dd></div>
+ </dl></article>
+ <article class="payment-card"><header><span class="card-icon"><app-icon name="shopping-bag" /></span><h3>Order Information</h3><a class="detail-button" [routerLink]="['/admin/orders',field(current,'order_id','orderId') || id]" *appCanRoute="['/admin/orders',field(current,'order_id','orderId') || id]">View Order ↗</a></header><dl class="payment-fields">
+ <div><dt>Order Number</dt><dd>{{text(field(current,'order_number','orderNumber') || field(order() || {},'order_number','orderNumber'))}}</dd></div><div><dt>Order Code</dt><dd>{{text(current['codeOrder'] || field(order() || {},'code','codeOrder'))}}</dd></div><div><dt>Order ID</dt><dd>{{text(field(current,'order_id','orderId') || id)}}</dd></div><div><dt>Customer</dt><dd>{{field(current,'customerType','customer_type')==='GUEST'?'Guest customer':text(field(order() || {},'customer_name','customerName','fullName','user_name'))}}</dd></div><div><dt>Order Status</dt><dd><span class="detail-badge">{{text(field(order() || {},'status','order_status','orderStatus'))}}</span></dd></div><div><dt>Order Amount</dt><dd>{{field(order() || {},'total_amount','totalAmount','amount')!==''?amount({amount:field(order() || {},'total_amount','totalAmount','amount')})+' '+text(field(order() || {},'currency') || current['currency']):'—'}}</dd></div><div><dt>Payment Amount</dt><dd>{{amount(current)}} {{text(current['currency'])}}</dd></div><div><dt>Payment Method</dt><dd>{{text(field(current,'payment_method','method'))}}</dd></div><div><dt>Placed At</dt><dd>{{when(field(order() || {},'created_at','createdAt','order_date','orderDate'))}}</dd></div><div><dt>Confirmed At</dt><dd>{{when(field(order() || {},'confirmed_at','confirmedAt'))}}</dd></div>
+ </dl>@if(!order()){<p class="section-note">Additional order details are unavailable. Open the order to check access or refresh.</p>}</article>
 </div>
-<div class="detail-row">
-<span>{{ "Transaction ID" | translate }}</span>
-<span class="detail-mono">{{ text(field(current, 'transaction_id', 'transactionId', 'transaction_hash')) }}</span>
+<div class="payment-secondary-grid">
+ <article class="payment-card"><header><span class="card-icon"><app-icon name="clock" /></span><h3>Payment Timeline</h3></header><div class="payment-timeline">@for(event of timeline(current);track $index){<article [class.complete]="event.complete"><span class="timeline-marker"><app-icon [name]="event.complete?'check':'clock'" /></span><div><strong>{{event.title}}</strong><p>{{event.description}}</p></div><time>{{when(event.date)}}</time></article>}@empty{<p class="empty-state">No payment timestamps provided.</p>}</div></article>
+ <article class="payment-card"><header><span class="card-icon"><app-icon name="file-text" /></span><h3>Transaction Events</h3></header><div class="payment-table-wrap"><table class="payment-table"><thead><tr><th>#</th><th>Event</th><th>Description</th><th>Created At</th></tr></thead><tbody>@for(event of records(current,'events');track $index){<tr><td>{{$index+1}}</td><td><span class="event-badge">{{text(field(event,'event','type','eventType'))}}</span></td><td>{{text(field(event,'description','message'))}}</td><td>{{when(field(event,'created_at','createdAt'))}}</td></tr>}@empty{<tr><td colspan="4" class="empty-state">No transaction events are included in this payment record.</td></tr>}</tbody></table></div></article>
 </div>
-<div class="detail-row">
-<span>Payment Date</span>
-<span>{{ when(field(current, 'payment_date', 'paymentDate', 'datetime')) }}</span>
-</div>
-<div class="detail-row">
-<span>{{ "Status" | translate }}</span>
-<span class="detail-badge" [class.on]="paymentTone(current) === 'on'" [class.off]="paymentTone(current) === 'off'" [class.wait]="paymentTone(current) === 'wait'">{{ text(current['status']) }}</span>
-</div>
-</div>
-</article>
-      <article class="detail-card">
-<h3>Action Panel</h3>
-<div class="detail-notice" [class.on]="paymentTone(current) === 'on'" [class.off]="paymentTone(current) === 'off'">
-<h4>{{ (paymentTone(current) === 'on' ? 'Payment Successful' : paymentTone(current) === 'off' ? 'Payment Unsuccessful' : paymentTone(current) === 'wait' ? 'Payment Pending' : text(current['status'])) | translate }}</h4>
-<p>{{ paymentTone(current) === 'on' ? 'Review the associated order for fulfillment or return handling.' : 'Refresh the recorded status or inspect trusted provider verification.' }}</p>
-</div>
-<button class="detail-button detail-wide" [disabled]="busy()" (click)="load()">
-<app-icon name="refresh" /> {{ "Check Status Now" | translate }}</button>
-<a class="detail-button detail-wide" [routerLink]="['/admin/payments/bakong-callback', id]" *appCanRoute="['/admin/payments/bakong-callback', id]">
-<app-icon name="shield" /> Review Callback</a>
-</article>
-    </div>
-<aside class="detail-stack">
-      <article class="detail-card">
-<h3>Associated Order</h3>
-<div class="detail-rows">
-<div class="detail-row">
-<span>Order Number</span>
-<span>{{ text(field(current, 'order_number', 'orderNumber')) }}</span>
-</div>
-<div class="detail-row">
-<span>Order Code</span>
-<span>{{ text(current['codeOrder']) }}</span>
-</div>
-<div class="detail-row">
-<span>{{ "Order ID" | translate }}</span>
-<span>{{ text(field(current, 'order_id', 'orderId') || id) }}</span>
-</div>
-<a [routerLink]="['/admin/orders', field(current, 'order_id', 'orderId') || id]" *appCanRoute="['/admin/orders', field(current, 'order_id', 'orderId') || id]">View Order ↗</a>
-</div>
-</article>
-      <article class="detail-card">
-<h3>{{ "Payment Method" | translate }}</h3>
-<div class="detail-rows">
-<div class="detail-row">
-<span>Method</span>
-<span>{{ text(field(current, 'payment_method', 'method')) }}</span>
-</div>
-<div class="detail-row">
-<span>Provider</span>
-<span>{{ text(field(current, 'payment_provider', 'provider')) }}</span>
-</div>
-<div class="detail-row">
-<span>{{ "Currency" | translate }}</span>
-<span>{{ text(current['currency']) }}</span>
-</div>
-</div>
-</article>
-      <article class="detail-card">
-<h3>Payment Timeline</h3>
-<div class="detail-timeline">@if (field(current, 'updated_at', 'updatedAt', 'payment_date') !== '') { <div>
-<b>Payment {{ text(current['status']) }}</b>
-<small>{{ when(field(current, 'updated_at', 'updatedAt', 'payment_date')) }}</small>
-</div> }
-@if (field(current, 'created_at', 'createdAt') !== '') { <div>
-<b>Payment Initiated</b>
-<small>{{ when(field(current, 'created_at', 'createdAt')) }}</small>
-</div> }
-@else { <p class="detail-muted">Initiation time not provided.</p> }</div>
-</article>
-    </aside>
-</div>
-  }
-</section>
-
+<article class="payment-card audit-card"><header><span class="card-icon"><app-icon name="file-text" /></span><h3>Audit Logs</h3></header><div class="payment-table-wrap"><table class="payment-table"><thead><tr><th>#</th><th>Action</th><th>User</th><th>Details</th><th>Created At</th></tr></thead><tbody>@for(log of records(current,'auditLogs');track $index){<tr><td>{{$index+1}}</td><td>{{text(log['action'])}}</td><td>{{text(field(log,'user','actor','actorId'))}}</td><td>{{text(field(log,'description','details'))}}</td><td>{{when(field(log,'occurredAt','createdAt','created_at'))}}</td></tr>}@empty{<tr><td colspan="5" class="empty-state">No audit logs are included in this payment record.</td></tr>}</tbody></table></div></article>
 }
+</section>}

@@ -1,5 +1,5 @@
 import { TranslatePipe } from "../../../core/i18n/translate.pipe";
-import { Component, DestroyRef, inject, input, output, signal } from '@angular/core';
+import { Component, DestroyRef, inject, input, output, signal, effect, untracked } from '@angular/core';
 import { ChatOrder } from "../chat-order";
 import { PaymentQr } from "../../payments/payment-qr";
 import { CurrencyPipe } from '@angular/common';
@@ -23,6 +23,7 @@ import { ProductImage } from '../../../shared/components/product-image';
     templateUrl: './chat-checkout.html', styleUrl: './chat-checkout.css',
 })
 export class ChatCheckout {
+    preferredMethod=input('');
     language=input('en');
     text(en:string,km:string){return this.language()==='km'?km:en;}
     labels = input<Record<number, {
@@ -65,7 +66,14 @@ export class ChatCheckout {
     }
     method = 'CASH_ON_DELIVERY';
     methods: string[] = [];
+    private applyPreferredMethod(){
+        if(this.pending()||this.reviewing()||this.order())return;
+        const requested=this.preferredMethod();
+        const method=requested==='BAKONG'&&this.methods.includes('KHQR')?'KHQR':requested;
+        if(method&&this.methods.includes(method))this.method=method;
+    }
     constructor() {
+        effect(()=>{this.preferredMethod();untracked(()=>this.applyPreferredMethod());});
         if (this.auth.session()) {
             const saved = this.attempt.read(this.auth.userId());
             if (saved) {
@@ -91,6 +99,7 @@ export class ChatCheckout {
                 if (!this.pending() && !this.methods.includes(this.method)) this.method = this.methods[0] || '';
                 if (!this.pending() && !data.addresses.some(a => a.id === this.addressId))
                     this.addressId = data.addresses.find(a => a.is_default)?.id || data.addresses[0]?.id || 0;
+                this.applyPreferredMethod();
                 this.loading.set(false);
             },
             error: () => { this.error.set('Could not load your cart and addresses. Please retry.'); this.loading.set(false); },
@@ -204,7 +213,8 @@ export class ChatCheckout {
                 this.order.set(order);
                 this.pending.set(false);
                 this.reviewing.set(false);
-                this.attempt.clear(this.auth.userId());
+                if(['BAKONG','KHQR','ABA'].includes(order.paymentMethod || body.payment_method))this.attempt.attachOrder(this.auth.userId(),order.id);
+                else this.attempt.clear(this.auth.userId());
                 this.store.cartCount.set(0);
                 this.notice.set('Order received. Payment has not been taken in chat.');
             },

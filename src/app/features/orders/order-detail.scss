@@ -1,0 +1,69 @@
+:host{display:block;max-width:1180px;margin:0 auto;color:#11233b}
+:host .page-heading{gap:16px;align-items:center;margin:8px 0 24px}
+.order-eyebrow{display:block;font-size:10px;font-weight:750;letter-spacing:1.8px;color:#008653;margin-bottom:7px}
+:host .page-heading h1{font-size:30px;letter-spacing:-1px;margin:0 0 6px}
+:host .page-heading p{font-size:14px;color:#718096;margin:0;line-height:1.6}
+:host .page-heading>.button{border-radius:12px;padding:10px 16px;font-size:13px;min-height:42px}
+:host .compact-heading{padding:20px;background:#f4f8fc;border:1px solid #e5ecf3;border-radius:16px;margin-bottom:20px}
+:host .compact-heading h3{font-size:19px;line-height:1.4;margin:0 0 5px;overflow-wrap:anywhere}
+:host .order-detail-actions button{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 12px;min-height:40px;font-size:12px;border:1px solid #d8e4ee;border-radius:10px;background:white;color:#36516b}
+:host .order-detail-actions .danger-outline{color:#ba3d4b;border-color:#f1d6da}
+:host .order-detail-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(280px,1fr);gap:20px;align-items:start}
+:host .order-detail-grid>div,:host .order-detail-grid>aside{display:grid;gap:16px;min-width:0}
+:host .order-detail-grid .panel{margin:0;padding:22px;border:1px solid #e4ebf2;border-radius:16px;background:white;box-shadow:0 3px 14px #11233b04;min-width:0}
+:host .panel h2{font-size:17px;margin:0 0 18px;letter-spacing:-.3px}
+:host .panel p{font-size:13px;line-height:1.65;color:#718096}
+:host .order-status-banner{display:flex;gap:12px;align-items:center;padding:16px;margin:20px 0 0;border-radius:12px;background:#edf8f3}
+:host .order-status-banner h3{font-size:16px;line-height:1.4;margin:0 0 4px;color:#166244}
+:host .order-status-banner p{font-size:10px;letter-spacing:.8px;margin:0;color:#51836c}
+:host .order-status-banner.negative{background:#fff3f3}
+:host .order-status-banner.negative h3{color:#a23848}
+:host .order-status-banner .icon-circle{width:38px;height:38px;flex:none;color:#008653;background:white}
+.section-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+:host .section-title h2{margin:0}.section-title>span{font-size:12px;color:#718096}
+:host .order-item{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:12px;align-items:center;padding:18px 0;border-bottom:1px solid #edf1f5}
+:host .order-item:last-child{border-bottom:0;padding-bottom:0}
+:host .order-item .item-placeholder{grid-row:1/3;display:grid;place-items:center;width:64px;height:72px;border:1px solid #edf1f5;border-radius:10px;background:#f6f9fc;color:#8c9fb5;overflow:hidden}
+.item-placeholder img{width:100%;height:100%;object-fit:contain}
+:host .order-item .grow{min-width:0;grid-column:2;grid-row:1}
+:host .order-item h3{font-size:14px;line-height:1.5;margin:0;overflow-wrap:anywhere}
+:host .order-item p{font-size:12px;margin:3px 0 0}
+:host .order-item .pill{grid-column:2;grid-row:2;justify-self:start;border-radius:6px;background:#f0f5fb;padding:3px 8px;font-size:11px;color:#52657d}
+:host .order-item>strong{grid-column:3;grid-row:1/3;font-size:15px;white-space:nowrap}
+:host .summary-row{display:flex;justify-content:space-between;font-size:13px;color:#718096}
+:host .total{display:flex;justify-content:space-between;border-top:1px solid #e5ecf3;padding-top:16px;margin-top:18px;font-size:17px}
+:host .total strong{color:#0066ff;font-size:24px;letter-spacing:-.5px}
+:host .order-detail-grid .button{display:flex;align-items:center;justify-content:center;gap:8px;padding:11px 14px;border:1px solid #dce6f1;border-radius:10px;min-height:42px;font-size:13px;color:#245a91;background:#f8fbff;text-decoration:none;box-sizing:border-box}
+:host #tracking>p{font-size:12px;margin:12px 0}
+:host .tracking-event{display:flex;align-items:center;gap:10px;padding-top:12px;border-top:1px solid #edf1f5}
+:host .tracking-event h3{font-size:13px;margin:0}.tracking-event p{margin:3px 0 0}
+:host .tracking-event .icon-circle{width:30px;height:30px}
+.payment-method{display:flex;gap:10px;align-items:center;font-size:13px;color:#36516b}.payment-method app-icon{width:20px;height:20px;flex:none}
+.shipping-address{display:flex;gap:12px;font-size:14px;line-height:1.5}.shipping-address app-icon{width:20px;height:20px;flex:none;color:#008653}.shipping-address strong{display:block;margin-bottom:6px}:host .shipping-address p{margin:0}
+@media(max-width:750px){
+ :host .page-heading{align-items:flex-start;margin-bottom:18px}:host .page-heading h1{font-size:26px}
+ :host .page-heading>div{min-width:0}:host .page-heading>.button{font-size:12px;padding:8px 12px}
+ :host .compact-heading{display:grid;padding:16px;gap:14px}:host .compact-heading h3{font-size:18px}
+ :host .order-detail-grid{grid-template-columns:minmax(0,1fr);gap:16px}
+ :host .order-detail-grid .panel{padding:18px;border-radius:14px}
+ :host .order-status-banner{padding:13px;margin-top:16px}:host .order-status-banner h3{font-size:15px}
+ :host .order-detail-actions{display:flex;flex-wrap:wrap}
+ :host .order-item{grid-template-columns:56px minmax(0,1fr) auto;gap:10px}
+ :host .order-item .item-placeholder{width:56px;height:66px}
+ :host .order-item h3{font-size:13px}:host .order-item>strong{font-size:14px}
+}
+
+:host .order-journey{padding:24px;border:1px solid #e2ece7;border-radius:16px;background:#fff;margin:0 0 20px;box-shadow:0 3px 14px #11233b04}
+:host .order-journey .order-status-banner{margin-top:16px}
+.tracking-link{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;color:#008653;font-size:12px;font-weight:650;text-decoration:none}.tracking-link app-icon{width:15px;height:15px}
+.order-update-list{list-style:none;padding:0;margin:22px 0 0}
+.order-update-list li{position:relative;display:flex;gap:16px;padding:0 0 24px 2px}
+.order-update-list li:last-child{padding-bottom:0}
+.order-update-list li:not(:last-child)::after{content:"";position:absolute;left:7px;top:14px;bottom:0;width:2px;background:#e2ebe6}
+.update-dot{width:12px;height:12px;flex:0 0 12px;border:2px solid #cbd7d1;box-sizing:border-box;border-radius:50%;margin-top:4px;background:white;z-index:1}
+.latest .update-dot{background:#008653;border-color:#008653;box-shadow:0 0 0 4px #e8f6ef}
+:host .order-update-list h3{font-size:14px;margin:0 0 5px;line-height:1.4;color:#203d31}
+.order-update-list time{color:#748378;font-size:12px}
+:host .order-update-list p{margin:0;font-size:12px}
+:host #tracking .tracking-note{border-top:1px solid #edf1f5;padding-top:14px;margin:20px 0 0;font-size:11px}
+@media(max-width:750px){:host .order-journey{padding:18px 14px;margin-bottom:16px}.order-update-list{margin-top:20px}:host .page-heading{flex-wrap:wrap}:host .page-heading p{font-size:13px}}

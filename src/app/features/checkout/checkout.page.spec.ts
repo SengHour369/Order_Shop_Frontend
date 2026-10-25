@@ -75,4 +75,25 @@ describe('Single-page checkout',()=>{
     expect(page.needsRefresh()).toBe(true);expect(page.canSubmit()).toBe(false);expect(new CheckoutAttempt().read(7)).toBeNull();
     page.load();expect(page.canSubmit()).toBe(true);
   });
+  it('unlocks a rejected changed cart and requires a fresh review before resubmission',()=>{
+    const pending=new Subject<any>();const {page,checkout}=setup({pending});
+    page.submit();
+    pending.error({status:400,error:{message:'Cart changed. Review again before confirming.'}});
+    expect(page.locked()).toBe(false);
+    expect(page.needsRefresh()).toBe(true);
+    expect(new CheckoutAttempt().read(7)).toBeNull();
+    page.submit();expect(checkout).toHaveBeenCalledOnce();
+    page.load();expect(page.needsRefresh()).toBe(false);expect(page.canSubmit()).toBe(true);
+  });
+
+  it('refreshes changed quantities and totals before creating a checkout key or order',()=>{
+    const {page,current,checkout}=setup();
+    const updated={...cart,total_items:2,total_price:20,items:[{...cart.items[0],quantity:2,total_price:20}]};
+    current.mockReturnValue(of(updated));
+    page.submit();
+    expect(page.cart()).toEqual(updated);expect(checkout).not.toHaveBeenCalled();
+    expect(new CheckoutAttempt().read(7)).toBeNull();expect(page.message()).toContain('Review');
+    page.submit();expect(checkout).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({expected_total:20,reviewed_items:[{skuId:2,quantity:2}]}));
+  });
+
 });

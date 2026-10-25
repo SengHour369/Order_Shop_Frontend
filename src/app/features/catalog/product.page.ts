@@ -32,10 +32,9 @@ export class ProductPage extends PageState {
   product = signal<Product | null>(null);
   skuId = signal(0);
   selected = computed(() => this.product()?.skus.find(s => s.id === this.skuId()));
-  images = computed(() => [...new Set([
-    ...(this.product()?.main_image || []),
-    ...(this.product()?.skus.map(s => s.image_url).filter((image): image is string => !!image) || []),
-  ])]);
+  images = computed(() => this.selected()?.image_url
+    ? [this.selected()!.image_url!]
+    : [...new Set(this.product()?.main_image || [])]);
   imageIndex = signal(0);
   currentImage = computed(() => this.images()[this.imageIndex()]);
   available = computed(() => availableStock(this.selected()));
@@ -44,17 +43,23 @@ export class ProductPage extends PageState {
   sellingPrice = sellingPrice;
   hasDiscount = hasDiscount;
   promotionName = promotionName;
-  highlights = computed(() => this.selected()?.attributes?.map(a => ({
-    name: a.name, value: a.attributes.map(v => v.value).join(', '),
-  })).filter(a => a.value) || []);
+  private attributesFor(sku?:Sku){
+    const grouped=new Map<string,{name:string;values:string[]}>();
+    for(const attribute of sku?.attributes || []){
+      const name=attribute.name.trim();const key=name.toLowerCase();
+      if(!name)continue;
+      const row=grouped.get(key)||{name,values:[]};
+      for(const item of attribute.attributes || []){const value=item.value.trim();if(value&&!row.values.includes(value))row.values.push(value);}
+      grouped.set(key,row);
+    }
+    return [...grouped.values()].filter(row=>row.values.length);
+  }
+  highlights = computed(() => this.attributesFor(this.selected()).map(row=>({name:row.name,value:row.values.join(', ')})));
   brand = computed(() => this.highlights().find(a => a.name.toLowerCase() === 'brand')?.value);
   specificationsExpanded = signal(false);
   specifications = computed(() => {
     const sku = this.selected();
-    const rows = (sku?.attributes || []).map(attribute => ({
-      name: attribute.name,
-      values: (attribute.attributes || []).map(value => value.value).filter(Boolean),
-    })).filter(attribute => attribute.values.length > 0);
+    const rows = this.attributesFor(sku);
     if (sku) {
       rows.push({ name: 'SKU', values: [sku.sku] });
       if (sku.barcode) rows.push({ name: 'Barcode', values: [sku.barcode] });
@@ -87,15 +92,15 @@ export class ProductPage extends PageState {
     });
   }
   optionLabel(sku: Sku) {
-    const attributes = sku.attributes || [];
+    const attributes = this.attributesFor(sku);
     const optionNames = ['color', 'colour', 'size', 'storage', 'capacity'];
     const options = attributes.filter(attribute => optionNames.includes(attribute.name.toLowerCase()));
     const varying = options.length ? options : attributes.filter(attribute => {
-      const values = attribute.attributes.map(value => value.value).join('|');
+      const values = attribute.values.join('|');
       return this.product()?.skus.some(other => other.id !== sku.id &&
-        other.attributes?.find(candidate => candidate.name === attribute.name)?.attributes.map(value => value.value).join('|') !== values);
+        this.attributesFor(other).find(candidate => candidate.name === attribute.name)?.values.join('|') !== values);
     });
-    return varying.flatMap(attribute => attribute.attributes.map(value => value.value)).join(' / ') || sku.sku;
+    return varying.flatMap(attribute => attribute.values).join(' / ') || sku.sku;
   }
   choose(sku?: Sku) {
     this.skuId.set(sku?.id || 0); this.quantity = 1;

@@ -42,4 +42,13 @@ describe('Customer orders embedded in chat',()=>{
     session.set(null);const f=TestBed.createComponent(OrdersPage);f.componentRef.setInput('embedded',true);f.detectChanges();
     http.expectNone(r=>r.url.includes('/orders/user/'));expect(f.nativeElement.querySelector('table')).toBeNull();expect(f.nativeElement.querySelector('app-sign-in-card')).toBeTruthy();
   });
+  it('resolves order product names from the actual SKU and allows searching by name',()=>{
+    const f=TestBed.createComponent(OrdersPage);f.componentRef.setInput('embedded',true);
+    const purchased={...order,customer_id:7,shipping_address_id:5,items:[{id:1,product_sku_id:88,quantity:1,unit_price:39,total_price:39}]};
+    http.expectOne(r=>r.url==='/api/v1/orders/user/history').flush({content:[{data:purchased}],totalPages:1});
+    http.expectOne('/api/v1/products/sku/88').flush({id:9,name:'Wireless headphones'});
+    f.detectChanges();expect(f.componentInstance.productTitle(purchased)).toBe('Wireless headphones');
+    f.componentInstance.search='headphones';expect(f.componentInstance.filtered()).toHaveLength(1);
+  });
+
 });

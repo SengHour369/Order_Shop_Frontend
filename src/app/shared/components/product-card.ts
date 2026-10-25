@@ -67,7 +67,7 @@ import { Icon } from "./icon";
       "
       (click)="add()"
     >
-      <app-icon name="cart" />{{ (busy() ? "Adding…" : "Add to Cart") | translate }}
+      <app-icon name="cart" /><span class="product-add-label">{{ (busy() ? "Adding…" : "Add to Cart") | translate }}</span>
     </button>
     @if (message()) {
       <p class="card-feedback" role="status">{{ message() }}</p>

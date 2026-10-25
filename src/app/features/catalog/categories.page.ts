@@ -15,22 +15,11 @@ import { Icon } from "../../shared/components/icon";
         >
       </div>
     </div>
-    <section class="category-feature">
-      <div>
-        <span class="eyebrow">{{ "ELECTRONICS" | translate }}</span>
-        <h2>Latest Tech<br /><span>For a Smarter Life</span></h2>
-        <p>Discover your next everyday essential.</p>
-        <a
-          class="button primary"
-          routerLink="/shop"
-          [queryParams]="{ category: 'Electronics' }"
-          >Shop Electronics <app-icon name="arrow"
-        /></a>
-      </div>
-      <img
-        src="/images/eshop-scene.svg"
-        alt="Headphones, phone and shopping essentials"
-      />
+    <section class="category-reference-banner" aria-label="Electronics collection">
+      <a routerLink="/shop" [queryParams]="{ category: 'Electronics' }" aria-label="Shop Electronics">
+        <img src="/images/electronics-category-banner.png" width="1280" height="546" fetchpriority="high"
+          alt="Electronics. Latest Tech For a Smarter Life. Discover your next everyday essential. Shop Electronics." />
+      </a>
     </section>
     <div class="section-heading">
       <h2>Shop by Category</h2>

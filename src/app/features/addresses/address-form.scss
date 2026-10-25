@@ -1,21 +1,356 @@
-:host { display:block; color:#0c103c; }
-.address-form-heading { margin:5px 0 18px; h1 { font-size:28px; margin:0 0 6px; letter-spacing:-.6px; } p { font-size:14px; color:#66628e; margin:0; } }
-.delivery-form { border:1px solid #e6e8f2; border-radius:7px; background:white; padding:22px; }
-fieldset { border:0; padding:0; margin:0; min-width:0; } fieldset:disabled { opacity:.65; }
-.form-upper { display:grid; grid-template-columns:minmax(0,1.65fr) minmax(200px,1fr); gap:26px; }
-h2 { color:#0e1039; font-size:18px; margin:0 0 20px; }
-.field { display:block; margin:0 0 16px; font-size:12px; font-weight:600; color:#14133f; line-height:1.5; b { color:#e51d31; } input,select,textarea { display:block; width:100%; margin:6px 0 0; min-height:36px; padding:8px 12px; border:1px solid #dcdfee; border-radius:5px; color:#171540; background:white; font:inherit; font-size:13px; font-weight:400; } textarea { resize:vertical; min-height:60px; } input::placeholder { color:#9290ac; font-size:12px; } >label { font:inherit; margin:0; } }
-.field-label { display:block; margin-bottom:6px; }
-.address-labels { display:grid; grid-template-columns:repeat(4,max-content); gap:8px; button { font:inherit; display:flex; align-items:center; justify-content:center; gap:7px; font-weight:400; font-size:12px; padding:8px 12px; min-height:38px; background:white; border:1px solid #e0e2ef; border-radius:5px; color:#302b5b; white-space:nowrap; } app-icon { width:18px; height:18px; } button.chosen { color:#00824b; border-color:#008b50; background:#f1fbf6; } }
-.phone-fields { display:grid; grid-template-columns:115px minmax(0,1fr); gap:10px; }
-.location-fields { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
-.delivery-preview { padding-top:0; img { width:100%; height:230px; object-fit:cover; border-radius:6px; } >small { display:block; margin-top:8px; color:#777791; font-size:10px; } }
-.address-advice { margin-top:12px; padding:14px 12px; display:flex; gap:10px; border:1px solid #cbeede; background:#eefaf5; border-radius:5px; >app-icon { flex-shrink:0; width:19px; height:19px; color:#00844e; } strong { display:block; font-size:12px; color:#007e47; margin-bottom:5px; } p { font-size:11px; line-height:1.55; color:#57777e; margin:0; } }
-.optional { font-weight:400; color:#76709b; }
-.default-check { margin:0; display:flex; align-items:center; gap:12px; font-size:13px; font-weight:400; input { width:22px; height:22px; min-height:22px; margin:0; accent-color:#008850; } }
-.form-actions { display:flex; justify-content:flex-end; gap:9px; margin-top:8px; }
-.cancel-address,.save-address { display:flex; align-items:center; justify-content:center; font:inherit; font-size:13px; font-weight:600; min-height:43px; border-radius:5px; padding:10px 25px; }
-.cancel-address { border:1px solid #9691bd; color:#141340; min-width:110px; } .save-address { background:linear-gradient(120deg,#008753,#007c47); color:white; border:1px solid #00824c; min-width:175px; } .save-address:hover { background:#006f40; } button:disabled { opacity:.5; }
-@media(max-width:1100px) { .form-upper { grid-template-columns:1fr; } .delivery-preview { display:none; } .address-labels { grid-template-columns:repeat(4,minmax(0,1fr)); button { padding:8px; } } }
-@media(max-width:600px) { .address-form-heading { margin:4px 0 20px; h1 { font-size:25px; } p { line-height:1.5; } } .delivery-form { border:0; padding:0; } h2 { display:none; } .field { margin-bottom:17px; font-size:12px; input,select,textarea { min-height:36px; } } .address-labels { display:flex; overflow-x:auto; gap:7px; padding-bottom:3px; button { flex-shrink:0; padding:8px 10px; font-size:11px; } } .location-fields { display:block; } .phone-fields { grid-template-columns:110px minmax(0,1fr); } .default-check { margin:20px 0; font-size:12px; } .form-actions { margin:0 0 18px; display:grid; grid-template-columns:1fr 1.35fr; } .save-address,.cancel-address { min-width:0; padding:10px; min-height:45px; } }
-@media (min-width:601px) and (max-width:1100px) { .address-labels { display:flex; flex-wrap:wrap; } }
+:host {
+  display: block;
+  color: #0c103c;
+}
+
+.address-form-heading {
+  margin: 5px 0 18px;
+
+  h1 {
+    font-size: 28px;
+    margin: 0 0 6px;
+    letter-spacing: -.6px;
+  }
+
+  p {
+    font-size: 14px;
+    color: #66628e;
+    margin: 0;
+  }
+}
+
+.delivery-form {
+  border: 1px solid #e6e8f2;
+  border-radius: 7px;
+  background: white;
+  padding: 22px;
+}
+
+fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+fieldset:disabled {
+  opacity: .65;
+}
+
+.form-upper {
+  display: grid;
+  grid-template-columns: minmax(0,1.65fr) minmax(200px,1fr);
+  gap: 26px;
+}
+
+h2 {
+  color: #0e1039;
+  font-size: 18px;
+  margin: 0 0 20px;
+}
+
+.field {
+  display: block;
+  margin: 0 0 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #14133f;
+  line-height: 1.5;
+
+  b {
+    color: #e51d31;
+  }
+
+  input,
+  select,
+  textarea {
+    display: block;
+    width: 100%;
+    margin: 6px 0 0;
+    min-height: 36px;
+    padding: 8px 12px;
+    border: 1px solid #dcdfee;
+    border-radius: 5px;
+    color: #171540;
+    background: white;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 400;
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 60px;
+  }
+
+  input::placeholder {
+    color: #9290ac;
+    font-size: 12px;
+  }
+
+  >label {
+    font: inherit;
+    margin: 0;
+  }
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.address-labels {
+  display: grid;
+  grid-template-columns: repeat(4,max-content);
+  gap: 8px;
+
+  button {
+    font: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    font-weight: 400;
+    font-size: 12px;
+    padding: 8px 12px;
+    min-height: 38px;
+    background: white;
+    border: 1px solid #e0e2ef;
+    border-radius: 5px;
+    color: #302b5b;
+    white-space: nowrap;
+  }
+
+  app-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  button.chosen {
+    color: #00824b;
+    border-color: #008b50;
+    background: #f1fbf6;
+  }
+}
+
+.phone-fields {
+  display: grid;
+  grid-template-columns: 115px minmax(0,1fr);
+  gap: 10px;
+}
+
+.location-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.delivery-preview {
+  padding-top: 0;
+
+  img {
+    width: 100%;
+    height: 230px;
+    object-fit: cover;
+    border-radius: 6px;
+  }
+
+  >small {
+    display: block;
+    margin-top: 8px;
+    color: #777791;
+    font-size: 10px;
+  }
+}
+
+.address-advice {
+  margin-top: 12px;
+  padding: 14px 12px;
+  display: flex;
+  gap: 10px;
+  border: 1px solid #cbeede;
+  background: #eefaf5;
+  border-radius: 5px;
+
+  >app-icon {
+    flex-shrink: 0;
+    width: 19px;
+    height: 19px;
+    color: #00844e;
+  }
+
+  strong {
+    display: block;
+    font-size: 12px;
+    color: #007e47;
+    margin-bottom: 5px;
+  }
+
+  p {
+    font-size: 11px;
+    line-height: 1.55;
+    color: #57777e;
+    margin: 0;
+  }
+}
+
+.optional {
+  font-weight: 400;
+  color: #76709b;
+}
+
+.default-check {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  font-weight: 400;
+
+  input {
+    width: 22px;
+    height: 22px;
+    min-height: 22px;
+    margin: 0;
+    accent-color: #008850;
+  }
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 8px;
+}
+
+.cancel-address,
+.save-address {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  min-height: 43px;
+  border-radius: 5px;
+  padding: 10px 25px;
+}
+
+.cancel-address {
+  border: 1px solid #9691bd;
+  color: #141340;
+  min-width: 110px;
+}
+
+.save-address {
+  background: linear-gradient(120deg,#008753,#007c47);
+  color: white;
+  border: 1px solid #00824c;
+  min-width: 175px;
+}
+
+.save-address:hover {
+  background: #006f40;
+}
+
+button:disabled {
+  opacity: .5;
+}
+
+@media (max-width: 1100px) {
+  .form-upper {
+    grid-template-columns: 1fr;
+  }
+
+  .delivery-preview {
+    display: none;
+  }
+
+  .address-labels {
+    grid-template-columns: repeat(4,minmax(0,1fr));
+
+    button {
+      padding: 8px;
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .address-form-heading {
+    margin: 4px 0 20px;
+
+    h1 {
+      font-size: 25px;
+    }
+
+    p {
+      line-height: 1.5;
+    }
+  }
+
+  .delivery-form {
+    border: 0;
+    padding: 0;
+  }
+
+  h2 {
+    display: none;
+  }
+
+  .field {
+    margin-bottom: 17px;
+    font-size: 12px;
+
+    input,
+    select,
+    textarea {
+      min-height: 36px;
+    }
+  }
+
+  .address-labels {
+    display: flex;
+    overflow-x: auto;
+    gap: 7px;
+    padding-bottom: 3px;
+
+    button {
+      flex-shrink: 0;
+      padding: 8px 10px;
+      font-size: 11px;
+    }
+  }
+
+  .location-fields {
+    display: block;
+  }
+
+  .phone-fields {
+    grid-template-columns: 110px minmax(0,1fr);
+  }
+
+  .default-check {
+    margin: 20px 0;
+    font-size: 12px;
+  }
+
+  .form-actions {
+    margin: 0 0 18px;
+    display: grid;
+    grid-template-columns: 1fr 1.35fr;
+  }
+
+  .save-address,
+  .cancel-address {
+    min-width: 0;
+    padding: 10px;
+    min-height: 45px;
+  }
+}
+
+@media (min-width: 601px) and (max-width: 1100px) {
+  .address-labels {
+    display: flex;
+    flex-wrap: wrap;
+  }
+}

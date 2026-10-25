@@ -1,5 +1,9 @@
 import { Component, input } from "@angular/core";
 const icons: Record<string, string> = {
+  play: "M6 3l15 9-15 9V3",
+  workflow: "M9 2h6v5H9V2 M12 7v5 M4 17v-5h16v5 M1 17h6v5H1v-5 M9 17h6v5H9v-5 M17 17h6v5h-6v-5 M12 12v5",
+  lightbulb: "M9 18h6 M10 22h4 M8 14a7 7 0 1 1 8 0c-1 1-1 2-1 4H9c0-2 0-3-1-4",
+  "book-open": "M12 5v16 M12 5C9 2 5 2 2 3v16c4-1 7 0 10 2 M12 5c3-3 7-3 10-2v16c-4-1-7 0-10 2",
   speaker: "M11 5L6 9H2v6h4l5 4V5 M15 8a6 6 0 0 1 0 8 M18 5a10 10 0 0 1 0 14",
   stop: "M5 5h14v14H5z",
   alert: "M12 3L1 21h22L12 3 M12 9v5 M12 17h.01",
@@ -16,6 +20,7 @@ const icons: Record<string, string> = {
   robot:
     "M5 7h14a2 2 0 0 1 2 2v10H3V9a2 2 0 0 1 2-2 M12 3v4 M10 3h4 M7 11v3 M17 11v3 M8 17h8 M1 11v5 M23 11v5",
   send: "M22 2L9 15 M22 2l-7 20-6-7-7-6 20-7",
+  "message-circle": "M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5Z",
   calendar: "M3 5h18v16H3V5 M3 10h18 M7 2v6 M17 2v6",
   filter: "M3 3h18l-7 8v9l-4 2V11L3 3",
   download: "M12 2v13 M7 10l5 5 5-5 M3 16v6h18v-6",

@@ -1,3 +1,4 @@
+import { forkJoin, of, catchError } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PageAccessDenied } from '../../../shared/components/page-access-denied';
 import { CanAccessDirective } from '../../../core/auth/can-access.directive';
@@ -372,11 +373,29 @@ export class PaymentsPage extends PageState {
 @Component({
   imports: [PageAccessDenied, CanAccessDirective, TranslatePipe, Status, RouterLink, Icon],
   templateUrl: "./payment-detail.html",
-  styleUrls: ["../styles/details.css", "../styles/detail-typography.css"],
+  styleUrls: ["../styles/details.css", "../styles/detail-typography.css", "./payment-detail.css"],
 })
 export class PaymentDetailPage extends PageState {
+  order = signal<Row | null>(null);
+  actionsOpen = signal(false);
+  async copyValue(value: unknown) {
+    if (!value) return;
+    try { await navigator.clipboard.writeText(String(value)); this.message.set('Copied to clipboard.'); }
+    catch { this.message.set('Copy unavailable. Select the reference to copy it.'); }
+  }
+  records(row: Row, key: string): Row[] { return Array.isArray(row[key]) ? row[key] as Row[] : []; }
+  timeline(row: Row) {
+    const entries: {title:string;description:string;date:unknown;complete:boolean}[] = [];
+    const created = field(row,'created_at','createdAt');
+    const updated = field(row,'updated_at','updatedAt','payment_date','paymentDate');
+    if (created !== '') entries.push({title:'Payment Initiated',description:'Payment record created.',date:created,complete:true});
+    if (updated !== '') entries.push({title:'Payment '+text(row['status']),description:'Recorded payment status from Payment Service.',date:updated,complete:this.paymentTone(row)==='on'});
+    return entries;
+  }
+
   load() {
-    this.run(this.api.paymentByOrder(this.id), row => this.row.set(row), true);
+    this.order.set(null);
+    this.run(forkJoin({payment: this.api.paymentByOrder(this.id), order: this.api.order(this.id).pipe(catchError(() => of(null)))}), result => { this.row.set(result.payment); this.order.set(result.order); }, true);
   }
   paymentTone(row: Row) {
     const status = String(field(row, 'status')).toUpperCase();

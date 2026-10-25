@@ -81,6 +81,7 @@ export class CustomerChat {
     readonly cartBusy = signal<number | null>(null);
     private pendingCartKeys = new Map<number,{key:string;quantity:number}>();
     readonly cartFeedback = signal("");
+    readonly checkoutPaymentMethod = signal('');
     readonly checkoutVisible = signal(false);
     readonly trackingOrderId = signal<number|null>(null);
     readonly checkout = viewChild(ChatCheckout);
@@ -208,6 +209,7 @@ export class CustomerChat {
     }
     send() {
         const value = this.prompt.trim();
+        if (/\b(bakong|khqr)\b|បាគង/i.test(value)) this.checkoutPaymentMethod.set('BAKONG');
         if (!value || value.length > 4000 || this.busy() || this.quota.exhausted() || this.voice.recording() || this.voice.pending())
             return;
         this.messages.update((items) => [...items, { role: "user", text: value, time: new Date().toISOString() }]);

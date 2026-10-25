@@ -1,3 +1,4 @@
+import { LanguageService } from '../../../core/i18n/language.service';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
@@ -18,6 +19,7 @@ describe('Native product form embedded in chat',()=>{
       {provide:AiImportsApi,useValue:{reviewerOptions:()=>of({reviewers:[],defaultReviewerId:null}),stageProduct:stage,action:()=>of({id:'batch-1',status:'SUBMITTED'})}},
       {provide:PermissionService,useValue:{has:()=>true,allows:()=>true}},
     ]});
+    TestBed.inject(LanguageService).setLanguage('en');
   });
   function create(){const f=TestBed.createComponent(ProductFormPage);f.componentRef.setInput('embedded',true);f.componentRef.setInput('prefill',{name:'Running Shoe',description:'Black size 42',price:120,quantity:20,warehouse:'Main'});f.detectChanges();return f;}
   it('uses the actual product editor with SKU, image and real category controls',async()=>{
